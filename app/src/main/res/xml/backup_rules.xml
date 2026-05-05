@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+
+    <!-- Salvar SharedPreferences (recentes, favoritos, configs) -->
+    <include domain="sharedpref" path="." />
+
+    <!-- Salvar bancos de dados -->
+    <include domain="database" path="." />
+
+    <!-- Salvar arquivos internos -->
+    <include domain="file" path="." />
+
+</full-backup-content>

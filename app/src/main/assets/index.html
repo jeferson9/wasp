@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Wasp Browser — navegador Web3 com hub cripto e mercado em tempo real.">
+    <meta name="theme-color" content="#0b0f1a">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <title>Wasp Browser</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-theme="dark" data-accent="honey">
+
+<!-- =========================
+     HOME
+========================= -->
+<section id="home" class="screen active">
+    <div class="home-wrap">
+
+        <div class="home-topbar-mini">
+            <div class="topbar-logo-wrap">
+                <img class="logo-topbar logo-topbar-dark" src="img/wasp-topbar-dark.webp" alt="Wasp Browser">
+                <img class="logo-topbar logo-topbar-light" src="img/wasp-topbar-light.webp" alt="Wasp Browser">
+            </div>
+            <button class="home-menu-btn" onclick="toggleMenu()">☰</button>
+        </div>
+
+        <!-- SAUDAÇÃO -->
+        <div class="home-greeting">
+            <span id="greetingText">Olá, Wasp</span>
+            <span id="greetingEmoji" class="greeting-emoji">🐝</span>
+        </div>
+
+        <div class="home-hero">
+            <div class="home-search" id="homeSearchWrap">
+                <div class="search-engine" onclick="toggleEngineMenu()">
+                    <img id="engineIcon" src="img/google.webp" alt="Motor de busca">
+                    <span class="engine-arrow">▼</span>
+                </div>
+                <input
+                        id="homeInput"
+                        type="text"
+                        placeholder="Buscar ou digitar URL..."
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                />
+                <button class="home-go" onclick="searchFrom('homeInput')">➜</button>
+                <div id="engineMenu" class="engine-menu">
+                    <div class="engine-item" onclick="setEngine('google')">
+                        <img id="engine-google" src="img/google.webp" alt=""> Google
+                    </div>
+                    <div class="engine-item" onclick="setEngine('brave')">
+                        <img id="engine-brave" src="img/brave.webp" alt=""> Brave
+                    </div>
+                    <div class="engine-item" onclick="setEngine('bing')">
+                        <img id="engine-bing" src="img/bing.webp" alt=""> Bing
+                    </div>
+                    <div class="engine-item" onclick="setEngine('duck')">
+                        <img id="engine-duck" src="img/duck.webp" alt=""> DuckDuckGo
+                    </div>
+                </div>
+                <div id="searchSuggestions" class="search-suggestions"></div>
+            </div>
+            <div class="wasp-status">
+                <span class="wasp-status-pill">🛡 Powered by Wasp Browser</span>
+            </div>
+        </div>
+
+        <div class="home-panels">
+
+            <!-- NACKL TICKER -->
+            <div class="nackl-ticker" onclick="openNativeUrl('https://www.coingecko.com/en/coins/acki-nacki')">
+                <div class="nackl-left">
+                    <div class="nackl-dot"></div>
+                    <div class="nackl-info">
+                        <span class="nackl-name">NACKL</span>
+                        <span class="nackl-sub">Acki Nacki (NACKL)</span>
+                    </div>
+                </div>
+                <div class="nackl-right">
+                    <span class="nackl-price" id="nacklPrice">$ --</span>
+                    <span class="nackl-change" id="nacklChange">--</span>
+                </div>
+                <div class="nackl-mcap-wrap">
+                    <span class="nackl-mcap-label">Mkt Cap</span>
+                    <span class="nackl-mcap" id="nacklMcap">--</span>
+                </div>
+            </div>
+
+            <!-- RECENTES -->
+            <div class="panel recents-panel">
+                <div class="panel-head">
+                    <div class="panel-title">Recentes</div>
+                    <button class="panel-action" onclick="clearRecents()">Limpar</button>
+                </div>
+                <div id="recentList" class="recent-list"></div>
+            </div>
+
+            <!-- WASP BLOG FEED -->
+            <div class="panel feed-panel">
+                <div class="panel-head">
+                    <div class="panel-title">📰 Wasp Blog</div>
+                    <button class="panel-action" onclick="openNativeUrl('https://waspblogblockchain.blogspot.com')">Ver tudo</button>
+                </div>
+                <div id="waspFeedList" class="wasp-feed-list">
+                    <div class="feed-skeleton">
+                        <div class="feed-sk-img"></div>
+                        <div class="feed-sk-lines">
+                            <div class="feed-sk-line long"></div>
+                            <div class="feed-sk-line short"></div>
+                        </div>
+                    </div>
+                    <div class="feed-skeleton">
+                        <div class="feed-sk-img"></div>
+                        <div class="feed-sk-lines">
+                            <div class="feed-sk-line long"></div>
+                            <div class="feed-sk-line short"></div>
+                        </div>
+                    </div>
+                    <div class="feed-skeleton">
+                        <div class="feed-sk-img"></div>
+                        <div class="feed-sk-lines">
+                            <div class="feed-sk-line long"></div>
+                            <div class="feed-sk-line short"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- =========================
+     PAINEL
+========================= -->
+<section id="browser" class="screen">
+    <div class="panel-wrap">
+
+        <div class="panel-hero">
+            <div class="panel-title">📊 Painel do Usuário</div>
+            <div class="panel-sub">
+                Seu resumo diário de uso, atividade e recursos do Wasp Browser.
+            </div>
+        </div>
+
+        <div class="panel-grid">
+            <div class="panel-card">
+                <div class="pc-label">⏱️ Tempo online hoje</div>
+                <div class="pc-value" id="onlineToday">00:00</div>
+                <div class="pc-sub">Zera automaticamente todo dia</div>
+            </div>
+
+            <div class="panel-card">
+                <div class="pc-label">⚡ Bee Engine</div>
+                <div class="pc-value" id="beeStatus">OFF</div>
+                <div class="pc-sub">Ativação manual (em breve)</div>
+                <button class="pc-btn" onclick="toggleBeeDemo()">Ligar / Desligar</button>
+            </div>
+        </div>
+
+        <div class="panel-card wide">
+            <div class="pc-label">📊 Gráfico (em breve)</div>
+            <div class="chart-placeholder">(Área reservada para gráfico)</div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- =========================
+     MERCADO CRIPTO
+========================= -->
+<section id="market" class="screen">
+    <div class="web3x">
+
+        <div class="web3x-head">
+            <div class="web3x-title">
+                <span class="web3x-badge">MERCADO</span>
+                <h2>Mercado Cripto</h2>
+                <p>Preços em tempo real, sentimento e variações 24h.</p>
+
+                <div class="market-overview">
+                    <div class="mo-item">
+                        <div class="mo-label">Market Cap</div>
+                        <div class="mo-value" id="moCap">$ --</div>
+                    </div>
+                    <div class="mo-item">
+                        <div class="mo-label">Volume 24h</div>
+                        <div class="mo-value" id="moVol">$ --</div>
+                    </div>
+                    <div class="mo-item">
+                        <div class="mo-label">BTC Dominance</div>
+                        <div class="mo-value" id="moBtcDom">--%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP 3 -->
+        <div class="web3x-prices">
+            <div class="crypto-card">
+                <div class="crypto-left">
+                    <div class="crypto-icon btc">₿</div>
+                    <div class="crypto-meta">
+                        <div class="crypto-name">Bitcoin</div>
+                        <div class="crypto-symbol">BTC</div>
+                    </div>
+                </div>
+                <div class="crypto-right">
+                    <div class="crypto-price" id="btcPrice">$ --</div>
+                    <div class="crypto-sub" id="btcChange">Atualizando…</div>
+                </div>
+            </div>
+
+            <div class="crypto-card">
+                <div class="crypto-left">
+                    <div class="crypto-icon eth">◆</div>
+                    <div class="crypto-meta">
+                        <div class="crypto-name">Ethereum</div>
+                        <div class="crypto-symbol">ETH</div>
+                    </div>
+                </div>
+                <div class="crypto-right">
+                    <div class="crypto-price" id="ethPrice">$ --</div>
+                    <div class="crypto-sub" id="ethChange">Atualizando…</div>
+                </div>
+            </div>
+
+            <div class="crypto-card">
+                <div class="crypto-left">
+                    <div class="crypto-icon bnb">B</div>
+                    <div class="crypto-meta">
+                        <div class="crypto-name">BNB</div>
+                        <div class="crypto-symbol">BNB</div>
+                    </div>
+                </div>
+                <div class="crypto-right">
+                    <div class="crypto-price" id="bnbPrice">$ --</div>
+                    <div class="crypto-sub" id="bnbChange">Atualizando…</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEAR & GREED -->
+        <div class="web3x-sentiment">
+            <div class="sent-head">
+                <h3>Fear & Greed Index</h3>
+                <p>Sentimento do mercado nas últimas 24h.</p>
+            </div>
+            <div class="sent-card">
+                <div class="sent-left">
+                    <div class="sent-value" id="fgValue">--</div>
+                    <div class="sent-label" id="fgLabel">--</div>
+                    <div class="sent-sub" id="fgDate">--</div>
+                </div>
+                <div class="sent-meter">
+                    <div class="sent-bar">
+                        <div class="sent-fill" id="fgFill"></div>
+                    </div>
+                    <div class="sent-scale">
+                        <span>Fear</span>
+                        <span>Greed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRENDING -->
+        <div class="web3x-trending">
+            <div class="trend-head">
+                <h3>Trending</h3>
+                <p>Criptos em destaque agora.</p>
+            </div>
+            <div id="trendList" class="trend-grid">
+                <div class="trend-skeleton">Carregando tendências…</div>
+            </div>
+        </div>
+
+        <!-- GAINERS -->
+        <div class="web3x-gainers">
+            <div class="gain-head">
+                <h3>Gainers</h3>
+                <p>Maiores altas nas últimas 24h.</p>
+            </div>
+            <div id="gainerList" class="gain-grid">
+                <div class="gain-skeleton">Carregando altas…</div>
+            </div>
+        </div>
+
+        <!-- LOSERS -->
+        <div class="web3x-losers">
+            <div class="lose-head">
+                <h3>Losers</h3>
+                <p>Maiores quedas nas últimas 24h.</p>
+            </div>
+            <div id="loserList" class="lose-grid">
+                <div class="lose-skeleton">Carregando quedas…</div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- HIVE PANEL -->
+<div id="hivePanel" class="hive-panel">
+    <div class="hive-handle-top"></div>
+    <div class="hive-header">
+        <h1 class="hive-title">Hive</h1>
+    </div>
+    <div id="hiveGrid" class="hive-grid"></div>
+    <button class="hive-fab" onclick="addHiveSite()">+</button>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsPanel" class="settings-panel">
+    <div class="settings-topbar">
+        <div class="settings-back" onclick="closeSettings()">←</div>
+        <div class="settings-title">Configurações</div>
+    </div>
+    <div class="settings-content">
+
+        <!-- NOME DO USUÁRIO -->
+        <div class="settings-section-title">Perfil</div>
+        <div class="settings-item settings-item-input">
+            <span class="settings-item-label">Seu nome</span>
+            <input
+                    id="userNameInput"
+                    class="settings-name-input"
+                    type="text"
+                    placeholder="Ex: Jeferson"
+                    autocomplete="off"
+                    autocapitalize="words"
+                    maxlength="24"
+                    oninput="saveUserName(this.value)"
+            />
+        </div>
+
+        <!-- TEMA -->
+        <div class="settings-section-title">Aparência</div>
+        <div class="settings-item" onclick="toggleThemeOptions()">
+            Tema: <span id="themeLabel">Dark</span>
+        </div>
+        <div id="themeOptions" class="settings-submenu">
+            <div class="settings-subitem" onclick="setTheme('dark')">🌙 Dark</div>
+            <div class="settings-subitem" onclick="setTheme('light')">☀️ Light</div>
+        </div>
+        <div class="settings-item">Idioma</div>
+        <div class="settings-item">Motor de busca</div>
+        <div class="settings-item">Privacidade</div>
+        <div class="settings-item">Bee Engine</div>
+        <div class="settings-item">Sobre</div>
+    </div>
+</div>
+
+<!-- DIALOG ADICIONAR -->
+<div id="addDialog" class="remove-dialog">
+    <div class="remove-box add-box">
+        <div class="remove-text">Adicionar site</div>
+        <input id="addName" class="add-input" type="text" placeholder="Nome do site">
+        <input id="addUrl"  class="add-input" type="text" placeholder="https://site.com">
+        <div class="remove-actions">
+            <button class="remove-cancel" onclick="closeAddDialog()">Cancelar</button>
+            <button class="remove-danger"  onclick="confirmAddSite()">Adicionar</button>
+        </div>
+    </div>
+</div>
+
+<!-- DIALOG REMOVER -->
+<div id="removeDialog" class="remove-dialog">
+    <div class="remove-box">
+        <div class="remove-text">Remover este site do Hive?</div>
+        <div class="remove-actions">
+            <button class="remove-cancel" onclick="closeRemoveDialog()">Cancelar</button>
+            <button class="remove-danger"  onclick="confirmRemove()">Remover</button>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+    <button class="bottom-tab active" data-mode="main" onclick="goNativeHome(); setBottomTab('main')">
+        <span class="bottom-icon">⌂</span>
+        <span class="bottom-label">Home</span>
+    </button>
+    <button class="bottom-tab" data-mode="browser" onclick="openBeePanel(); setBottomTab('browser')">
+        <span class="bottom-icon">◫</span>
+        <span class="bottom-label">Painel</span>
+    </button>
+    <button class="bottom-tab" data-mode="market" onclick="openMarketTab()">
+        <span class="bottom-icon">⌁</span>
+        <span class="bottom-label">Mercado</span>
+    </button>
+    <button class="bottom-tab" data-mode="hive" onclick="openHiveTab()">
+        <span class="bottom-icon">⬡</span>
+        <span class="bottom-label">Hive</span>
+    </button>
+</nav>
+
+<script src="feed.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

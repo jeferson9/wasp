@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/waspToolbar"
+    android:layout_width="match_parent"
+    android:layout_height="58dp"
+    android:background="#111420"
+    android:orientation="vertical"
+    android:elevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <!-- VOLTAR -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/wasp_tb_btn_bg"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="#6B7A99"
+            android:padding="9dp"
+            android:contentDescription="Voltar" />
+
+        <!-- HOME -->
+        <ImageButton
+            android:id="@+id/btnHome"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="2dp"
+            android:background="@drawable/wasp_tb_btn_bg"
+            android:src="@drawable/ic_home"
+            android:tint="#6B7A99"
+            android:padding="9dp"
+            android:contentDescription="Home" />
+
+        <!-- URL BAR -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/wasp_url_bar_new"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/iconFavicon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
+                android:src="@drawable/globe"
+                android:scaleType="centerCrop" />
+
+            <ImageView
+                android:id="@+id/iconSecurity"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="7dp"
+                android:src="@android:drawable/ic_lock_lock"
+                android:tint="#22C55E" />
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:id="@+id/urlDisplay"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center_vertical">
+                    <TextView
+                        android:id="@+id/urlTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#C8D0E0"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                    <TextView
+                        android:id="@+id/urlDomain"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#6B7A99"
+                        android:textSize="10sp"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/urlInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:textColor="#C8D0E0"
+                    android:textColorHint="#3D4560"
+                    android:textSize="13sp"
+                    android:background="@null"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch"
+                    android:textCursorDrawable="@drawable/wasp_cursor"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnUrl"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <!-- BEE PILL -->
+        <LinearLayout
+            android:id="@+id/btnBeePill"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginStart="6dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/wasp_bee_pill_bg"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <com.example.waspbrowser.MiningIndicator
+                android:id="@+id/beeMiningIndicator"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="5dp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_bee_tech"
+                android:scaleType="fitCenter" />
+        </LinearLayout>
+
+        <!-- TABS PILL -->
+        <LinearLayout
+            android:id="@+id/btnTabsPill"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:layout_marginStart="4dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/wasp_tabs_pill_bg"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:id="@+id/tabsCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1"
+                android:textColor="#111420"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnMenu"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/wasp_tb_btn_bg"
+            android:src="@drawable/ic_more_vert"
+            android:tint="#6B7A99"
+            android:padding="9dp"
+            android:contentDescription="Menu" />
+    </LinearLayout>
+</LinearLayout>

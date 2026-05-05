@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_add_favorite"
+        android:title=" Add aos Favoritos"
+        android:icon="@drawable/ic_star" />
+
+    <!-- NAVEGAÇÃO -->
+    <group android:id="@+id/group_nav">
+
+        <item
+            android:id="@+id/menu_home"
+            android:title="Home"
+            android:icon="@drawable/ic_home" />
+
+        <item
+            android:id="@+id/menu_recarregar"
+            android:title="Recarregar"
+            android:icon="@drawable/ic_refresh" />
+
+        <item
+            android:id="@+id/menu_avancar"
+            android:title="Avançar"
+            android:icon="@drawable/ic_forward" />
+
+        <item
+            android:id="@+id/menu_compartilhar"
+            android:title="Compartilhar"
+            android:icon="@drawable/ic_share" />
+
+        <item
+            android:id="@+id/menu_favoritos"
+            android:title="Favoritos"
+            android:icon="@drawable/ic_star" />
+
+        <item
+            android:id="@+id/menu_recentes"
+            android:title="Historico"
+            android:icon="@drawable/ic_history" />
+
+        <item
+            android:id="@+id/menu_downloads"
+            android:title="Downloads"
+            android:icon="@drawable/ic_download" />
+
+    </group>
+
+
+    <!-- WEB3 -->
+    <group android:id="@+id/group_web3">
+
+        <item
+            android:id="@+id/menu_web3"
+            android:title="Web3 Hub"
+            android:icon="@drawable/ic_web" />
+
+        <item
+            android:id="@+id/menu_bee"
+            android:title="Bee Engine"
+            android:icon="@drawable/ic_engine" />
+        <item
+            android:id="@+id/menu_wasp_pulse"
+            android:title="WaspPulse"
+            android:icon="@drawable/ic_web" />
+    </group>
+
+
+    <!-- SISTEMA -->
+    <group android:id="@+id/group_system">
+
+        <item
+            android:id="@+id/menu_config"
+            android:title="Configurações"
+            android:icon="@drawable/ic_settings" />
+
+        <item
+            android:id="@+id/menu_sobre"
+            android:title="Sobre o Wasp"
+            android:icon="@drawable/ic_info" />
+
+    </group>
+
+</menu>

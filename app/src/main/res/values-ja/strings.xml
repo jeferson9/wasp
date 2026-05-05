@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wasp Browser</string>
+    <string name="menu_section_navigation">ナビゲーション</string>
+    <string name="menu_translate">ページを翻訳</string>
+    <string name="menu_translate_sub">ページ内で直接翻訳</string>
+    <string name="menu_favorites">お気に入り</string>
+    <string name="menu_favorites_sub">保存済みサイト</string>
+    <string name="menu_history">履歴</string>
+    <string name="menu_history_sub">訪問済みページ</string>
+    <string name="menu_downloads">ダウンロード</string>
+    <string name="menu_downloads_sub">ダウンロードしたファイル</string>
+    <string name="menu_section_web3">WEB3</string>
+    <string name="menu_web3">Web3 Hub</string>
+    <string name="menu_web3_sub">DAppとウォレット</string>
+    <string name="menu_bee">Bee Engine</string>
+    <string name="menu_bee_sub">アクティブマイニング</string>
+    <string name="menu_settings">設定</string>
+    <string name="menu_about">Waspについて</string>
+    <string name="menu_reload">再読み込み</string>
+    <string name="menu_forward">進む</string>
+    <string name="menu_share">共有</string>
+    <string name="menu_new_tab">新しいタブ</string>
+    <string name="toolbar_new_tab">+ 新しいタブ</string>
+    <string name="toast_new_tab">新しいタブを開きました</string>
+    <string name="toast_tab_duplicated">タブを複製しました</string>
+    <string name="tab_singular">タブ</string>
+    <string name="tab_plural">タブ</string>
+    <string name="toast_added_favorite">お気に入りに追加しました</string>
+    <string name="toast_removed_favorite">お気に入りから削除しました</string>
+    <string name="download_started">ダウンロードを開始しました</string>
+    <string name="download_error">ダウンロードを開始できませんでした</string>
+    <string name="download_image_title">Image</string>
+    <string name="download_image_confirm">ダウンロード</string>
+    <string name="error_no_app">このリンクに対応するアプリが見つかりません</string>
+    <string name="error_load_title">読み込みエラー</string>
+    <string name="error_load_body">Waspはこのページを開けませんでした。</string>
+    <string name="perm_location_title">位置情報の許可</string>
+    <string name="perm_location_body">%s があなたの位置情報へのアクセスを求めています</string>
+    <string name="perm_media_title">Media access</string>
+    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_allow">許可</string>
+    <string name="perm_camera">カメラ</string>
+    <string name="perm_microphone">マイク</string>
+    <string name="translate_title">ページを翻訳先：</string>
+    <string name="translate_subtitle">テキストはページ内で直接置換されます</string>
+    <string name="translate_search_hint">🔍  言語を検索...</string>
+    <string name="translate_not_found">言語が見つかりません</string>
+    <string name="translate_done">ページを翻訳しました ✓</string>
+    <string name="translate_done_to">翻訳先：%s</string>
+    <string name="translate_change">別の言語に翻訳</string>
+    <string name="translate_change_sub">%d言語から選択</string>
+    <string name="translate_revert">原文を表示</string>
+    <string name="translate_revert_sub">翻訳なしでページを再読み込み</string>
+    <string name="translate_loading">⟳ 翻訳中...</string>
+    <string name="translate_error">翻訳の開始中にエラーが発生しました</string>
+    <string name="translate_none">翻訳するページがありません</string>
+    <string name="settings_title">設定</string>
+    <string name="settings_section_appearance">外観</string>
+    <string name="settings_section_language">言語</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_dark">ダーク</string>
+    <string name="settings_theme_light">ライト</string>
+    <string name="settings_language">アプリの言語</string>
+    <string name="settings_language_system">システムに従う</string>
+    <string name="settings_language_changed">言語を変更しました。適用するにはアプリを再起動してください。</string>
+    <string name="settings_search_engine">Search engine</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_bee">Bee Engine</string>
+    <string name="settings_about">About Wasp</string>
+    <string name="settings_version">バージョン</string>
+    <string name="dialog_image_title">Image</string>
+    <string name="dialog_cancel">キャンセル</string>
+    <string name="dialog_confirm">確認</string>
+    <string name="bee_engine_started">Bee Engine Started</string>
+    <string-array name="search_engines">
+        <item>Google</item>
+        <item>Bing</item>
+        <item>DuckDuckGo</item>
+    </string-array>
+</resources>

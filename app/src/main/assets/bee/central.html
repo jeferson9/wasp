@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <title>Central WP</title>
+    <style>
+        /* ══════════════════════════════════════════
+           RESET & VARS
+        ══════════════════════════════════════════ */
+        :root {
+          --bg:      #08090d;
+          --bg2:     #10121a;
+          --bg3:     #161923;
+          --text:    #eef0f6;
+          --muted:   rgba(238,240,246,0.55);
+          --yellow:  #ffc107;
+          --yellow2: #ffd54f;
+          --green:   #37d67a;
+          --red:     #ff5c5c;
+          --blue:    #64a8ff;
+          --purple:  #9b7cff;
+          --border:  rgba(255,255,255,0.08);
+          --shadow:  0 12px 36px rgba(0,0,0,0.55);
+          --radius:  18px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+          height: 100%;
+          font-family: -apple-system, 'Inter', system-ui, sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          overflow-x: hidden;
+        }
+
+        body {
+          padding:
+            calc(env(safe-area-inset-top,0px) + 16px)
+            0
+            calc(env(safe-area-inset-bottom,0px) + 24px);
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        button { cursor: pointer; -webkit-tap-highlight-color: transparent; outline: none; border: none; }
+
+        /* ══════════════════════════════════════════
+           TOPBAR
+        ══════════════════════════════════════════ */
+        .c-topbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 18px 14px;
+          gap: 12px;
+        }
+        .c-topbar-left { display: flex; flex-direction: column; gap: 2px; }
+        .c-badge {
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 2px;
+          color: var(--yellow);
+          opacity: .8;
+          text-transform: uppercase;
+        }
+        .c-title {
+          font-size: clamp(22px, 6vw, 28px);
+          font-weight: 900;
+          line-height: 1.1;
+        }
+        .c-close-btn {
+          width: 40px; height: 40px;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.07);
+          border: 1px solid var(--border);
+          color: var(--muted);
+          font-size: 18px;
+          display: flex; align-items: center; justify-content: center;
+          transition: transform .15s ease;
+        }
+        .c-close-btn:active { transform: scale(.9); }
+
+        /* ══════════════════════════════════════════
+           BALANCE HERO
+        ══════════════════════════════════════════ */
+        .c-balance-hero {
+          margin: 0 16px 18px;
+          padding: 20px;
+          border-radius: 22px;
+          background:
+            radial-gradient(circle at top left, rgba(255,193,7,0.12), transparent 55%),
+            linear-gradient(135deg, rgba(255,193,7,0.08), rgba(16,18,26,0.95));
+          border: 1px solid rgba(255,193,7,0.22);
+          box-shadow: 0 18px 48px rgba(0,0,0,.45);
+          position: relative;
+          overflow: hidden;
+        }
+        .c-balance-hero::before {
+          content: "⚡";
+          position: absolute;
+          right: 16px; bottom: 10px;
+          font-size: 72px;
+          opacity: .06;
+          pointer-events: none;
+          line-height: 1;
+        }
+        .c-bal-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .5px; margin-bottom: 4px; }
+        .c-bal-value { font-size: clamp(38px, 10vw, 52px); font-weight: 900; color: var(--yellow); line-height: 1; margin-bottom: 6px; }
+        .c-bal-sub   { font-size: 12px; color: var(--muted); }
+        .c-bal-sub span { color: var(--text); font-weight: 700; }
+
+        /* Stats row */
+        .c-stats-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin: 14px 0 0;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255,255,255,0.07);
+        }
+        .c-stat { text-align: center; }
+        .c-stat-val { font-size: 18px; font-weight: 900; color: var(--text); }
+        .c-stat-lbl { font-size: 10px; color: var(--muted); font-weight: 700; margin-top: 2px; }
+
+        /* Level bar */
+        .c-level-bar-wrap { margin-top: 14px; }
+        .c-level-bar-head {
+          display: flex; justify-content: space-between; align-items: center;
+          font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 6px;
+        }
+        .c-level-bar-head strong { color: var(--yellow); font-size: 13px; }
+        .c-level-bar {
+          height: 7px; border-radius: 999px;
+          background: rgba(255,255,255,0.08);
+          overflow: hidden;
+        }
+        .c-level-fill {
+          height: 100%; border-radius: inherit;
+          background: linear-gradient(90deg, var(--yellow), var(--yellow2));
+          box-shadow: 0 0 12px rgba(255,193,7,.4);
+          transition: width .5s ease;
+          width: 0%;
+        }
+
+        /* ══════════════════════════════════════════
+           SECTION TITLE
+        ══════════════════════════════════════════ */
+        .c-section {
+          padding: 0 18px;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .c-section-title {
+          font-size: 13px; font-weight: 800; color: var(--text);
+        }
+        .c-section-hint { font-size: 11px; color: var(--muted); }
+
+        /* ══════════════════════════════════════════
+           GAME CARDS GRID
+        ══════════════════════════════════════════ */
+        .c-game-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+          padding: 0 16px;
+          margin-bottom: 20px;
+        }
+
+        .c-game-card {
+          position: relative;
+          overflow: hidden;
+          border-radius: 20px;
+          border: 1px solid var(--border);
+          background: var(--bg2);
+          padding: 18px 16px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          transition: transform .18s ease, box-shadow .18s ease;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .c-game-card:active { transform: scale(.96); }
+
+        /* Glow por tipo */
+        .c-game-card::before {
+          content: "";
+          position: absolute;
+          top: -24px; right: -24px;
+          width: 90px; height: 90px;
+          border-radius: 50%;
+          opacity: .20;
+          pointer-events: none;
+        }
+        .card-tap    { border-color: rgba(255,193,7,0.25); }
+        .card-tap::before    { background: radial-gradient(var(--yellow), transparent 70%); }
+        .card-ad     { border-color: rgba(100,168,255,0.25); }
+        .card-ad::before     { background: radial-gradient(var(--blue), transparent 70%); }
+        .card-boost  { border-color: rgba(155,124,255,0.25); }
+        .card-boost::before  { background: radial-gradient(var(--purple), transparent 70%); }
+        .card-daily  { border-color: rgba(55,214,122,0.25); }
+        .card-daily::before  { background: radial-gradient(var(--green), transparent 70%); }
+
+        .cgc-emoji  { font-size: 28px; margin-bottom: 6px; }
+        .cgc-name   { font-size: 14px; font-weight: 800; color: var(--text); }
+        .cgc-reward {
+          font-size: 12px; font-weight: 700;
+          margin-top: 1px;
+        }
+        .card-tap   .cgc-reward { color: var(--yellow); }
+        .card-ad    .cgc-reward { color: var(--blue); }
+        .card-boost .cgc-reward { color: var(--purple); }
+        .card-daily .cgc-reward { color: var(--green); }
+
+        .cgc-status {
+          font-size: 10px; color: var(--muted); font-weight: 600;
+          min-height: 14px; margin-top: 2px;
+        }
+        .cgc-status.ready   { color: var(--green); }
+        .cgc-status.cooldown{ color: var(--muted); }
+        .cgc-status.active  { color: var(--yellow); }
+
+        .cgc-btn {
+          margin-top: 12px;
+          width: 100%;
+          padding: 9px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: .3px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.10);
+          color: var(--text);
+          transition: background .15s ease, transform .1s ease;
+        }
+        .cgc-btn:active { transform: scale(.96); }
+        .cgc-btn.btn-yellow  { background: rgba(255,193,7,0.18);  border-color: rgba(255,193,7,0.35);  color: var(--yellow); }
+        .cgc-btn.btn-blue    { background: rgba(100,168,255,0.18);border-color: rgba(100,168,255,0.35);color: var(--blue); }
+        .cgc-btn.btn-purple  { background: rgba(155,124,255,0.18);border-color: rgba(155,124,255,0.35);color: var(--purple); }
+        .cgc-btn.btn-green   { background: rgba(55,214,122,0.18); border-color: rgba(55,214,122,0.35); color: var(--green); }
+        .cgc-btn:disabled    { opacity: .45; pointer-events: none; }
+
+        /* ══════════════════════════════════════════
+           BOOST CARD — estado ativo
+        ══════════════════════════════════════════ */
+        .card-boost.boost-active {
+          border-color: rgba(155,124,255,0.55);
+          background: linear-gradient(145deg, rgba(155,124,255,0.10), var(--bg2));
+        }
+        .card-boost.boost-active .cgc-btn {
+          background: rgba(155,124,255,0.28);
+          border-color: rgba(155,124,255,0.55);
+          color: var(--purple);
+        }
+
+        /* ══════════════════════════════════════════
+           MINING INFO CARD
+        ══════════════════════════════════════════ */
+        .c-mining-card {
+          margin: 0 16px 20px;
+          padding: 16px 18px;
+          border-radius: 18px;
+          background: linear-gradient(135deg, rgba(55,214,122,0.07), rgba(16,18,26,0.95));
+          border: 1px solid rgba(55,214,122,0.18);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+        }
+        .cmc-left { display: flex; flex-direction: column; gap: 4px; }
+        .cmc-label{ font-size: 11px; font-weight: 700; color: var(--muted); }
+        .cmc-val  { font-size: 18px; font-weight: 900; color: var(--green); }
+        .cmc-hint { font-size: 11px; color: var(--muted); max-width: 180px; line-height: 1.4; }
+        .cmc-icon { font-size: 36px; }
+
+        /* ══════════════════════════════════════════
+           HISTÓRICO
+        ══════════════════════════════════════════ */
+        .c-history-wrap {
+          margin: 0 16px;
+          background: var(--bg2);
+          border: 1px solid var(--border);
+          border-radius: 18px;
+          overflow: hidden;
+        }
+        .c-history-head {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 16px;
+          border-bottom: 1px solid var(--border);
+          font-size: 13px; font-weight: 800;
+        }
+        .c-clear-btn {
+          font-size: 11px; font-weight: 700; color: var(--muted);
+          background: none; border: none; padding: 0;
+        }
+        .c-history-list {
+          max-height: 220px;
+          overflow-y: auto;
+          padding: 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .c-hist-item {
+          font-size: 12px; color: var(--muted);
+          padding: 7px 10px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.03);
+          line-height: 1.4;
+        }
+        .c-hist-item.positive { color: var(--green); }
+        .c-hist-item.negative { color: var(--red); }
+
+        /* ══════════════════════════════════════════
+           TAP GAME OVERLAY
+        ══════════════════════════════════════════ */
+        .tap-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.92);
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 24px 20px;
+        }
+        .tap-overlay.active { display: flex; }
+
+        .tap-game-card {
+          width: 100%;
+          max-width: 360px;
+          background:
+            radial-gradient(circle at top, rgba(255,193,7,0.10), transparent 40%),
+            linear-gradient(180deg, #111318, #0a0b0f);
+          border: 1px solid rgba(255,193,7,0.22);
+          border-radius: 28px;
+          padding: 24px 20px 22px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0;
+        }
+
+        .tap-game-head {
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 18px;
+        }
+        .tap-game-title  { font-size: 22px; font-weight: 900; color: var(--yellow); }
+        .tap-game-sub    { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .tap-game-close  {
+          background: rgba(255,255,255,0.07);
+          border: 1px solid var(--border);
+          color: var(--muted);
+          border-radius: 12px;
+          padding: 8px 12px;
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        /* Progress */
+        .tap-prog-wrap { width: 100%; margin-bottom: 14px; }
+        .tap-prog-head {
+          display: flex; justify-content: space-between;
+          font-size: 12px; color: var(--muted);
+          margin-bottom: 7px;
+        }
+        .tap-prog-head strong { color: var(--yellow); }
+        .tap-prog-bar {
+          height: 9px; border-radius: 999px;
+          background: rgba(255,255,255,0.07);
+          overflow: hidden;
+        }
+        .tap-prog-fill {
+          height: 100%; border-radius: inherit;
+          background: linear-gradient(90deg, var(--yellow), var(--yellow2));
+          box-shadow: 0 0 14px rgba(255,193,7,.4);
+          transition: width .12s ease;
+          width: 0%;
+        }
+
+        /* Counter */
+        .tap-counter-val {
+          font-size: 52px; font-weight: 900;
+          color: var(--text); line-height: 1;
+          margin-bottom: 4px;
+        }
+        .tap-combo-badge {
+          font-size: 13px; font-weight: 800;
+          color: var(--yellow); margin-bottom: 18px;
+          min-height: 20px;
+        }
+
+        /* Button */
+        .tap-btn-wrap {
+          position: relative;
+          width: 170px; height: 170px;
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: 16px;
+        }
+        .tap-ring {
+          position: absolute; border-radius: 50%;
+          border: 1px solid rgba(255,193,7,0.18);
+          pointer-events: none;
+        }
+        .tap-ring-1 { inset: -12px; animation: tpulse 2.4s infinite; }
+        .tap-ring-2 { inset: -24px; animation: tpulse 2.4s infinite .4s; }
+        .tap-ring-3 { inset: -36px; animation: tpulse 2.4s infinite .8s; }
+        @keyframes tpulse {
+          0%   { transform: scale(.92); opacity: 0; }
+          35%  { opacity: .28; }
+          100% { transform: scale(1.08); opacity: 0; }
+        }
+        .tap-main-btn {
+          width: 160px; height: 160px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, var(--yellow), var(--yellow2));
+          color: #000;
+          font-size: 22px; font-weight: 900;
+          box-shadow: 0 18px 42px rgba(255,193,7,.30), inset 0 -8px 18px rgba(0,0,0,.15);
+          transition: transform .08s ease, box-shadow .1s ease;
+          position: relative; z-index: 2;
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          gap: 2px;
+          border: none;
+        }
+        .tap-main-btn:active,
+        .tap-main-btn.tapping {
+          transform: scale(.95);
+          box-shadow: 0 8px 24px rgba(255,193,7,.22), inset 0 -4px 12px rgba(0,0,0,.18);
+        }
+        .tap-main-btn-sub { font-size: 11px; font-weight: 700; opacity: .7; }
+
+        /* Floaters */
+        .tap-float-zone {
+          position: absolute; inset: 0;
+          pointer-events: none; overflow: hidden; z-index: 3;
+        }
+        .tap-floater {
+          position: absolute;
+          font-size: 20px; font-weight: 900;
+          color: var(--yellow2);
+          text-shadow: 0 0 12px rgba(255,193,7,.6);
+          pointer-events: none;
+          animation: floatup 700ms ease forwards;
+        }
+        @keyframes floatup {
+          0%   { opacity: 1; transform: translateY(0) scale(1.1); }
+          100% { opacity: 0; transform: translateY(-60px) scale(.9); }
+        }
+
+        .tap-milestone { font-size: 12px; color: var(--muted); min-height: 16px; text-align: center; }
+
+        /* ══════════════════════════════════════════
+           TOAST
+        ══════════════════════════════════════════ */
+        .c-toast {
+          position: fixed;
+          bottom: calc(env(safe-area-inset-bottom,0px) + 24px);
+          left: 50%; transform: translateX(-50%) translateY(20px);
+          background: rgba(20,22,32,0.95);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 999px;
+          padding: 10px 22px;
+          font-size: 13px; font-weight: 700;
+          color: var(--text);
+          box-shadow: 0 8px 28px rgba(0,0,0,.5);
+          backdrop-filter: blur(14px);
+          z-index: 99999;
+          opacity: 0;
+          transition: opacity .25s ease, transform .25s ease;
+          white-space: nowrap;
+        }
+        .c-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="c-topbar">
+    <div class="c-topbar-left">
+        <span class="c-badge">Wasp Points</span>
+        <span class="c-title">Central WP ⚡</span>
+    </div>
+    <button class="c-close-btn" onclick="closeCentral()">✕</button>
+</div>
+
+<!-- BALANCE HERO -->
+<div class="c-balance-hero">
+    <div class="c-bal-label">SEU SALDO</div>
+    <div class="c-bal-value" id="balValue">0 WP</div>
+    <div class="c-bal-sub">Total ganho: <span id="balTotal">0 WP</span></div>
+
+    <div class="c-stats-row">
+        <div class="c-stat">
+            <div class="c-stat-val" id="statLevel">1</div>
+            <div class="c-stat-lbl">Nível</div>
+        </div>
+        <div class="c-stat">
+            <div class="c-stat-val" id="statStreak">0</div>
+            <div class="c-stat-lbl">Streak dias</div>
+        </div>
+        <div class="c-stat">
+            <div class="c-stat-val" id="statBoost">OFF</div>
+            <div class="c-stat-lbl">Boost</div>
+        </div>
+    </div>
+
+    <div class="c-level-bar-wrap">
+        <div class="c-level-bar-head">
+            <span id="levelHint">Faltam 50 WP</span>
+            <strong id="levelPct">0%</strong>
+        </div>
+        <div class="c-level-bar">
+            <div class="c-level-fill" id="levelFill"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MINING INFO -->
+<div class="c-mining-card">
+    <div class="cmc-left">
+        <div class="cmc-label">MINERAÇÃO NACKL</div>
+        <div class="cmc-val" id="miningStatus">WP necessário para minerar</div>
+        <div class="cmc-hint">Use WP para ativar o Boost 2x e turbinar sua mineração de NACKL.</div>
+    </div>
+    <div class="cmc-icon">🐝</div>
+</div>
+
+<!-- GAME CARDS -->
+<div class="c-section">
+    <span class="c-section-title">🎮 Ganhar WP</span>
+    <span class="c-section-hint">Toque para jogar</span>
+</div>
+
+<div class="c-game-grid">
+
+    <!-- TAP GAME -->
+    <div class="c-game-card card-tap" id="cardTap" onclick="openTap()">
+        <div class="cgc-emoji">👆</div>
+        <div class="cgc-name">Tap Game</div>
+        <div class="cgc-reward">+10 WP</div>
+        <div class="cgc-status" id="tapStatus">Verificando...</div>
+        <button class="cgc-btn btn-yellow" id="tapBtn">Jogar agora</button>
+    </div>
+
+    <!-- ANÚNCIO -->
+    <div class="c-game-card card-ad" id="cardAd" onclick="doWatchAd()">
+        <div class="cgc-emoji">📺</div>
+        <div class="cgc-name">Ver Anúncio</div>
+        <div class="cgc-reward">+5 WP</div>
+        <div class="cgc-status" id="adStatus">Verificando...</div>
+        <button class="cgc-btn btn-blue" id="adBtn">Assistir</button>
+    </div>
+
+    <!-- BOOST -->
+    <div class="c-game-card card-boost" id="cardBoost" onclick="doBoost()">
+        <div class="cgc-emoji">🚀</div>
+        <div class="cgc-name">Boost 2x</div>
+        <div class="cgc-reward" id="boostRewardText">−20 WP</div>
+        <div class="cgc-status" id="boostStatus">Turbina mineração</div>
+        <button class="cgc-btn btn-purple" id="boostBtn">Ativar Boost</button>
+    </div>
+
+    <!-- LOGIN DIÁRIO -->
+    <div class="c-game-card card-daily" id="cardDaily">
+        <div class="cgc-emoji">📅</div>
+        <div class="cgc-name">Login Diário</div>
+        <div class="cgc-reward">+5 a +25 WP</div>
+        <div class="cgc-status" id="dailyStatus">Verificando...</div>
+        <button class="cgc-btn btn-green" id="dailyBtn" onclick="doDaily()">Coletar</button>
+    </div>
+
+</div>
+
+<!-- HISTÓRICO -->
+<div class="c-section">
+    <span class="c-section-title">📋 Histórico</span>
+    <button class="c-clear-btn" onclick="doClear()">Limpar</button>
+</div>
+
+<div class="c-history-wrap">
+    <div class="c-history-list" id="historyList"></div>
+</div>
+
+<!-- TAP GAME OVERLAY -->
+<div class="tap-overlay" id="tapOverlay">
+    <div class="tap-game-card">
+        <div class="tap-game-head">
+            <div>
+                <div class="tap-game-title">Tap Game ⚡</div>
+                <div class="tap-game-sub">Toque 100x para ganhar 10 WP</div>
+            </div>
+            <button class="tap-game-close" onclick="closeTap()">✕ Fechar</button>
+        </div>
+
+        <div class="tap-prog-wrap">
+            <div class="tap-prog-head">
+                <span id="tapCountText">0 / 100</span>
+                <strong id="tapPctText">0%</strong>
+            </div>
+            <div class="tap-prog-bar">
+                <div class="tap-prog-fill" id="tapProgFill"></div>
+            </div>
+        </div>
+
+        <div class="tap-counter-val" id="tapRemain">100</div>
+        <div class="tap-combo-badge" id="tapComboText"></div>
+
+        <div class="tap-btn-wrap">
+            <div class="tap-float-zone" id="tapFloatZone"></div>
+            <div class="tap-ring tap-ring-1"></div>
+            <div class="tap-ring tap-ring-2"></div>
+            <div class="tap-ring tap-ring-3"></div>
+            <button class="tap-main-btn" id="tapMainBtn" onclick="doTap()">
+                <span>TAP</span>
+                <span class="tap-main-btn-sub">100 vezes</span>
+            </button>
+        </div>
+
+        <div class="tap-milestone" id="tapMilestone">Comece tocando para carregar energia.</div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="c-toast" id="cToast"></div>
+
+<script>
+    /* ══════════════════════════════════════════
+       STORAGE KEYS (mesmos do tap.js para compartilhar localStorage)
+    ══════════════════════════════════════════ */
+    const K = {
+      wp:        "wasp_wp",
+      total:     "wasp_wp_total_earned",
+      history:   "wasp_wp_history_v1",
+      daily:     "wasp_daily_login",
+      streak:    "wasp_daily_streak",
+      tapLast:   "wasp_tap_last_play",
+      adLast:    "wasp_wp_ad_last_view",
+      boostEnd:  "wasp_boost_end",
+    };
+
+    /* ══════════════════════════════════════════
+       CONFIG
+    ══════════════════════════════════════════ */
+    const CFG = {
+      tapMax:        100,
+      tapReward:     10,
+      adReward:      5,
+      tapCooldown:   60 * 60 * 1000,   // 1h
+      adCooldown:    15 * 60 * 1000,   // 15min
+      boostCost:     20,
+      boostDuration: 15 * 60 * 1000,   // 15min
+    };
+
+    /* ══════════════════════════════════════════
+       STORAGE HELPERS
+    ══════════════════════════════════════════ */
+    const getN  = (k, d=0) => parseInt(localStorage.getItem(k) || d, 10);
+    const setN  = (k, v)   => localStorage.setItem(k, String(v));
+    const getJ  = (k, d)   => { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(d)); } catch { return d; } };
+    const setJ  = (k, v)   => localStorage.setItem(k, JSON.stringify(v));
+
+    /* ══════════════════════════════════════════
+       WP CORE
+    ══════════════════════════════════════════ */
+    const getWP    = ()  => getN(K.wp, 0);
+    const getTotal = ()  => getN(K.total, 0);
+
+    function addWP(amount, label) {
+      const cur = getWP();
+      setN(K.wp, Math.max(0, cur + amount));
+      setN(K.total, getTotal() + Math.max(0, amount));
+      const hist = getJ(K.history, []);
+      const sign = amount >= 0 ? "+" : "";
+      hist.unshift(`[${new Date().toLocaleString("pt-BR")}] ${sign}${amount} WP • ${label}`);
+      setJ(K.history, hist.slice(0, 100));
+      // Acumula WP ganhos hoje numa chave separada
+      if (amount > 0) {
+        const todayKey = "wasp_wp_today_" + new Date().toDateString();
+        const prev = parseInt(localStorage.getItem(todayKey) || "0", 10);
+        localStorage.setItem(todayKey, prev + amount);
+      }
+      renderAll();
+      toast(`${sign}${amount} WP — ${label}`);
+    }
+
+    /* ══════════════════════════════════════════
+       LEVEL
+    ══════════════════════════════════════════ */
+    const LEVELS = [0,50,120,220,360,550,800,1100,1500,2000,2600,3300];
+
+    function getLevelData() {
+      const total = getTotal();
+      let lvl = 1, base = 0, next = LEVELS[1] || 50;
+      for (let i = 0; i < LEVELS.length; i++) {
+        if (total >= LEVELS[i]) { lvl = i+1; base = LEVELS[i]; next = LEVELS[i+1] || (LEVELS[i]+1000); }
+      }
+      const range = Math.max(1, next - base);
+      const pct   = Math.min(100, Math.floor(((total - base) / range) * 100));
+      return { lvl, total, pct, remaining: Math.max(0, next - total) };
+    }
+
+    /* ══════════════════════════════════════════
+       COOLDOWN HELPERS
+    ══════════════════════════════════════════ */
+    function remMs(key, cd) { return Math.max(0, cd - (Date.now() - getN(key, 0))); }
+
+    function fmtTime(ms) {
+      const s = Math.ceil(ms / 1000);
+      const h = Math.floor(s / 3600);
+      const m = Math.ceil((s % 3600) / 60);
+      return h > 0 ? `${h}h ${m}min` : `${Math.max(1,m)} min`;
+    }
+
+    function fmtSecs(ms) {
+      const s = Math.max(0, Math.ceil(ms / 1000));
+      return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+    }
+
+    /* ══════════════════════════════════════════
+       RENDER ALL
+    ══════════════════════════════════════════ */
+    function renderAll() {
+      const wp    = getWP();
+      const total = getTotal();
+      const ld    = getLevelData();
+      const streak= getN(K.streak, 0);
+
+      // Balance hero
+      el("balValue").textContent = wp + " WP";
+      el("balTotal").textContent = total + " WP";
+      el("statLevel").textContent= ld.lvl;
+      el("statStreak").textContent = streak;
+      el("levelFill").style.width  = ld.pct + "%";
+      el("levelPct").textContent   = ld.pct + "%";
+      el("levelHint").textContent  = `Faltam ${ld.remaining} WP`;
+
+      // Boost status in hero
+      const boostOn = Date.now() < getN(K.boostEnd, 0);
+      el("statBoost").textContent = boostOn ? "ATIVO ⚡" : "OFF";
+      el("statBoost").style.color = boostOn ? "var(--yellow)" : "var(--muted)";
+
+      // Mining status
+      el("miningStatus").textContent = boostOn
+        ? "Boost ativo — mineração 2x ⚡"
+        : wp >= CFG.boostCost
+          ? "Você tem WP para ativar o Boost"
+          : `Ganhe mais ${CFG.boostCost - wp} WP para o Boost`;
+
+      // TAP card
+      const tapRem = remMs(K.tapLast, CFG.tapCooldown);
+      const tapReady = tapRem <= 0;
+      el("tapStatus").textContent = tapReady ? "Disponível agora ✅" : `Em ${fmtTime(tapRem)}`;
+      el("tapStatus").className   = "cgc-status " + (tapReady ? "ready" : "cooldown");
+      el("tapBtn").disabled       = !tapReady;
+      el("tapBtn").textContent    = tapReady ? "Jogar agora" : "Em cooldown";
+
+      // AD card
+      const adRem = remMs(K.adLast, CFG.adCooldown);
+      const adReady = adRem <= 0;
+      el("adStatus").textContent = adReady ? "Disponível agora ✅" : `Em ${fmtTime(adRem)}`;
+      el("adStatus").className   = "cgc-status " + (adReady ? "ready" : "cooldown");
+      el("adBtn").disabled       = !adReady;
+      el("adBtn").textContent    = adReady ? "Assistir" : "Em cooldown";
+
+      // BOOST card
+      const boostRem = Math.max(0, getN(K.boostEnd,0) - Date.now());
+      el("cardBoost").classList.toggle("boost-active", boostOn);
+      if (boostOn) {
+        el("boostStatus").textContent   = "Ativo: " + fmtSecs(boostRem);
+        el("boostStatus").className     = "cgc-status active";
+        el("boostBtn").textContent      = "Ativo ⚡ " + fmtSecs(boostRem);
+        el("boostRewardText").textContent = "ATIVO";
+      } else {
+        el("boostStatus").textContent   = wp >= CFG.boostCost ? "Você tem WP suficiente" : `Precisa de ${CFG.boostCost} WP`;
+        el("boostStatus").className     = "cgc-status " + (wp >= CFG.boostCost ? "ready" : "cooldown");
+        el("boostBtn").textContent      = "Ativar Boost";
+        el("boostRewardText").textContent = "−20 WP";
+      }
+      el("boostBtn").disabled = boostOn;
+
+      // DAILY card
+      const today   = new Date().toDateString();
+      const lastDay = localStorage.getItem(K.daily);
+      const collected = lastDay === today;
+      el("dailyStatus").textContent = collected ? `Streak: ${streak} dia(s) 🔥` : "Disponível agora ✅";
+      el("dailyStatus").className   = "cgc-status " + (collected ? "active" : "ready");
+      el("dailyBtn").textContent    = collected ? "Coletado ✅" : "Coletar";
+      el("dailyBtn").disabled       = collected;
+      if (collected) el("dailyBtn").className = "cgc-btn btn-green";
+      else           el("dailyBtn").className = "cgc-btn btn-green";
+
+      // History
+      const hist  = getJ(K.history, []);
+      const hList = el("historyList");
+      hList.innerHTML = "";
+      if (!hist.length) {
+        const d = document.createElement("div");
+        d.className   = "c-hist-item";
+        d.textContent = "Nenhum ganho de WP ainda.";
+        hList.appendChild(d);
+      } else {
+        hist.forEach(item => {
+          const d = document.createElement("div");
+          d.className   = "c-hist-item " + (item.includes("+") ? "positive" : item.includes("-") ? "negative" : "");
+          d.textContent = item;
+          hList.appendChild(d);
+        });
+      }
+
+      // Notifica app principal se disponível
+      try {
+        if (window.opener && window.opener.renderWpCentral) window.opener.renderWpCentral();
+        if (window.parent && window.parent !== window && window.parent.renderWpCentral) window.parent.renderWpCentral();
+      } catch(_) {}
+    }
+
+    /* ══════════════════════════════════════════
+       DAILY LOGIN
+    ══════════════════════════════════════════ */
+    function checkDaily() {
+      const today = new Date().toDateString();
+      const last  = localStorage.getItem(K.daily);
+      if (last === today) return;
+
+      let streak = getN(K.streak, 0);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      streak = (last === yesterday.toDateString()) ? streak + 1 : 1;
+
+      setN(K.streak, streak);
+      localStorage.setItem(K.daily, today);
+      const reward = Math.min(25, 5 + (streak - 1) * 2);
+      addWP(reward, `Login diário • streak ${streak}`);
+    }
+
+    function doDaily() {
+      const today = new Date().toDateString();
+      if (localStorage.getItem(K.daily) === today) { toast("Já coletado hoje!"); return; }
+      let streak = getN(K.streak, 0);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const last = localStorage.getItem(K.daily);
+      streak = (last === yesterday.toDateString()) ? streak + 1 : 1;
+      setN(K.streak, streak);
+      localStorage.setItem(K.daily, today);
+      const reward = Math.min(25, 5 + (streak - 1) * 2);
+      addWP(reward, `Login diário • streak ${streak}`);
+    }
+
+    /* ══════════════════════════════════════════
+       BOOST
+    ══════════════════════════════════════════ */
+    function doBoost() {
+      if (Date.now() < getN(K.boostEnd, 0)) { toast("Boost já está ativo!"); return; }
+      const wp = getWP();
+      if (wp < CFG.boostCost) { toast(`Precisa de ${CFG.boostCost} WP`); return; }
+      setN(K.wp, wp - CFG.boostCost);
+      setN(K.boostEnd, Date.now() + CFG.boostDuration);
+      const hist = getJ(K.history, []);
+      hist.unshift(`[${new Date().toLocaleString("pt-BR")}] -${CFG.boostCost} WP • Boost 2x ativado`);
+      setJ(K.history, hist.slice(0,100));
+      renderAll();
+      toast("Boost 2x ativado por 15 min! 🚀");
+    }
+
+    /* ══════════════════════════════════════════
+       AD
+    ══════════════════════════════════════════ */
+    function doWatchAd() {
+      const rem = remMs(K.adLast, CFG.adCooldown);
+      if (rem > 0) { toast(`Anúncio disponível em ${fmtTime(rem)}`); return; }
+
+      // Tenta chamar bridge Android
+      if (window.AndroidBee && typeof window.AndroidBee.openWpAd === "function") {
+        el("adBtn").disabled     = true;
+        el("adBtn").textContent  = "Carregando...";
+        window.AndroidBee.openWpAd();
+        return;
+      }
+
+      // Simulação para teste (remover em produção)
+      el("adBtn").disabled    = true;
+      el("adBtn").textContent = "Simulando...";
+      setTimeout(() => {
+        setN(K.adLast, Date.now());
+        addWP(CFG.adReward, "Anúncio assistido");
+      }, 1500);
+    }
+
+    // Chamado pelo Android quando anúncio completo
+    window.onWpAdRewarded = function() {
+      setN(K.adLast, Date.now());
+      el("adBtn").disabled    = true;
+      el("adBtn").textContent = "Em cooldown";
+      addWP(CFG.adReward, "Anúncio assistido");
+    };
+    window.onWpAdClosed = function() {
+      el("adBtn").disabled    = false;
+      el("adBtn").textContent = "Assistir";
+      renderAll();
+      toast("Anúncio fechado sem recompensa.");
+    };
+    // Anúncio ainda carregando — mostra feedback visual
+    window.onWpAdLoading = function() {
+      el("adBtn").disabled    = true;
+      el("adBtn").textContent = "Carregando...";
+    };
+    // Anúncio não disponível (falhou ou timeout)
+    window.onWpAdUnavailable = function() {
+      el("adBtn").disabled    = false;
+      el("adBtn").textContent = "Assistir";
+      toast("Anúncio indisponível. Tente novamente.");
+      renderAll();
+    };
+
+    /* ══════════════════════════════════════════
+       CLEAR HISTORY
+    ══════════════════════════════════════════ */
+    function doClear() {
+      localStorage.removeItem(K.history);
+      renderAll();
+      toast("Histórico limpo.");
+    }
+
+    /* ══════════════════════════════════════════
+       TAP GAME
+    ══════════════════════════════════════════ */
+    let tapCount = 0, tapCombo = 1, lastTapTs = 0;
+
+    function openTap() {
+      const rem = remMs(K.tapLast, CFG.tapCooldown);
+      if (rem > 0) { toast(`Tap disponível em ${fmtTime(rem)}`); return; }
+      tapCount = 0; tapCombo = 1; lastTapTs = 0;
+      updateTapUI();
+      el("tapOverlay").classList.add("active");
+    }
+
+    function closeTap() {
+      el("tapOverlay").classList.remove("active");
+    }
+
+    function doTap() {
+      const now = Date.now();
+      if (now - lastTapTs < 900 && lastTapTs > 0) tapCombo = Math.min(9, tapCombo + 1);
+      else tapCombo = 1;
+      lastTapTs = now;
+      tapCount++;
+
+      // Animação botão
+      const btn = el("tapMainBtn");
+      btn.classList.add("tapping");
+      setTimeout(() => btn.classList.remove("tapping"), 90);
+
+      // Float
+      spawnFloat("+1");
+      if (tapCount === 25 || tapCount === 50 || tapCount === 75) spawnFloat("⚡");
+
+      // Vibrar
+      if (navigator.vibrate) navigator.vibrate(8);
+
+      updateTapUI();
+
+      if (tapCount >= CFG.tapMax) {
+        setTimeout(() => {
+          closeTap();
+          setN(K.tapLast, Date.now());
+          addWP(CFG.tapReward, "Tap Game concluído");
+        }, 200);
+      }
+    }
+
+    function updateTapUI() {
+      const pct = Math.min(100, Math.floor((tapCount / CFG.tapMax) * 100));
+      const rem = Math.max(0, CFG.tapMax - tapCount);
+      el("tapCountText").textContent = `${tapCount} / ${CFG.tapMax}`;
+      el("tapPctText").textContent   = `${pct}%`;
+      el("tapProgFill").style.width  = `${pct}%`;
+      el("tapRemain").textContent    = rem;
+      el("tapComboText").textContent = tapCombo > 1 ? `Combo x${tapCombo} 🔥` : "";
+      el("tapMilestone").textContent = getMilestone(tapCount);
+    }
+
+    function getMilestone(c) {
+      if (c >= 100) return "Concluído! Recompensa liberada ✅";
+      if (c >= 75)  return "Incrível! Quase lá...";
+      if (c >= 50)  return "Metade feita! Continue!";
+      if (c >= 25)  return "Boa! Sua energia está subindo.";
+      if (c >= 1)   return "Continue tocando!";
+      return "Comece tocando para carregar energia.";
+    }
+
+    function spawnFloat(text) {
+      const zone = el("tapFloatZone");
+      const d    = document.createElement("div");
+      d.className   = "tap-floater";
+      d.textContent = text;
+      d.style.left  = (30 + Math.random() * 40) + "%";
+      d.style.top   = (40 + Math.random() * 20) + "%";
+      zone.appendChild(d);
+      setTimeout(() => d.remove(), 700);
+    }
+
+    /* ══════════════════════════════════════════
+       TOAST
+    ══════════════════════════════════════════ */
+    let toastTimer = null;
+    function toast(msg) {
+      const t = el("cToast");
+      t.textContent = msg;
+      t.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 2800);
+    }
+
+    /* ══════════════════════════════════════════
+       FECHAR (volta ao app)
+    ══════════════════════════════════════════ */
+    function closeCentral() {
+      try {
+        if (window.Android && typeof window.Android.closeCentral === "function") {
+          window.Android.closeCentral();
+          return;
+        }
+        if (history.length > 1) history.back();
+        else window.close();
+      } catch(_) { history.back(); }
+    }
+
+    /* ══════════════════════════════════════════
+       UTILS
+    ══════════════════════════════════════════ */
+    function el(id) { return document.getElementById(id); }
+
+    /* ══════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════ */
+    document.addEventListener("DOMContentLoaded", () => {
+      checkDaily();
+      renderAll();
+      // Atualiza cooldowns a cada segundo
+      setInterval(() => renderAll(), 1000);
+    });
+</script>
+</body>
+</html>

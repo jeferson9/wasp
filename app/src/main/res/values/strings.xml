@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wasp Browser</string>
+
+    <!-- Menu -->
+    <string name="menu_section_navigation">NAVIGATION</string>
+    <string name="menu_translate">Translate page</string>
+    <string name="menu_translate_sub">Translation directly on the page</string>
+    <string name="menu_favorites">Favorites</string>
+    <string name="menu_favorites_sub">Saved sites</string>
+    <string name="menu_history">History</string>
+    <string name="menu_history_sub">Visited pages</string>
+    <string name="menu_downloads">Downloads</string>
+    <string name="menu_downloads_sub">Downloaded files</string>
+    <string name="menu_section_web3">WEB3</string>
+    <string name="menu_web3">Web3 Hub</string>
+    <string name="menu_web3_sub">DApps and wallets</string>
+    <string name="menu_bee">Bee Engine</string>
+    <string name="menu_bee_sub">Active mining</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_about">About Wasp</string>
+    <string name="menu_reload">Reload</string>
+    <string name="menu_forward">Forward</string>
+    <string name="menu_share">Share</string>
+    <string name="menu_new_tab">New tab</string>
+
+    <!-- Toolbar / Tabs -->
+    <string name="toolbar_new_tab">+ New tab</string>
+    <string name="toast_new_tab">New tab opened</string>
+    <string name="toast_tab_duplicated">Tab duplicated</string>
+    <string name="tab_singular">tab</string>
+    <string name="tab_plural">tabs</string>
+
+    <!-- Favorites -->
+    <string name="toast_added_favorite">Added to favorites</string>
+    <string name="toast_removed_favorite">Removed from favorites</string>
+
+    <!-- Downloads -->
+    <string name="download_started">Download started</string>
+    <string name="download_error">Could not start download</string>
+    <string name="download_image_title">Image</string>
+    <string name="download_image_confirm">Download</string>
+
+    <!-- Errors -->
+    <string name="error_no_app">No app found for this link</string>
+    <string name="error_load_title">Loading error</string>
+    <string name="error_load_body">Wasp could not open this page.</string>
+
+    <!-- Permissions -->
+    <string name="perm_location_title">Location permission</string>
+    <string name="perm_location_body">%s wants to access your location</string>
+    <string name="perm_media_title">Media access</string>
+    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_allow">Allow</string>
+    <string name="perm_camera">camera</string>
+    <string name="perm_microphone">microphone</string>
+
+    <!-- Page translation (WaspTranslator) -->
+    <string name="translate_title">Translate page to</string>
+    <string name="translate_subtitle">Texts replaced directly on the page</string>
+    <string name="translate_search_hint">🔍  Search language...</string>
+    <string name="translate_not_found">No language found</string>
+    <string name="translate_done">Page translated ✓</string>
+    <string name="translate_done_to">Translated to: %s</string>
+    <string name="translate_change">Translate to another language</string>
+    <string name="translate_change_sub">Choose from %d languages</string>
+    <string name="translate_revert">View original</string>
+    <string name="translate_revert_sub">Reload page without translation</string>
+    <string name="translate_loading">⟳ Translating...</string>
+    <string name="translate_error">Error starting translation</string>
+    <string name="translate_none">No page to translate</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_language">Language</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_language">App language</string>
+    <string name="settings_language_system">Follow system</string>
+    <string name="settings_language_changed">Language changed. Restart the app to apply.</string>
+    <string name="settings_languages_available">%d languages available</string>
+    <string name="settings_search_engine">Search engine</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_bee">Bee Engine</string>
+    <string name="settings_about">About Wasp</string>
+    <string name="settings_version">Version</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_image_title">Image</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_confirm">Confirm</string>
+
+    <!-- Bee -->
+    <string name="bee_engine_started">Bee Engine Started</string>
+
+    <string-array name="search_engines">
+        <item>Google</item>
+        <item>Bing</item>
+        <item>DuckDuckGo</item>
+    </string-array>
+</resources>

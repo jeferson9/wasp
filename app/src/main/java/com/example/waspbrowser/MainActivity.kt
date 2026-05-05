@@ -1,0 +1,1156 @@
+package com.example.waspbrowser
+
+import android.app.DownloadManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.os.Environment
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
+import android.webkit.URLUtil
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONArray
+import org.json.JSONObject
+import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoView
+import org.mozilla.geckoview.WebRequestError
+import org.mozilla.geckoview.WebResponse
+
+class MainActivity : AppCompatActivity() {
+
+    // =========================================================
+    // RESET SESSION - only resets gecko, no visibility changes
+    // =========================================================
+
+    private fun resetToMainSession() {
+        val currentPopup = popupSession
+        popupSession = null
+
+        try {
+            if (::geckoSession.isInitialized) {
+                val activeTab = tabs.getOrNull(activeTabIndex)
+                geckoView.setSession(activeTab?.session ?: geckoSession)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try { currentPopup?.close() } catch (_: Exception) {}
+    }
+
+    companion object {
+        private var geckoRuntime: GeckoRuntime? = null
+    }
+
+    // =========================================================
+    // TABS
+    // =========================================================
+
+    data class WaspTab(
+        val session: GeckoSession,
+        var url: String = "",
+        var title: String = "",
+        val id: Int = System.currentTimeMillis().toInt()
+    )
+
+    private val tabs = mutableListOf<WaspTab>()
+    private var activeTabIndex = 0
+
+    private fun getCurrentTab(): WaspTab? = tabs.getOrNull(activeTabIndex)
+
+    private fun newTab(url: String = "") {
+        val session = GeckoSession()
+        attachGeckoDelegates(session)
+        session.open(geckoRuntime!!)
+        val tab = WaspTab(session = session, url = url)
+        tabs.add(tab)
+        activeTabIndex = tabs.size - 1
+        currentUrl = url
+        currentTitle = ""
+        sslErrorActive = false
+        runOnUiThread {
+            geckoView.setSession(session)
+            urlInput.visibility = View.GONE
+            urlDisplay.visibility = View.VISIBLE
+            urlTitle.text = ""
+            urlDomain.text = if (url.isNotBlank()) getCleanDomain(url) else ""
+            updateSecurityIcon(url)
+            updateTabIndicator()
+        }
+        if (url.isNotBlank()) session.loadUri(url)
+    }
+
+    private fun switchToTab(index: Int) {
+        if (index < 0 || index >= tabs.size) return
+        activeTabIndex = index
+        val tab = tabs[index]
+        geckoView.setSession(tab.session)
+        currentUrl = tab.url
+        currentTitle = tab.title
+        sslErrorActive = false
+        runOnUiThread {
+            urlInput.visibility = View.GONE
+            urlDisplay.visibility = View.VISIBLE
+            urlTitle.text = tab.title.ifBlank { "" }
+            urlDomain.text = if (tab.url.isNotBlank()) getCleanDomain(tab.url) else ""
+            updateSecurityIcon(tab.url)
+            updateTabIndicator()
+            try { tab.session.setActive(true) } catch (_: Exception) {}
+        }
+    }
+
+    private fun closeTab(index: Int) {
+        if (tabs.size <= 1) { goHome(); return }
+        tabs[index].session.close()
+        tabs.removeAt(index)
+        val newIndex = if (activeTabIndex >= tabs.size) tabs.size - 1 else activeTabIndex
+        activeTabIndex = newIndex
+        switchToTab(activeTabIndex)
+        updateTabIndicator()
+    }
+
+    private fun updateTabIndicator() {
+        runOnUiThread {
+            val count = tabs.size
+            val pill = topBar.findViewById<android.widget.LinearLayout>(R.id.btnTabsPill)
+            val badge = topBar.findViewById<android.widget.TextView>(R.id.tabsCount)
+            pill?.visibility = if (count > 1) View.VISIBLE else View.GONE
+            badge?.text = count.toString()
+        }
+    }
+
+    private fun showTabSwitcher() {
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+        val dp = resources.displayMetrics.density
+        fun Int.dp() = (this * dp).toInt()
+
+        val root = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundColor(android.graphics.Color.parseColor("#111420"))
+            setPadding(0, 0, 0, 32.dp())
+        }
+
+        // Handle
+        val handleLp = android.widget.LinearLayout.LayoutParams(36.dp(), 4.dp())
+        handleLp.gravity = android.view.Gravity.CENTER_HORIZONTAL
+        handleLp.topMargin = 12.dp()
+        handleLp.bottomMargin = 8.dp()
+        root.addView(android.view.View(this).apply {
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = 4.dp().toFloat()
+                setColor(android.graphics.Color.parseColor("#252A3D"))
+            }
+        }, handleLp)
+
+        // Header
+        val titleRow = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(16.dp(), 8.dp(), 16.dp(), 8.dp())
+        }
+        titleRow.addView(android.widget.TextView(this).apply {
+            text = "${tabs.size} ${if (tabs.size == 1) "aba" else "abas"}"
+            textSize = 16f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(android.graphics.Color.parseColor("#C8D0E0"))
+        }, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+
+        titleRow.addView(android.widget.TextView(this).apply {
+            text = "+ Nova aba"
+            textSize = 13f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(android.graphics.Color.parseColor("#FFD400"))
+            setPadding(12.dp(), 8.dp(), 12.dp(), 8.dp())
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = 8.dp().toFloat()
+                setColor(android.graphics.Color.parseColor("#1A120A"))
+                setStroke(1, android.graphics.Color.parseColor("#3D2F00"))
+            }
+            setOnClickListener {
+                dialog.dismiss()
+                newTab("https://www.google.com")
+                webAppView.visibility = View.GONE
+                geckoView.visibility = View.VISIBLE
+                topBar.visibility = View.VISIBLE
+                updateTopBarForHome(false)
+            }
+        })
+        root.addView(titleRow)
+        root.addView(android.view.View(this).apply {
+            setBackgroundColor(android.graphics.Color.parseColor("#1A1E2E"))
+        }, android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 1))
+
+        // Tab rows
+        tabs.forEachIndexed { index, tab ->
+            val isActive = index == activeTabIndex
+            val row = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(12.dp(), 10.dp(), 12.dp(), 10.dp())
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    cornerRadius = 10.dp().toFloat()
+                    setColor(if (isActive) android.graphics.Color.parseColor("#1A1E2E") else android.graphics.Color.TRANSPARENT)
+                }
+                val lp = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT)
+                lp.leftMargin = 8.dp(); lp.rightMargin = 8.dp(); lp.topMargin = 2.dp()
+                layoutParams = lp
+                isClickable = true; isFocusable = true
+                setOnClickListener {
+                    dialog.dismiss()
+                    switchToTab(index)
+                    webAppView.visibility = View.GONE
+                    geckoView.visibility = View.VISIBLE
+                    topBar.visibility = View.VISIBLE
+                    updateTopBarForHome(false)
+                }
+            }
+
+            row.addView(android.view.View(this).apply {
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(if (isActive) android.graphics.Color.parseColor("#FFD400") else android.graphics.Color.TRANSPARENT)
+                }
+            }, android.widget.LinearLayout.LayoutParams(6.dp(), 6.dp()).also { it.rightMargin = 10.dp() })
+
+            val info = android.widget.LinearLayout(this).apply { orientation = android.widget.LinearLayout.VERTICAL }
+            info.addView(android.widget.TextView(this).apply {
+                text = tab.title.ifBlank { if (tab.url.isNotBlank()) getCleanDomain(tab.url) else "Nova aba" }
+                textSize = 13f; setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(android.graphics.Color.parseColor("#C8D0E0"))
+                maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            info.addView(android.widget.TextView(this).apply {
+                text = if (tab.url.isNotBlank()) getCleanDomain(tab.url) else "—"
+                textSize = 11f; setTextColor(android.graphics.Color.parseColor("#3D4560"))
+                maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
+                setPadding(0, 2.dp(), 0, 0)
+            })
+            row.addView(info, android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+
+            row.addView(android.widget.TextView(this).apply {
+                text = "✕"; textSize = 14f
+                setTextColor(android.graphics.Color.parseColor("#3D4560"))
+                gravity = android.view.Gravity.CENTER
+                setPadding(10.dp(), 6.dp(), 4.dp(), 6.dp())
+                setOnClickListener { dialog.dismiss(); closeTab(index) }
+            })
+            root.addView(row)
+        }
+
+        dialog.setContentView(android.widget.ScrollView(this).apply { addView(root) })
+        dialog.show()
+    }
+
+    // =========================================================
+    // VIEWS
+    // =========================================================
+
+    private lateinit var topBar: View
+    private lateinit var webAppView: WebView
+    private lateinit var beeMiningIndicator: MiningIndicator
+    private lateinit var geckoView: GeckoView
+    private lateinit var btnBack: ImageButton
+    private lateinit var btnHome: ImageButton
+    private lateinit var btnMenu: ImageButton
+    private lateinit var urlInput: EditText
+    private lateinit var pageProgress: ProgressBar
+    private lateinit var btnUrl: Button
+    private lateinit var iconSecurity: ImageView
+    private lateinit var iconFavicon: ImageView
+    private lateinit var urlDisplay: View
+    private lateinit var urlTitle: TextView
+    private lateinit var urlDomain: TextView
+
+    private lateinit var geckoSession: GeckoSession
+    private var popupSession: GeckoSession? = null
+    private var canGoBackGecko = false
+    private var canGoForwardGecko = false
+
+    private var currentUrl: String = ""
+    private var currentTitle: String = ""
+    private var sslErrorActive = false
+
+    // =========================================================
+    // LIFECYCLE
+    // =========================================================
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        window.statusBarColor = android.graphics.Color.parseColor("#111420")
+        window.navigationBarColor = android.graphics.Color.parseColor("#0b0f1a")
+
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.insetsController?.setSystemBarsAppearance(
+                0,
+                android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                    window.decorView.systemUiVisibility
+                            and android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                    )
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
+        }
+
+        bindViews()
+        setupWebAppView()
+        setupGecko()
+        setupTopBar()
+        setupUrlInput()
+
+        webAppView.loadUrl("file:///android_asset/index.html")
+        webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
+
+        // Start with toolbar hidden - home has no toolbar
+        topBar.visibility = View.GONE
+
+        // Reseta o estado de mineração ao iniciar o app — a BeeActivity vai notificar
+        // via setMiningStatus() se realmente estiver minerando quando aberta.
+        // Isso evita que um crash anterior deixe o dot verde para sempre.
+        getSharedPreferences("bee_mining", MODE_PRIVATE)
+            .edit().putBoolean("mining_active", false).apply()
+
+        updateMiningIndicator()
+        handleIncomingIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIncomingIntent(intent)
+    }
+
+    fun onMiningStatusChanged(active: Boolean, wallet: String) {
+        if (::beeMiningIndicator.isInitialized) {
+            beeMiningIndicator.isMining = active
+        }
+        // Salva estado para persistir entre Activities
+        getSharedPreferences("bee_mining", MODE_PRIVATE)
+            .edit().putBoolean("mining_active", active).apply()
+    }
+
+    private fun updateMiningIndicator() {
+        try {
+            val prefs = getSharedPreferences("bee_mining", MODE_PRIVATE)
+            val active = prefs.getBoolean("mining_active", false)
+            if (::beeMiningIndicator.isInitialized) {
+                beeMiningIndicator.isMining = active
+            }
+        } catch (e: Exception) {}
+    }
+
+    override fun onResume() {
+        super.onResume()
+        webAppView.onResume()
+        webAppView.resumeTimers()
+        updateMiningIndicator()
+        if (::webAppView.isInitialized && webAppView.visibility == View.VISIBLE &&
+            ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
+            webAppView.evaluateJavascript("setBottomTab('main')", null)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        webAppView.onPause()
+        webAppView.pauseTimers()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try { popupSession?.close() } catch (_: Exception) {}
+        try { geckoSession.close() } catch (_: Exception) {}
+        webAppView.stopLoading()
+        webAppView.destroy()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (geckoView.visibility == View.VISIBLE) {
+            when {
+                popupSession != null -> resetToMainSession()
+                canGoBackGecko -> getActiveSession().goBack()
+                else -> goHome()
+            }
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    // =========================================================
+    // DIALOGS / TOAST
+    // =========================================================
+
+    private fun showWaspToast(message: String) {
+        val layout = layoutInflater.inflate(R.layout.wasp_toast, null)
+        layout.findViewById<TextView>(R.id.txtToast).text = message
+        val toast = Toast(applicationContext)
+        toast.duration = Toast.LENGTH_SHORT
+        toast.view = layout
+        toast.setGravity(android.view.Gravity.BOTTOM, 0, 120)
+        toast.show()
+    }
+
+    private fun showWaspConfirmDialog(
+        title: String,
+        message: String,
+        confirmText: String,
+        onCancel: (() -> Unit)? = null,
+        onConfirm: () -> Unit
+    ) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_wasp_confirm, null)
+        val txtTitle = dialogView.findViewById<TextView>(R.id.txtDialogTitle)
+        val txtMessage = dialogView.findViewById<TextView>(R.id.txtDialogMessage)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btnDialogCancel)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btnDialogConfirm)
+
+        txtTitle.text = title
+        txtMessage.text = message
+        btnConfirm.text = confirmText
+
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(dialogView).create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        btnCancel.background = getDrawable(R.drawable.bg_wasp_button_danger)
+        btnConfirm.background = getDrawable(R.drawable.bg_wasp_button_cancel)
+        btnCancel.backgroundTintList = null
+        btnConfirm.backgroundTintList = null
+
+        btnCancel.setOnClickListener { dialog.dismiss(); onCancel?.invoke() }
+        btnConfirm.setOnClickListener { dialog.dismiss(); onConfirm() }
+        dialog.show()
+    }
+
+    // =========================================================
+    // INTENT HANDLING
+    // =========================================================
+
+    private fun handleIncomingIntent(intent: Intent?) {
+        if (intent == null) return
+
+        val navigateTo = intent.getStringExtra("navigate_to")
+        if (!navigateTo.isNullOrBlank()) {
+            intent.removeExtra("navigate_to")
+            runOnUiThread {
+                when (navigateTo) {
+                    "home"   -> webAppView.evaluateJavascript("resetHome && resetHome()", null)
+                    "market" -> webAppView.evaluateJavascript("openMarketTab && openMarketTab()", null)
+                    "hive"   -> webAppView.evaluateJavascript("""
+                        (function(){
+                            if(typeof resetHome==='function') resetHome();
+                            setTimeout(function(){ if(typeof openHiveTab==='function') openHiveTab(); },80);
+                        })();
+                    """.trimIndent(), null)
+                }
+            }
+            return
+        }
+
+        val url = when (intent.action) {
+            Intent.ACTION_VIEW -> intent.data?.toString()
+            else -> intent.getStringExtra("open_url")
+        } ?: return
+
+        if (url.isBlank()) return
+        intent.data = null
+        intent.removeExtra("open_url")
+
+        runOnUiThread { openSite(url) }
+    }
+
+    private fun getActiveSession(): GeckoSession {
+        return popupSession ?: tabs.getOrNull(activeTabIndex)?.session ?: geckoSession
+    }
+
+    private fun finishPopupLoginIfNeeded(session: GeckoSession, url: String?) {
+        if (session != popupSession) return
+        val safeUrl = url?.trim()?.lowercase().orEmpty()
+        val shouldClose = safeUrl.isBlank() || safeUrl == "about:blank" ||
+                safeUrl.contains("login/success") || safeUrl.contains("login/callback") ||
+                safeUrl.contains("auth/success") || safeUrl.contains("auth/callback") ||
+                safeUrl.contains("signin/callback") || safeUrl.contains("close") ||
+                (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage"))
+        if (!shouldClose) return
+        runOnUiThread {
+            val currentPopup = popupSession
+            popupSession = null
+            try { geckoView.setSession(geckoSession) } catch (e: Exception) { e.printStackTrace() }
+            try { currentPopup?.close() } catch (_: Exception) {}
+            webAppView.visibility = View.GONE
+            geckoView.visibility = View.VISIBLE
+            topBar.visibility = View.VISIBLE
+            urlInput.visibility = View.GONE
+            urlDisplay.visibility = View.VISIBLE
+            pageProgress.visibility = View.GONE
+            updateTopBarForHome(false)
+            try { geckoSession.reload() } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    // =========================================================
+    // SETUP
+    // =========================================================
+
+    private fun bindViews() {
+        topBar      = findViewById(R.id.topBar)
+        webAppView  = findViewById(R.id.webAppView)
+        geckoView   = findViewById(R.id.geckoView)
+
+        webAppView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            allowFileAccess = true
+            allowContentAccess = true
+            javaScriptCanOpenWindowsAutomatically = true
+        }
+
+        webAppView.addJavascriptInterface(
+            BeeBridge(this) { url -> runOnUiThread { openSite(url) } },
+            "Android"
+        )
+
+        btnBack      = topBar.findViewById(R.id.btnBack)
+        btnHome      = topBar.findViewById(R.id.btnHome)
+        btnMenu      = topBar.findViewById(R.id.btnMenu)
+        urlInput     = topBar.findViewById(R.id.urlInput)
+        urlDisplay   = topBar.findViewById(R.id.urlDisplay)
+        urlTitle     = topBar.findViewById(R.id.urlTitle)
+        urlDomain    = topBar.findViewById(R.id.urlDomain)
+        btnUrl       = topBar.findViewById(R.id.btnUrl)
+        pageProgress = findViewById(R.id.pageProgress)
+        iconSecurity = topBar.findViewById(R.id.iconSecurity)
+        iconFavicon  = topBar.findViewById(R.id.iconFavicon)
+        beeMiningIndicator = topBar.findViewById(R.id.beeMiningIndicator)
+    }
+
+    private fun setupWebAppView() {
+        webAppView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+            startDownload(url, userAgent, contentDisposition, mimeType)
+        }
+        CookieManager.getInstance().apply {
+            setAcceptCookie(true)
+            setAcceptThirdPartyCookies(webAppView, true)
+        }
+        webAppView.apply {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            isClickable = true
+            isLongClickable = true
+            requestFocus(View.FOCUS_DOWN)
+            setOnTouchListener { v, _ -> if (!v.hasFocus()) v.requestFocus(View.FOCUS_DOWN); false }
+        }
+        webAppView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Inject system bar heights so CSS var(--safe-top/--safe-bottom) work correctly
+                val resources = this@MainActivity.resources
+                val statusBarResId = resources.getIdentifier("status_bar_height", "dimen", "android")
+                val statusBarPx = if (statusBarResId > 0) resources.getDimensionPixelSize(statusBarResId) else 0
+                // Convert px to dp for the WebView (WebView uses CSS px = dp on mdpi)
+                val density = resources.displayMetrics.density
+                val statusBarDp = (statusBarPx / density).toInt()
+
+                view?.evaluateJavascript(
+                    "if(window.setStatusBarHeight) window.setStatusBarHeight($statusBarDp);", null
+                )
+            }
+        }
+        webAppView.webChromeClient = WebChromeClient()
+    }
+
+    private fun setupGecko() {
+        if (geckoRuntime == null) {
+            geckoRuntime = GeckoRuntime.create(this)
+        }
+        geckoSession = GeckoSession()
+        attachGeckoDelegates(geckoSession)
+        geckoSession.open(geckoRuntime!!)
+        geckoView.setSession(geckoSession)
+        tabs.add(WaspTab(session = geckoSession))
+        activeTabIndex = 0
+    }
+
+    private fun setupTopBar() {
+        btnBack.setOnClickListener {
+            if (geckoView.visibility == View.VISIBLE) {
+                when {
+                    popupSession != null -> {
+                        try { popupSession?.close() } catch (_: Exception) {}
+                        popupSession = null
+                        geckoView.setSession(geckoSession)
+                    }
+                    canGoBackGecko -> getActiveSession().goBack()
+                    else -> goHome()
+                }
+            } else {
+                goHome()
+            }
+        }
+
+        btnHome.setOnClickListener { goHome() }
+
+        topBar.findViewById<android.view.View>(R.id.btnBeePill)?.setOnClickListener {
+            openBeePanel()
+        }
+
+        topBar.findViewById<android.view.View>(R.id.btnTabsPill)?.setOnClickListener {
+            showTabSwitcher()
+        }
+
+        btnHome.setOnLongClickListener {
+            newTab("https://www.google.com")
+            webAppView.visibility = View.GONE
+            geckoView.visibility = View.VISIBLE
+            topBar.visibility = View.VISIBLE
+            updateTopBarForHome(false)
+            showWaspToast("Nova aba aberta")
+            true
+        }
+
+        urlDisplay.setOnClickListener {
+            if (currentUrl.isBlank()) return@setOnClickListener
+            urlDisplay.visibility = View.GONE
+            urlInput.visibility = View.VISIBLE
+            urlInput.setText(currentUrl)
+            urlInput.requestFocus()
+            urlInput.selectAll()
+        }
+
+        btnMenu.setOnClickListener {
+            val isFav = FavoritesManager.getAll(this).any { it.url == currentUrl }
+            WaspMenuSheet.show(
+                context    = this,
+                currentUrl = currentUrl,
+                pageTitle  = urlTitle.text?.toString() ?: "",
+                isFavorite = isFav
+            ) { action ->
+                when (action) {
+                    "favorite"   -> {
+                        val t = if (urlTitle.text.isNullOrBlank()) currentUrl else urlTitle.text.toString()
+                        FavoritesManager.add(this, t, currentUrl)
+                        showWaspToast("Adicionado aos favoritos")
+                    }
+                    "unfavorite" -> { FavoritesManager.remove(this, currentUrl); showWaspToast("Removido dos favoritos") }
+                    "reload"     -> getActiveSession().reload()
+                    "forward"    -> if (canGoForwardGecko) getActiveSession().goForward()
+                    "share"      -> {
+                        if (currentUrl.isBlank()) return@show
+                        startActivity(Intent.createChooser(
+                            Intent(Intent.ACTION_SEND).apply { type="text/plain"; putExtra(Intent.EXTRA_TEXT, currentUrl) },
+                            "Compartilhar"
+                        ))
+                    }
+                    "newtab"     -> { newTab(currentUrl); showWaspToast("Aba duplicada") }
+                    "hive"       -> goHome()
+                    "favorites"  -> startActivity(Intent(this, FavoritesActivity::class.java))
+                    "history"    -> startActivity(Intent(this, HistoryActivity::class.java))
+                    "downloads"  -> startActivity(Intent(this, DownloadsActivity::class.java))
+                    "web3"       -> startActivity(Intent(this, Web3Activity::class.java))
+                    "bee"        -> openBeePanel()
+                    "settings"   -> startActivity(Intent(this, SettingsActivity::class.java))
+                    "about"      -> startActivity(Intent(this, AboutActivity::class.java))
+                }
+            }
+        }
+    }
+
+    private fun setupUrlInput() {
+        urlInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH) {
+                hideKeyboard()
+                navigate(urlInput.text.toString())
+                true
+            } else false
+        }
+    }
+
+    // =========================================================
+    // GECKO DELEGATES
+    // =========================================================
+
+    private fun attachGeckoDelegates(session: GeckoSession) {
+
+        session.contentDelegate = object : GeckoSession.ContentDelegate {
+
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                runOnUiThread {
+                    if (!title.isNullOrBlank()) {
+                        currentTitle = title
+                        tabs.getOrNull(activeTabIndex)?.title = title
+                        urlTitle.text = title
+                        if (currentUrl.isNotBlank()) urlDomain.text = getCleanDomain(currentUrl)
+                    }
+                }
+            }
+
+            override fun onContextMenu(
+                session: GeckoSession, screenX: Int, screenY: Int,
+                element: GeckoSession.ContentDelegate.ContextElement
+            ) {
+                val target = element.srcUri?.takeIf { it.startsWith("http") }
+                    ?: element.linkUri?.takeIf { it.startsWith("http") } ?: return
+                runOnUiThread {
+                    showWaspConfirmDialog("Imagem", "Baixar esta imagem?", "Baixar") {
+                        downloadImage(target)
+                    }
+                }
+            }
+
+            override fun onExternalResponse(session: GeckoSession, response: WebResponse) {
+                val url = response.uri ?: return
+                runOnUiThread {
+                    startDownload(url, null,
+                        response.headers["Content-Disposition"],
+                        response.headers["Content-Type"]?.substringBefore(";")?.trim()
+                    )
+                }
+            }
+        }
+
+        session.progressDelegate = object : GeckoSession.ProgressDelegate {
+
+            override fun onPageStart(session: GeckoSession, url: String) {
+                currentUrl = url
+                tabs.getOrNull(activeTabIndex)?.url = url
+                sslErrorActive = false
+                currentTitle = ""
+                runOnUiThread {
+                    iconFavicon.setImageResource(R.drawable.globe)
+                    urlInput.visibility = View.GONE
+                    urlDisplay.visibility = View.VISIBLE
+                    urlTitle.text = ""
+                    urlDomain.text = getCleanDomain(url)
+                    pageProgress.visibility = View.VISIBLE
+                    pageProgress.progress = 0
+                    updateSecurityIcon(url)
+                }
+            }
+
+            override fun onProgressChange(session: GeckoSession, progress: Int) {
+                runOnUiThread {
+                    if (geckoView.visibility != View.VISIBLE) return@runOnUiThread
+                    pageProgress.progress = progress
+                    if (progress >= 100) pageProgress.visibility = View.GONE
+                }
+            }
+
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                runOnUiThread { pageProgress.visibility = View.GONE }
+                if (success && currentUrl.isNotBlank()) {
+                    try {
+                        val domain = android.net.Uri.parse(currentUrl).host ?: ""
+                        val faviconUrl = "https://www.google.com/s2/favicons?domain=$domain&sz=64"
+                        Thread {
+                            try {
+                                val conn = java.net.URL(faviconUrl).openConnection() as java.net.HttpURLConnection
+                                conn.connectTimeout = 3000; conn.readTimeout = 3000
+                                val bmp = android.graphics.BitmapFactory.decodeStream(conn.inputStream)
+                                conn.disconnect()
+                                runOnUiThread {
+                                    if (bmp != null) iconFavicon.setImageBitmap(bmp)
+                                    else iconFavicon.setImageResource(R.drawable.globe)
+                                }
+                            } catch (_: Exception) {
+                                runOnUiThread { iconFavicon.setImageResource(R.drawable.globe) }
+                            }
+                        }.start()
+                    } catch (_: Exception) {}
+                    runOnUiThread {
+                        webAppView.evaluateJavascript("window.addRecentFromSite('${escapeJs(currentUrl)}')", null)
+                    }
+                    saveRecent(currentTitle.ifBlank { getCleanDomain(currentUrl) }, currentUrl)
+                }
+            }
+
+            override fun onSecurityChange(session: GeckoSession, securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
+                runOnUiThread { updateSecurityIcon(currentUrl) }
+            }
+        }
+
+        session.navigationDelegate = object : GeckoSession.NavigationDelegate {
+
+            override fun onLocationChange(
+                session: GeckoSession, url: String?,
+                perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean
+            ) {
+                val safeUrl = url ?: return
+                currentUrl = safeUrl
+                runOnUiThread {
+                    urlDomain.text = getCleanDomain(safeUrl)
+                    updateSecurityIcon(safeUrl)
+                }
+                finishPopupLoginIfNeeded(session, safeUrl)
+            }
+
+            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
+                if (session == getActiveSession()) {
+                    canGoBackGecko = canGoBack
+                    runOnUiThread { btnBack.alpha = if (canGoBack || popupSession != null) 1f else 0.55f }
+                }
+            }
+
+            override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
+                if (session == getActiveSession()) canGoForwardGecko = canGoForward
+            }
+
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
+                return null
+            }
+
+            override fun onLoadRequest(
+                session: GeckoSession,
+                request: GeckoSession.NavigationDelegate.LoadRequest
+            ): GeckoResult<AllowOrDeny>? {
+                val url = request.uri ?: return null
+                val lowerUrl = url.lowercase()
+
+                val nativeScheme = !url.startsWith("http://") && !url.startsWith("https://") &&
+                        !url.startsWith("about:") && !url.startsWith("data:") && !url.startsWith("blob:")
+
+                if (nativeScheme) {
+                    runOnUiThread { openExternalApp(url) }
+                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                }
+
+                val isAppLink = lowerUrl.contains("play.google.com/store") ||
+                        lowerUrl.endsWith(".apk") ||
+                        lowerUrl.startsWith("https://t.me/") ||
+                        lowerUrl.startsWith("https://telegram.me/")
+
+                if (isAppLink) {
+                    runOnUiThread { openExternalApp(url) }
+                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                }
+
+                return null
+            }
+
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                sslErrorActive = true
+                val failedUrl = uri ?: "site desconhecido"
+                runOnUiThread { updateSecurityIcon(failedUrl) }
+                val html = """
+                    <html><body style="background:#111;color:white;font-family:sans-serif;text-align:center;padding:60px;">
+                    <h2 style="color:#ff4444;">Erro ao carregar</h2>
+                    <p>O Wasp nao conseguiu abrir esta pagina.</p>
+                    <div style="margin-top:25px;padding:12px;background:#222;border-radius:8px;">${escapeHtml(failedUrl)}</div>
+                    </body></html>
+                """.trimIndent()
+                return GeckoResult.fromValue("data:text/html;charset=utf-8," + Uri.encode(html))
+            }
+        }
+
+        session.permissionDelegate = object : GeckoSession.PermissionDelegate {
+
+            override fun onContentPermissionRequest(
+                session: GeckoSession,
+                perm: GeckoSession.PermissionDelegate.ContentPermission
+            ): GeckoResult<Int> {
+                val sensitive = perm.permission == GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
+                if (!sensitive) return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY)
+
+                val result = GeckoResult<Int>()
+                runOnUiThread {
+                    showWaspConfirmDialog(
+                        title = "Permissao de localizacao",
+                        message = "${getCleanDomain(currentUrl)} quer acessar sua localizacao",
+                        confirmText = "Permitir",
+                        onCancel = { result.complete(GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY) }
+                    ) { result.complete(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW) }
+                }
+                return result
+            }
+
+            override fun onMediaPermissionRequest(
+                session: GeckoSession, uri: String,
+                video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+                audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
+                callback: GeckoSession.PermissionDelegate.MediaCallback
+            ) {
+                val what = listOfNotNull(
+                    if (!video.isNullOrEmpty()) "camera" else null,
+                    if (!audio.isNullOrEmpty()) "microfone" else null
+                ).joinToString(" e ")
+                runOnUiThread {
+                    showWaspConfirmDialog("Acesso de midia", "${getCleanDomain(uri)} quer acessar: $what", "Permitir") {
+                        callback.grant(video?.firstOrNull(), audio?.firstOrNull())
+                    }
+                }
+            }
+        }
+    }
+
+    // =========================================================
+    // NAVIGATION
+    // =========================================================
+
+    private fun navigate(input: String) {
+        val q = input.trim()
+        if (q.isEmpty()) return
+        val url = when {
+            q.startsWith("http://") || q.startsWith("https://") -> q
+            q.contains(".") || q.contains("/") -> "https://$q"
+            else -> "https://www.google.com/search?q=${Uri.encode(q)}"
+        }
+        openSite(url)
+        urlInput.visibility = View.GONE
+        urlDisplay.visibility = View.VISIBLE
+    }
+
+    private fun openSite(url: String) {
+        sslErrorActive = false
+        currentUrl = url
+        try { popupSession?.close() } catch (_: Exception) {}
+        popupSession = null
+
+        val tab = tabs.getOrNull(activeTabIndex)
+        if (tab != null) {
+            tab.url = url
+            geckoView.setSession(tab.session)
+            try { tab.session.setActive(true) } catch (_: Exception) {}
+        } else {
+            geckoView.setSession(geckoSession)
+            try { geckoSession.setActive(true) } catch (_: Exception) {}
+        }
+
+        webAppView.visibility = View.GONE
+        geckoView.visibility = View.VISIBLE
+        topBar.visibility = View.VISIBLE
+        urlInput.visibility = View.GONE
+        urlDisplay.visibility = View.VISIBLE
+        pageProgress.visibility = View.VISIBLE
+        pageProgress.progress = 0
+        updateTopBarForHome(false)
+        webAppView.pauseTimers()
+        getActiveSession().loadUri(url)
+    }
+
+    fun goHome() {
+        resetToMainSession()
+        try { tabs.forEach { it.session.setActive(false) } } catch (_: Exception) {}
+
+        runOnUiThread {
+            topBar.visibility = View.GONE
+            geckoView.visibility = View.GONE
+            pageProgress.visibility = View.GONE
+            webAppView.visibility = View.VISIBLE
+            urlInput.setText("")
+            urlInput.clearFocus()
+            webAppView.onResume()
+            webAppView.resumeTimers()
+            webAppView.requestFocus(View.FOCUS_DOWN)
+            webAppView.evaluateJavascript("resetHome()", null)
+        }
+    }
+
+    private fun openExternalApp(url: String) {
+        if (url.isBlank()) return
+        try {
+            val intent = when {
+                url.startsWith("intent://") -> Intent.parseUri(url, Intent.URI_INTENT_SCHEME).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                url.endsWith(".apk", ignoreCase = true) -> { startDownload(url, null, null, "application/vnd.android.package-archive"); return }
+                else -> Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply { addCategory(Intent.CATEGORY_BROWSABLE); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            }
+            if (packageManager.resolveActivity(intent, 0) != null) startActivity(intent)
+            else startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
+        } catch (e: Exception) {
+            Toast.makeText(this, "Nenhum app encontrado para este link", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // =========================================================
+    // UI HELPERS
+    // =========================================================
+
+    private fun updateTopBarForHome(isHome: Boolean) {
+        if (isHome) {
+            urlInput.visibility = View.INVISIBLE
+            btnBack.visibility = View.INVISIBLE
+            btnUrl.visibility = View.INVISIBLE
+            iconSecurity.visibility = View.INVISIBLE
+        } else {
+            urlInput.visibility = View.VISIBLE
+            btnBack.visibility = View.VISIBLE
+            btnUrl.visibility = View.VISIBLE
+            iconSecurity.visibility = View.VISIBLE
+        }
+    }
+
+    private fun updateSecurityIcon(url: String) {
+        iconSecurity.setImageResource(android.R.drawable.ic_lock_lock)
+        iconSecurity.setColorFilter(when {
+            sslErrorActive                   -> android.graphics.Color.parseColor("#EF4444")
+            url.startsWith("https://", true) -> android.graphics.Color.parseColor("#22C55E")
+            else                             -> android.graphics.Color.parseColor("#3D4560")
+        })
+    }
+
+    private fun getCleanDomain(url: String): String {
+        return try {
+            if (url.contains("google.com/amp/"))
+                return url.substringAfter("amp/s/").substringBefore("/").removePrefix("www.")
+            var host = Uri.parse(url).host ?: url
+            if (host.startsWith("www.")) host = host.substring(4)
+            host
+        } catch (e: Exception) { url }
+    }
+
+    private fun hideKeyboard() {
+        (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(urlInput.windowToken, 0)
+    }
+
+    fun openBeePanel() {
+        startActivity(Intent(this, BeeActivity::class.java))
+        overridePendingTransition(0, 0)
+    }
+
+    // =========================================================
+    // DOWNLOADS
+    // =========================================================
+
+    private fun downloadImage(url: String) {
+        try {
+            val ext = when {
+                url.contains(".png",  ignoreCase = true) -> "png"
+                url.contains(".webp", ignoreCase = true) -> "webp"
+                url.contains(".gif",  ignoreCase = true) -> "gif"
+                else -> "jpg"
+            }
+            val fileName = "wasp_img_${System.currentTimeMillis()}.$ext"
+            val request = android.app.DownloadManager.Request(Uri.parse(url)).apply {
+                setTitle(fileName); setDescription("Baixando imagem")
+                setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setAllowedOverMetered(true); setAllowedOverRoaming(true)
+                addRequestHeader("Referer", currentUrl)
+                setMimeType("image/$ext")
+                setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, fileName)
+            }
+            (getSystemService(DOWNLOAD_SERVICE) as android.app.DownloadManager).enqueue(request)
+            salvarDownloadNoWasp(fileName, url)
+            showWaspToast("Download iniciado")
+        } catch (e: Exception) { showWaspToast("Erro ao baixar imagem") }
+    }
+
+    private fun startDownload(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
+        if (url.isBlank()) return
+        val scheme = url.substringBefore("://").lowercase()
+        if (scheme == "blob" || scheme == "data" || scheme == "javascript") return
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return
+        try {
+            var fileName = try { URLUtil.guessFileName(url, contentDisposition, mimeType) } catch (_: Exception) { "file_${System.currentTimeMillis()}" }
+            val lowerUrl  = url.lowercase()
+            val lowerMime = mimeType?.lowercase() ?: ""
+            if (fileName.endsWith(".bin") || !fileName.contains(".")) {
+                val ext = when {
+                    lowerMime.contains("png")  || lowerUrl.contains(".png")  -> "png"
+                    lowerMime.contains("jpeg") || lowerUrl.contains(".jpg")  -> "jpg"
+                    lowerMime.contains("webp") || lowerUrl.contains(".webp") -> "webp"
+                    lowerMime.contains("gif")  || lowerUrl.contains(".gif")  -> "gif"
+                    lowerMime.contains("pdf")  || lowerUrl.contains(".pdf")  -> "pdf"
+                    lowerMime.contains("zip")  || lowerUrl.contains(".zip")  -> "zip"
+                    lowerMime.contains("apk")  || lowerUrl.contains(".apk")  -> "apk"
+                    else -> "bin"
+                }
+                fileName = "file_${System.currentTimeMillis()}.$ext"
+            }
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                setMimeType(mimeType ?: "*/*")
+                if (!userAgent.isNullOrBlank()) addRequestHeader("User-Agent", userAgent)
+                addRequestHeader("Accept", "*/*")
+                try { CookieManager.getInstance().getCookie(url)?.takeIf { it.isNotEmpty() }?.let { addRequestHeader("Cookie", it) } } catch (_: Exception) {}
+                setTitle(fileName); setDescription("Baixando arquivo...")
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setAllowedOverMetered(true); setAllowedOverRoaming(true)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            }
+            (getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request)
+            salvarDownloadNoWasp(fileName, url)
+            Toast.makeText(this, "Download iniciado", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Nao foi possivel iniciar o download", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun salvarDownloadNoWasp(nome: String, url: String) {
+        val prefs = getSharedPreferences("wasp_downloads", MODE_PRIVATE)
+        val json  = prefs.getString("downloads_json", "[]") ?: "[]"
+        val array = try { JSONArray(json) } catch (_: Exception) { JSONArray() }
+        val obj   = JSONObject().apply { put("name", nome); put("url", url); put("time", System.currentTimeMillis()) }
+        val newArray = JSONArray()
+        newArray.put(obj)
+        for (i in 0 until minOf(array.length(), 199)) newArray.put(array.getJSONObject(i))
+        prefs.edit().putString("downloads_json", newArray.toString()).apply()
+    }
+
+    // =========================================================
+    // HISTORY
+    // =========================================================
+
+    private fun saveRecent(title: String?, url: String?) {
+        if (url.isNullOrBlank() || url.startsWith("about:") || url.contains("google.com/search")) return
+        val clean  = cleanUrl(url)
+        val prefs  = getSharedPreferences("wasp_recents", MODE_PRIVATE)
+        val oldList = JSONArray(prefs.getString("recents_json", "[]"))
+        val newList = JSONArray()
+        newList.put(JSONObject().apply { put("title", title ?: ""); put("url", clean); put("time", System.currentTimeMillis()) })
+        for (i in 0 until oldList.length()) {
+            val obj = oldList.getJSONObject(i)
+            if (obj.getString("url") != clean) newList.put(obj)
+        }
+        val finalList = JSONArray()
+        for (i in 0 until minOf(100, newList.length())) finalList.put(newList.getJSONObject(i))
+        prefs.edit().putString("recents_json", finalList.toString()).apply()
+    }
+
+    private fun cleanUrl(raw: String): String {
+        return try { Uri.parse(raw).buildUpon().clearQuery().build().toString() } catch (e: Exception) { raw }
+    }
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+
+    private fun escapeJs(text: String) = text.replace("\\","\\\\").replace("'","\\'").replace("\n","\\n").replace("\r","")
+    private fun escapeHtml(text: String) = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+
+    @JavascriptInterface
+    fun openCentral() {
+        runOnUiThread {
+            val intent = android.content.Intent(this@MainActivity, CentralActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    @JavascriptInterface
+    fun startBee() { runOnUiThread { Toast.makeText(this, "Bee Engine Started", Toast.LENGTH_SHORT).show() } }
+}

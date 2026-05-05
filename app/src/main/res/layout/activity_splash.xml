@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#08090d">
+
+    <!-- GRADE HEX — fundo decorativo (View com background drawable) -->
+    <View
+        android:id="@+id/splashBg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/splash_bg_hex"
+        android:alpha="0.35" />
+
+    <!-- GLOW TOP -->
+    <View
+        android:id="@+id/splashGlowTop"
+        android:layout_width="320dp"
+        android:layout_height="320dp"
+        android:background="@drawable/splash_glow"
+        android:alpha="0.18"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.08" />
+
+    <!-- LOGO -->
+    <ImageView
+        android:id="@+id/splashLogo"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_launcher_foreground"
+        android:scaleType="fitCenter"
+        android:alpha="0"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/splashTagline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.42" />
+
+    <!-- TAGLINE -->
+    <TextView
+        android:id="@+id/splashTagline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Navegador Web3 com Bee Engine"
+        android:textColor="#66ffffff"
+        android:textSize="12sp"
+        android:letterSpacing="0.08"
+        android:fontFamily="sans-serif"
+        android:alpha="0"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/splashLogo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- STATUS TEXT -->
+    <TextView
+        android:id="@+id/splashStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Inicializando motor..."
+        android:textColor="#88ffffff"
+        android:textSize="12sp"
+        android:letterSpacing="0.04"
+        android:fontFamily="monospace"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@id/splashProgressWrap"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- PROGRESS WRAP -->
+    <LinearLayout
+        android:id="@+id/splashProgressWrap"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="52dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- BARRA DE PROGRESSO CUSTOM -->
+        <ProgressBar
+            android:id="@+id/splashProgress"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:progressDrawable="@drawable/splash_progress_bar"
+            android:max="100"
+            android:progress="0" />
+
+        <!-- PORCENTAGEM -->
+        <TextView
+            android:id="@+id/splashPercent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textColor="#55ffc107"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:layout_gravity="end"
+            android:layout_marginTop="6dp" />
+
+    </LinearLayout>
+
+    <!-- VERSÃO -->
+    <TextView
+        android:id="@+id/splashVersion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="v1.0 • Powered by Wasp"
+        android:textColor="#33ffffff"
+        android:textSize="10sp"
+        android:letterSpacing="0.06"
+        android:layout_marginBottom="14dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

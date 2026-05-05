@@ -1,0 +1,1588 @@
+/* =======================================================
+   WASP BROWSER — app.js (CLEAN)
+   Bugs corrigidos:
+   - resetHome() duplicada removida (mantida com setBottomTab)
+   - setTheme() duplicada removida (mantida versão completa)
+   - 3 DOMContentLoaded unificados em 1
+   - pointerdown duplicado removido (mantido o completo)
+   - document.addEventListener("click") duplicado unificado
+   - toggleMenu() ligado ao settingsPanel (sem #menu no HTML)
+======================================================= */
+
+/* =========================
+   SAFE AREA — Android WebView
+   Android nativo chama window.setStatusBarHeight(px)
+   para injetar a altura real da status bar.
+   CSS usa var(--safe-top) nos lugares críticos.
+========================= */
+(function() {
+  document.documentElement.style.setProperty('--safe-top', '0px');
+  document.documentElement.style.setProperty('--safe-bottom', '0px');
+
+  window.setStatusBarHeight = function(px) {
+    var v = parseInt(px, 10) || 0;
+    document.documentElement.style.setProperty('--safe-top', v + 'px');
+  };
+  window.setNavBarHeight = function(px) {
+    var v = parseInt(px, 10) || 0;
+    document.documentElement.style.setProperty('--safe-bottom', v + 'px');
+  };
+})();
+
+
+/* =========================
+   CENTRAL WP — ABRE central.html
+========================= */
+function openCentralWP() {
+  // Via bridge Android (BeeActivity ou MainActivity)
+  if (window.Android && typeof window.Android.openCentral === "function") {
+    window.Android.openCentral();
+    return;
+  }
+  if (window.AndroidBee && typeof window.AndroidBee.navigateTo === "function") {
+    window.AndroidBee.navigateTo("central");
+    return;
+  }
+  // Fallback web
+  window.location.href = "central.html";
+}
+
+/* Atualiza saldo WP nos elementos do painel */
+function syncWpBalanceUI() {
+  try {
+    const bal = parseInt(localStorage.getItem("wasp_wp") || "0", 10);
+    const els = ["wpMiniBalance", "centralWpBal", "panelWpBalance"];
+    els.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = bal + " WP";
+    });
+  } catch(_) {}
+}
+
+/* =========================
+   UTILIDADES BASE
+========================= */
+
+function $(id){ return document.getElementById(id); }
+
+function safeText(value){
+  return String(value ?? "").replace(/[<>]/g, "");
+}
+
+/* =========================
+   CORES PADRÃO WASP
+========================= */
+const WASP_GREEN = "#00c853";
+const WASP_RED   = "#d50000";
+const WASP_GRAY  = "#999999";
+
+/* =========================
+   CONFIG / TEMA
+========================= */
+const THEME_KEY = "wasp_theme";
+
+function applyTheme(theme){
+    document.body.setAttribute("data-theme", theme);
+    localStorage.setItem(THEME_KEY, theme);
+
+    const label = $("themeLabel");
+    if(label){
+        label.textContent = theme === "dark" ? "Dark" : "Light";
+    }
+}
+
+function toggleTheme(){
+    const current = document.body.getAttribute("data-theme") || "dark";
+    applyTheme(current === "dark" ? "light" : "dark");
+}
+
+/* =========================
+   TEMA — SETTINGS
+========================= */
+
+// Versão única e completa de setTheme
+function setTheme(theme){
+    applyTheme(theme);
+
+    const label = $("themeLabel");
+    if(label){
+        label.textContent = theme === "dark" ? "Dark" : "Light";
+    }
+
+    const menu = $("themeOptions");
+    if(menu) menu.classList.remove("active");
+}
+
+function toggleThemeOptions(){
+    const menu = $("themeOptions");
+    if(menu) menu.classList.toggle("active");
+}
+
+/* =========================
+   URL NORMALIZER
+========================= */
+function normalizeUrl(input){
+  let q = (input || "").trim();
+  if(!q) return "";
+
+  const lower = q.toLowerCase();
+  if(lower.startsWith("javascript:")) return "";
+
+  if(q.includes(" ")){
+    return "https://www.google.com/search?q=" + encodeURIComponent(q);
+  }
+
+  if(q.startsWith("http://") || q.startsWith("https://")){
+    return q;
+  }
+
+  const domainLike =
+    q.includes(".") ||
+    q.includes("/") ||
+    q.startsWith("www.");
+
+  if(domainLike){
+    return "https://" + q;
+  }
+
+  return "https://www.google.com/search?q=" + encodeURIComponent(q);
+}
+
+/* =========================
+   OPEN URL (ANDROID)
+========================= */
+function openNativeUrl(input){
+  if(!input) return;
+
+  // Tratar URLs especiais do Hive
+  if(input === "bee://engine"){
+    if(window.Android && typeof Android.openBeePanel === "function") Android.openBeePanel();
+    return;
+  }
+  if(input === "settings://open"){
+    if(window.Android && typeof Android.openSettings === "function") Android.openSettings();
+    else openSettings();
+    return;
+  }
+
+  const url = normalizeUrl(input);
+  if(!url) return;
+
+  if(window.Android && typeof Android.openUrl === "function"){
+    Android.openUrl(url);
+  } else {
+    window.location.href = url;
+  }
+}
+
+/* =========================
+   TELAS
+========================= */
+function openScreen(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  const el = $(id);
+  if(el) el.classList.add("active");
+
+  if(id === "home"){
+    document.body.classList.add("home-active");
+    document.querySelectorAll(".badge").forEach(btn => btn.classList.remove("active"));
+    const mainBtn = document.querySelector(".badge");
+    if(mainBtn) mainBtn.classList.add("active");
+  } else {
+    document.body.classList.remove("home-active");
+  }
+
+  if(id === "market"){
+    waspUpdateMarketAll();
+  }
+}
+
+/* =========================
+   SEARCH
+========================= */
+function searchFrom(inputId){
+    const input = $(inputId);
+    if(!input) return;
+
+    const value = input.value.trim();
+    if(!value) return;
+
+    addToHistory(value);
+
+    let url;
+    const isUrl = value.includes(".") && !value.includes(" ");
+
+    if(value.startsWith("http")){
+        url = value;
+    } else if(isUrl){
+        url = "https://" + value;
+    } else {
+        url = engines[currentEngine].url + encodeURIComponent(value);
+    }
+
+    openNativeUrl(url);
+}
+
+/* =========================
+   HISTORY SYSTEM
+========================= */
+const HISTORY_KEY = "wasp_history_v1";
+
+function loadHistory(){
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(list){
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+
+function addToHistory(query){
+  if(!query || query.length < 2) return;
+
+  let history = loadHistory();
+  let existing = history.find(i => i.q === query);
+
+  if(existing){
+    existing.count += 1;
+    existing.time = Date.now();
+  } else {
+    history.push({ q: query, count: 1, time: Date.now() });
+  }
+
+  history.sort((a,b) => b.count - a.count || b.time - a.time);
+  saveHistory(history.slice(0, 50));
+}
+
+function showHistorySuggestions(){
+    const history = loadHistory().slice(0, 5);
+    const box = $("searchSuggestions");
+    if(!box) return;
+
+    box.classList.add("active");
+    box.innerHTML = history.map(item => `
+        <div class="suggestion-item" data-value="${item.q}">
+            <img class="suggestion-icon" src="img/search.webp">
+            <span>${item.q}</span>
+        </div>
+    `).join("");
+
+    box.querySelectorAll(".suggestion-item").forEach(item => {
+        item.addEventListener("click", function(){
+            selectSuggestion(this.getAttribute("data-value"));
+        });
+    });
+}
+
+/* =========================
+   RECENTES
+========================= */
+window.RECENTS_KEY = "wasp_recents_v1";
+
+function getRecents(){
+  try {
+    const data = localStorage.getItem(RECENTS_KEY);
+    return Array.isArray(JSON.parse(data)) ? JSON.parse(data) : [];
+  } catch(e){
+    return [];
+  }
+}
+
+function saveRecents(list){
+  try {
+    localStorage.setItem(RECENTS_KEY, JSON.stringify(list));
+  } catch(e){}
+}
+
+function addRecent(title, url){
+  if(url.includes("google.com/search?q=")){
+    try {
+      const u = new URL(url);
+      const q = u.searchParams.get("q");
+      if(q){
+        url = "https://www.google.com/search?q=" + encodeURIComponent(q);
+        title = q;
+      }
+    } catch(e){}
+  }
+
+  if(typeof url !== "string" || !url.startsWith("http")) return;
+  if(url.startsWith("file://")) return;
+  if(!title || title === "Wasp Browser") title = "";
+
+  const list = getRecents();
+  if(list[0]?.url === url) return;
+
+  let host = "";
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch(e){}
+
+  const safeTitle = title || host || url;
+
+  const filtered = list.filter(item => {
+    try {
+      const h = new URL(item.url).hostname.replace(/^www\./, "");
+      return h !== host;
+    } catch(e){
+      return true;
+    }
+  });
+
+  filtered.unshift({ title: safeTitle, url, time: Date.now() });
+  saveRecents(filtered.slice(0, 30));
+  renderRecents();
+}
+
+function renderRecents(){
+  const container = $("recentList");
+  if(!container) return;
+
+  const list = getRecents().slice(0, 7);
+
+  if(list.length === 0){
+    container.innerHTML = `<div style="opacity:.6;padding:10px;">Nenhum recente ainda…</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(item => {
+    let domain = item.url;
+    try { domain = new URL(item.url).hostname; } catch(e){}
+
+    const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    return `
+      <div class="recent-item" onclick="openNativeUrl('${item.url}')">
+        <img class="recent-favicon" src="${favicon}">
+        <div>
+          <div class="recent-name">${safeText(item.title)}</div>
+          <div class="recent-url">${safeText(domain)}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+window.addRecentFromSite = function(url){
+  if(!url || typeof url !== "string") return;
+  if(!url.startsWith("http")) return;
+
+  const list = getRecents();
+  if(list[0]?.url === url) return;
+
+  let title = "";
+  try {
+    const host = new URL(url).hostname
+      .replace(/^www\./, "")
+      .replace(/^m\./, "")
+      .replace(/^mobile\./, "")
+      .split(".")[0];
+    title = host.charAt(0).toUpperCase() + host.slice(1);
+  } catch(e){ title = ""; }
+
+  addRecent(title, url);
+};
+
+/* =========================
+   MERCADO CRIPTO
+========================= */
+async function waspFetchJSON(url){
+  const res = await fetch(url, { headers: { "accept": "application/json" } });
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  return await res.json();
+}
+
+function waspSetText(id, value){
+  const el = $(id);
+  if(el) el.textContent = value;
+}
+
+function waspFmtMoney(num){
+  if(num == null) return "$ --";
+  return "$ " + Number(num).toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function waspFmtPrice(num){
+  if(num == null) return "$ --";
+  return "$ " + Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function waspSetFill(id, pct){
+  const el = $(id);
+  if(!el) return;
+  const p = Math.max(0, Math.min(100, Number(pct || 0)));
+  el.style.width = p + "%";
+}
+
+function setChangeColor(id, value){
+  const el = $(id);
+  if(!el) return;
+  el.style.color = value > 0 ? WASP_GREEN : value < 0 ? WASP_RED : WASP_GRAY;
+}
+
+async function waspUpdateOverview(){
+  const g = (await waspFetchJSON("https://api.coingecko.com/api/v3/global")).data;
+  if(!g) return;
+
+  waspSetText("moCap", waspFmtMoney(g.total_market_cap?.usd));
+  waspSetText("moVol", waspFmtMoney(g.total_volume?.usd));
+  waspSetText("moBtcDom", (g.market_cap_percentage?.btc || 0).toFixed(2) + "%");
+}
+
+async function waspUpdateTop3(){
+  const p = await waspFetchJSON(
+    "https://api.coingecko.com/api/v3/simple/price" +
+    "?ids=bitcoin,ethereum,binancecoin" +
+    "&vs_currencies=usd&include_24hr_change=true"
+  );
+
+  const btc = p.bitcoin || {};
+  const eth = p.ethereum || {};
+  const bnb = p.binancecoin || {};
+
+  waspSetText("btcPrice", waspFmtPrice(btc.usd));
+  waspSetText("ethPrice", waspFmtPrice(eth.usd));
+  waspSetText("bnbPrice", waspFmtPrice(bnb.usd));
+
+  const btcCh = btc.usd_24h_change ?? 0;
+  const ethCh = eth.usd_24h_change ?? 0;
+  const bnbCh = bnb.usd_24h_change ?? 0;
+
+  waspSetText("btcChange", btcCh.toFixed(2) + "%");
+  waspSetText("ethChange", ethCh.toFixed(2) + "%");
+  waspSetText("bnbChange", bnbCh.toFixed(2) + "%");
+
+  setChangeColor("btcChange", btcCh);
+  setChangeColor("ethChange", ethCh);
+  setChangeColor("bnbChange", bnbCh);
+}
+
+async function waspUpdateFearGreed(){
+  const fg = (await waspFetchJSON("https://api.alternative.me/fng/?limit=1")).data?.[0];
+  if(!fg) return;
+
+  waspSetText("fgValue", fg.value);
+  waspSetText("fgLabel", fg.value_classification);
+  waspSetFill("fgFill", fg.value);
+}
+
+async function waspUpdateTrending(){
+  const trendList = $("trendList");
+  if(!trendList) return;
+
+  try {
+    const tr = await waspFetchJSON("https://api.coingecko.com/api/v3/search/trending");
+    const coins = tr?.coins || [];
+    const ids = coins.map(c => c.item.id).join(",");
+    const prices = await waspFetchJSON(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
+    );
+
+    trendList.innerHTML = coins.slice(0, 10).map(c => {
+      const i = c.item;
+      return `
+        <div class="trend-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${i.id}')">
+          <div class="trend-top">
+            <div class="trend-symbol">${safeText(i.symbol)}</div>
+            <div style="opacity:.7;font-weight:900;">#${i.market_cap_rank || "--"}</div>
+          </div>
+          <div class="trend-name">${safeText(i.name)}</div>
+          <div class="trend-price">${waspFmtPrice(prices[i.id]?.usd)}</div>
+        </div>
+      `;
+    }).join("");
+  } catch(e){}
+}
+
+let lastGainerUpdate = 0;
+let cachedGainersHTML = "";
+let cachedLosersHTML = "";
+
+async function waspUpdateGainersLosers(){
+  const now = Date.now();
+
+  if(now - lastGainerUpdate < 5 * 60 * 1000){
+    if(cachedGainersHTML) $("gainerList").innerHTML = cachedGainersHTML;
+    if(cachedLosersHTML)  $("loserList").innerHTML  = cachedLosersHTML;
+    return;
+  }
+
+  const gainerList = $("gainerList");
+  const loserList  = $("loserList");
+  if(!gainerList || !loserList) return;
+
+  try {
+    const list = await waspFetchJSON(
+      "https://api.coingecko.com/api/v3/coins/markets" +
+      "?vs_currency=usd&order=market_cap_desc&per_page=100&page=1" +
+      "&price_change_percentage=24h"
+    );
+
+    const valid = list.filter(c => c.price_change_percentage_24h != null);
+
+    const gainers = [...valid]
+      .sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+      .slice(0, 5);
+
+    const losers = [...valid]
+      .sort((a,b) => a.price_change_percentage_24h - b.price_change_percentage_24h)
+      .slice(0, 5);
+
+    cachedGainersHTML = gainers.map(c => `
+      <div class="gain-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
+        <div class="gain-top">
+          <div class="gain-symbol">${safeText(c.symbol.toUpperCase())}</div>
+          <div class="gain-change" style="color:${WASP_GREEN}">+${c.price_change_percentage_24h.toFixed(2)}%</div>
+        </div>
+        <div class="gain-name">${safeText(c.name)}</div>
+        <div class="gain-price">${waspFmtPrice(c.current_price)}</div>
+      </div>
+    `).join("");
+
+    cachedLosersHTML = losers.map(c => `
+      <div class="lose-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
+        <div class="lose-top">
+          <div class="lose-symbol">${safeText(c.symbol.toUpperCase())}</div>
+          <div class="lose-change" style="color:${WASP_RED}">${c.price_change_percentage_24h.toFixed(2)}%</div>
+        </div>
+        <div class="lose-name">${safeText(c.name)}</div>
+        <div class="lose-price">${waspFmtPrice(c.current_price)}</div>
+      </div>
+    `).join("");
+
+    gainerList.innerHTML = cachedGainersHTML;
+    loserList.innerHTML  = cachedLosersHTML;
+    lastGainerUpdate = now;
+
+  } catch(e){
+    if(cachedGainersHTML) gainerList.innerHTML = cachedGainersHTML;
+    if(cachedLosersHTML)  loserList.innerHTML  = cachedLosersHTML;
+  }
+}
+
+/* -------- NACKL TICKER (home) -------- */
+// Cache para não sumir ao falhar
+const _nacklCache = { price: null, change: null, mcap: null };
+
+async function waspUpdateNackl(){
+  try {
+    const data = await waspFetchJSON(
+      "https://api.coingecko.com/api/v3/simple/price" +
+      "?ids=acki-nacki&vs_currencies=usd&include_24hr_change=true&include_market_cap=true"
+    );
+
+    const coin = data["acki-nacki"] || {};
+    const price  = coin.usd ?? 0;
+    const change = coin.usd_24h_change ?? 0;
+    const mcap   = coin.usd_market_cap ?? 0;
+
+    const priceStr = price === 0
+      ? "$ 0.00"
+      : price < 0.0001
+        ? "$ " + price.toFixed(6)
+        : "$ " + price.toFixed(4);
+
+    const changeStr = (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
+
+    let mcapStr = "";
+    if(mcap >= 1e9)       mcapStr = "$ " + (mcap / 1e9).toFixed(2) + "B";
+    else if(mcap >= 1e6)  mcapStr = "$ " + (mcap / 1e6).toFixed(2) + "M";
+    else if(mcap > 0)     mcapStr = "$ " + mcap.toFixed(0);
+    else                  mcapStr = "Pré-lançamento";
+
+    // Salva cache
+    _nacklCache.price  = priceStr;
+    _nacklCache.change = changeStr;
+    _nacklCache.mcap   = mcapStr;
+    _nacklCache.chgVal = change;
+
+    waspSetText("nacklPrice",  priceStr);
+    waspSetText("nacklChange", changeStr);
+    waspSetText("nacklMcap",   mcapStr);
+
+    const changeEl = $("nacklChange");
+    if(changeEl) changeEl.style.color = change >= 0 ? WASP_GREEN : WASP_RED;
+
+  } catch(e){
+    // Mantém último valor válido se existir
+    if(_nacklCache.price){
+      waspSetText("nacklPrice",  _nacklCache.price);
+      waspSetText("nacklChange", _nacklCache.change);
+      waspSetText("nacklMcap",   _nacklCache.mcap);
+      const changeEl = $("nacklChange");
+      if(changeEl) changeEl.style.color = (_nacklCache.chgVal||0) >= 0 ? WASP_GREEN : WASP_RED;
+    }
+    // Se não tem cache ainda, mantém o "--" que já está
+  }
+}
+
+async function waspUpdateMarketAll(){
+  try {
+    await waspUpdateNackl();
+    await waspUpdateOverview();
+    await waspUpdateTop3();
+    await waspUpdateFearGreed();
+    await waspUpdateTrending();
+    await waspUpdateGainersLosers();
+  } catch(e){}
+}
+
+/* =========================
+   GOOGLE SUGGESTIONS
+========================= */
+function fetchGoogleSuggestions(query){
+    return new Promise((resolve) => {
+        const callbackName = "googleSuggest_" + Date.now();
+
+        window[callbackName] = function(data){
+            try {
+                const suggestions = data[1] || [];
+                resolve(suggestions.map(s => ({ phrase: s })));
+            } catch(e){
+                resolve([]);
+            }
+            delete window[callbackName];
+            script.remove();
+        };
+
+        const script = document.createElement("script");
+        script.src =
+          "https://suggestqueries.google.com/complete/search?client=chrome&q=" +
+          encodeURIComponent(query) +
+          "&callback=" + callbackName;
+        script.onerror = () => resolve([]);
+        document.body.appendChild(script);
+    });
+}
+
+/* =========================
+   MOTOR DE BUSCA
+========================= */
+let currentEngine = localStorage.getItem("searchEngine") || "google";
+
+const engines = {
+    google: { icon: "img/google.webp", url: "https://www.google.com/search?q=" },
+    brave:  { icon: "img/brave.webp",  url: "https://search.brave.com/search?q=" },
+    bing:   { icon: "img/bing.webp",   url: "https://www.bing.com/search?q=" },
+    duck:   { icon: "img/duck.webp",   url: "https://duckduckgo.com/?q=" }
+};
+
+function initEngine(){
+    const icon = $("engineIcon");
+    if(icon) icon.src = engines[currentEngine].icon;
+}
+
+function toggleEngineMenu(){
+    const menu  = $("engineMenu");
+    const arrow = document.querySelector(".engine-arrow");
+    if(menu)  menu.classList.toggle("active");
+    if(arrow) arrow.classList.toggle("open");
+}
+
+function setEngine(engine){
+    currentEngine = engine;
+    localStorage.setItem("searchEngine", engine);
+
+    const icon  = $("engineIcon");
+    const menu  = $("engineMenu");
+    const arrow = document.querySelector(".engine-arrow");
+
+    if(icon)  icon.src = engines[engine].icon;
+    if(menu)  menu.classList.remove("active");
+    if(arrow) arrow.classList.remove("open");
+}
+
+/* =========================
+   SUGESTÕES DE BUSCA
+========================= */
+function showSuggestions(list){
+    const box = $("searchSuggestions");
+    if(!box) return;
+
+    box.innerHTML = "";
+
+    if(!list || list.length === 0){
+        box.classList.remove("active");
+        return;
+    }
+
+    list.forEach(text => {
+        const item = document.createElement("div");
+        item.className = "suggestion-item";
+        item.textContent = text;
+        item.onclick = () => selectSuggestion(text);
+        box.appendChild(item);
+    });
+
+    box.classList.add("active");
+}
+
+function hideSuggestions(){
+    const box = $("searchSuggestions");
+    if(box) box.classList.remove("active");
+}
+
+function showNativeSuggestions(data){
+    const box = $("searchSuggestions");
+    if(!box) return;
+
+    const suggestions = data.map(item => item.phrase);
+
+    box.innerHTML = suggestions.map(s => {
+        let favicon = "img/search.webp";
+        const match = s.match(/([a-z0-9-]+\.[a-z]{2,})/i);
+        if(match){
+            favicon = "https://www.google.com/s2/favicons?domain=" + match[1] + "&sz=64";
+        }
+        return `
+            <div class="suggestion-item" data-value="${s}">
+                <img class="suggestion-icon" src="${favicon}">
+                <span>${s}</span>
+            </div>
+        `;
+    }).join("");
+
+    box.querySelectorAll(".suggestion-item").forEach(item => {
+        item.addEventListener("click", function(){
+            selectSuggestion(this.getAttribute("data-value"));
+        });
+    });
+
+    box.classList.add("active");
+}
+
+function selectSuggestion(text){
+    const input = $("homeInput");
+    if(input) input.value = text;
+    hideSuggestions();
+    searchFrom("homeInput");
+}
+
+/* =========================
+   ABAS / NAV
+========================= */
+function setBottomTab(mode){
+    document.querySelectorAll(".bottom-tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.mode === mode);
+    });
+}
+
+function openMarketTab(){
+    openScreen("market");
+    setBottomTab("market");
+}
+
+function openHiveTab(){
+    setBottomTab("hive");
+    // Garante que abre — nunca fecha ao clicar na aba
+    const panel = $("hivePanel");
+    if(!panel) return;
+    if(!panel.classList.contains("active")){
+        toggleHive();
+    }
+}
+
+function openBeePanel(){
+    if(window.Android && Android.openBeePanel){
+        Android.openBeePanel();
+    } else {
+        openScreen("browser");
+        setBottomTab("browser");
+    }
+}
+
+function goNativeHome(){
+    if(window.Android && typeof Android.goHome === "function"){
+        Android.goHome();
+    } else {
+        resetHome();
+    }
+}
+
+/* =========================
+   HOME / RESET
+========================= */
+
+// Versão única de resetHome — com setBottomTab correto
+function resetHome(){
+    openScreen("home");
+
+    document.querySelectorAll(".badge").forEach(btn => btn.classList.remove("active"));
+    const firstBadge = document.querySelector(".badge");
+    if(firstBadge) firstBadge.classList.add("active");
+
+    setBottomTab("main");
+}
+
+/* =========================
+   RECENTES — LIMPAR
+========================= */
+window.clearRecents = function(){
+  try {
+    localStorage.removeItem(window.RECENTS_KEY);
+    localStorage.setItem(window.RECENTS_KEY, JSON.stringify([]));
+
+    const list = $("recentList");
+    if(list){
+      list.innerHTML = `<div style="opacity:.6;padding:10px;">Nenhum recente ainda…</div>`;
+    }
+  } catch(e){
+    console.error("Erro ao limpar recents", e);
+  }
+};
+
+/* =========================
+   HIVE HANDLE
+========================= */
+function hideHiveHandle(){
+    const h = document.querySelector(".hive-handle");
+    if(h) h.style.opacity = "0";
+}
+
+function showHiveHandle(){
+    const h = document.querySelector(".hive-handle");
+    if(h) h.style.opacity = "1";
+}
+
+function restoreHiveHandleLater(){
+    setTimeout(() => {
+        const panel = $("hivePanel");
+        if(panel && !panel.classList.contains("active")){
+            showHiveHandle();
+        }
+    }, 60);
+}
+
+/* =========================
+   HIVE — CONTROLES
+========================= */
+function toggleHive(){
+    renderHive();
+    const panel = $("hivePanel");
+    if(!panel) return;
+
+    panel.classList.toggle("active");
+
+    if(panel.classList.contains("active")){
+        hideHiveHandle();
+    } else {
+        showHiveHandle();
+    }
+}
+
+function closeHive(){
+    const panel = $("hivePanel");
+    if(panel) panel.classList.remove("active");
+    showHiveHandle();
+    // Volta aba ativa para home quando fecha o Hive
+    setBottomTab("main");
+}
+
+/* =========================
+   HIVE — STORAGE
+========================= */
+const HIVE_KEY = "wasp_hive_items";
+
+function loadHive(){
+    try {
+        return JSON.parse(localStorage.getItem(HIVE_KEY)) || [];
+    } catch {
+        return [];
+    }
+}
+
+function saveHive(list){
+    localStorage.setItem(HIVE_KEY, JSON.stringify(list));
+}
+
+/* =========================
+   HIVE — RENDER
+========================= */
+function renderHive(){
+    const grid = $("hiveGrid");
+    if(!grid) return;
+
+    let list = loadHive();
+    if(!Array.isArray(list)) list = [];
+
+    // Sites completos do Wasp
+    const WASP_DEFAULT_SITES = [
+        { name:"Google",        url:"https://google.com" },
+        { name:"YouTube",       url:"https://youtube.com" },
+        { name:"Instagram",     url:"https://instagram.com" },
+        { name:"Facebook",      url:"https://facebook.com" },
+        { name:"X",             url:"https://twitter.com" },
+        { name:"WhatsApp",      url:"https://web.whatsapp.com" },
+        { name:"TikTok",        url:"https://tiktok.com" },
+        { name:"Reddit",        url:"https://reddit.com" },
+        { name:"GitHub",        url:"https://github.com" },
+        { name:"Binance",       url:"https://binance.com" },
+        { name:"CoinMarketCap", url:"https://coinmarketcap.com" },
+        { name:"CoinGecko",     url:"https://coingecko.com" },
+        { name:"Uniswap",       url:"https://app.uniswap.org" },
+        { name:"OpenSea",       url:"https://opensea.io" },
+        { name:"Acki Nacki",    url:"https://ackinacki.com" },
+        { name:"AckiScan",      url:"https://ackiscan.com" },
+        { name:"BeeScan",       url:"https://beescan.live" },
+        { name:"Telegram",      url:"https://web.telegram.org" },
+        { name:"DuckDuckGo",    url:"https://duckduckgo.com" },
+        { name:"Wikipedia",     url:"https://wikipedia.org" },
+        { name:"Bee Engine",    url:"bee://engine" },
+        { name:"Configurações", url:"settings://open" }
+    ];
+
+    // Seed inicial (primeira vez)
+    if(list.length === 0 && !localStorage.getItem("waspHiveInitialized")){
+        list = WASP_DEFAULT_SITES.map(s => ({ ...s, uses:0, lastUsed:0 }));
+        saveHive(list);
+        localStorage.setItem("waspHiveInitialized", "2");
+    }
+
+    // Migração: versões anteriores tinham poucos sites — adicionar os que faltam
+    if(localStorage.getItem("waspHiveInitialized") !== "2"){
+        const existingUrls = new Set(list.map(i => i.url));
+        WASP_DEFAULT_SITES.forEach(s => {
+            if(!existingUrls.has(s.url)){
+                list.push({ ...s, uses:0, lastUsed:0 });
+            }
+        });
+        saveHive(list);
+        localStorage.setItem("waspHiveInitialized", "2");
+    }
+
+    // Garantir campos
+    list.forEach(item => {
+        if(typeof item.uses !== "number") item.uses = 0;
+        if(!item.lastUsed) item.lastUsed = 0;
+    });
+
+    // Remover config salvo acidentalmente
+    list = list.filter(i => i.url !== "__config__");
+
+    const runtimeList = [
+        ...list,
+        { name:"Bee Engine", url:"__bee__",    uses:-999, lastUsed:0 },
+        { name:"Config",     url:"__config__", uses:-999, lastUsed:0 }
+    ];
+
+    const unpinnedItems = runtimeList.filter(i =>
+        i.url !== "__config__" && i.url !== "__bee__"
+    );
+
+    const now = Date.now();
+    const intelligence = [...unpinnedItems].sort((a,b) => {
+        const recencyA = (now - (a.lastUsed || 0)) / 86400000;
+        const recencyB = (now - (b.lastUsed || 0)) / 86400000;
+        const scoreA = (a.uses || 0) * 2 - recencyA;
+        const scoreB = (b.uses || 0) * 2 - recencyB;
+        return scoreB - scoreA;
+    });
+
+    const topItems = intelligence.slice(0, 4);
+
+    const remaining = runtimeList
+        .filter(i => !topItems.includes(i))
+        .sort((a,b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity:"base" }));
+
+    const finalList = [...topItems, ...remaining];
+
+    grid.innerHTML = "";
+
+    if(topItems.length > 0){
+        const title = document.createElement("div");
+        title.className = "hive-title";
+        title.textContent = "Mais usados";
+        grid.appendChild(title);
+    }
+
+    finalList.forEach((item, index) => {
+
+        if(index === 4){
+            const divider = document.createElement("div");
+            divider.className = "hive-divider";
+            grid.appendChild(divider);
+        }
+
+        const div = document.createElement("div");
+
+        // Bee Engine
+        if(item.url === "__bee__"){
+            div.className = "hive-item hive-config";
+            div.innerHTML = '<img src="img/bee.webp"><span>Bee Engine</span>';
+            div.onclick = function(){
+                if(window.Android && typeof Android.openBee === "function"){
+                    Android.openBee();
+                }
+            };
+            grid.appendChild(div);
+            return;
+        }
+
+        // Config
+        if(item.url === "__config__"){
+            div.className = "hive-item hive-config";
+            div.innerHTML = '<img src="img/settings.webp"><span>Config</span>';
+            div.onclick = openSettings;
+            grid.appendChild(div);
+            return;
+        }
+
+        // Item normal
+        let domain = "";
+        try { domain = new URL(item.url).hostname; } catch { domain = item.url; }
+
+        div.className = "hive-item";
+        div.innerHTML =
+            '<img class="hive-icon" src="https://www.google.com/s2/favicons?domain=' +
+            domain + '&sz=64"><span>' + item.name + '</span>';
+
+        const img = div.querySelector("img");
+        img.onload  = function(){ if(img.naturalWidth < 32) img.src = "file:///android_asset/img/globe.webp"; };
+        img.onerror = function(){ img.src = "file:///android_asset/img/globe.webp"; };
+
+        // Long press + tap
+        let timer = null;
+        let longPress = false;
+        let startX = 0, startY = 0;
+
+        div.addEventListener("touchstart", (e) => {
+            longPress = false;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            timer = setTimeout(() => {
+                longPress = true;
+                openRemoveDialog(item);
+            }, 800);
+        });
+
+        div.addEventListener("touchend", (e) => {
+            if(timer){ clearTimeout(timer); timer = null; }
+
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const moved = Math.abs(endX - startX) > 10 || Math.abs(endY - startY) > 10;
+
+            if(!longPress && !moved){
+                let stored = loadHive();
+                const real = stored.find(i => i.url === item.url);
+                if(real){
+                    real.uses++;
+                    real.lastUsed = Date.now();
+                    saveHive(stored);
+                }
+                openNativeUrl(item.url);
+                renderHive();
+            }
+        });
+
+        div.addEventListener("touchmove", () => {
+            if(timer){ clearTimeout(timer); timer = null; }
+        });
+
+        grid.appendChild(div);
+    });
+}
+
+/* =========================
+   HIVE — HINTS E DEMO
+   (removidos — Hive abre só pelo botão da nav)
+========================= */
+function showHiveHint(){ /* desativado */ }
+function demoHiveFirstTime(){ /* desativado */ }
+
+/* =========================
+   SETTINGS
+========================= */
+function openSettings(){
+    const panel = $("settingsPanel");
+    if(panel) panel.classList.add("active");
+
+    // Carregar nome salvo no input
+    const input = $("userNameInput");
+    if(input){
+        const saved = localStorage.getItem(USER_NAME_KEY) || "";
+        input.value = saved;
+    }
+}
+
+function closeSettings(){
+    const panel = $("settingsPanel");
+    if(panel) panel.classList.remove("active");
+    restoreHiveHandleLater();
+}
+
+/* =========================
+   MENU HAMBURGUER
+   (redireciona para settings — não há #menu no HTML)
+========================= */
+function toggleMenu(){
+    openSettings();
+}
+
+function closeMenu(){
+    closeSettings();
+}
+
+/* =========================
+   BEE DEMO
+========================= */
+function toggleBeeDemo(){
+  const el = $("beeStatus");
+  if(!el) return;
+  el.textContent = el.textContent === "ON" ? "OFF" : "ON";
+}
+
+/* =========================
+   DIALOGS — HIVE
+========================= */
+let hiveRemoveTarget = null;
+
+function openRemoveDialog(item){
+    if(item.url === "__config__" || item.url === "__bee__") return;
+    hiveRemoveTarget = item;
+    const dialog = $("removeDialog");
+    if(dialog) dialog.style.display = "flex";
+}
+
+function closeRemoveDialog(){
+    const dialog = $("removeDialog");
+    if(dialog) dialog.style.display = "none";
+    hiveRemoveTarget = null;
+    restoreHiveHandleLater();
+}
+
+function openAddDialog(){
+    const dialog = $("addDialog");
+    if(dialog) dialog.style.display = "flex";
+    const nameInput = $("addName");
+    const urlInput  = $("addUrl");
+    if(nameInput) nameInput.value = "";
+    if(urlInput)  urlInput.value  = "";
+}
+
+function closeAddDialog(){
+    const dialog = $("addDialog");
+    if(dialog) dialog.style.display = "none";
+}
+
+function confirmAddSite(){
+    const nameInput = $("addName");
+    const urlInput  = $("addUrl");
+
+    const name = nameInput ? nameInput.value.trim() : "";
+    let url = urlInput ? urlInput.value.trim() : "";
+
+    if(!name || !url){ alert("Preencha nome e URL"); return; }
+
+    if(!url.startsWith("http://") && !url.startsWith("https://")){
+        url = "https://" + url;
+    }
+
+    let list = loadHive();
+    if(!Array.isArray(list)) list = [];
+
+    list.push({ name, url, uses: 0, lastUsed: 0 });
+    saveHive(list);
+    renderHive();
+    closeAddDialog();
+}
+
+function confirmRemove(){
+    if(!hiveRemoveTarget) return;
+
+    let stored = loadHive();
+    stored = stored.filter(i => i.url !== hiveRemoveTarget.url);
+    saveHive(stored);
+    closeRemoveDialog();
+    renderHive();
+
+    const panel = $("hivePanel");
+    if(panel) panel.classList.add("active");
+    hideHiveHandle();
+}
+
+function addHiveSite(){
+    openAddDialog();
+}
+
+/* =========================
+   BACKGROUND DIÁRIO
+========================= */
+function setDailyBackground(){
+    const backgrounds = [
+        "img/backgrounds/bg1.webp",
+        "img/backgrounds/bg2.webp",
+        "img/backgrounds/bg3.webp"
+    ];
+    const day = new Date().getDate();
+    const bg  = backgrounds[day % backgrounds.length];
+    document.documentElement.style.setProperty("--wasp-home-bg", `url('${bg}')`);
+}
+
+/* =========================
+   LOGO POR TEMA
+========================= */
+function updateLogoByTheme(){
+    const isLight = document.body.getAttribute("data-theme") === "light";
+    const darkLogo  = document.querySelector(".logo-topbar-dark");
+    const lightLogo = document.querySelector(".logo-topbar-light");
+    if(darkLogo)  darkLogo.style.display  = isLight ? "none"  : "block";
+    if(lightLogo) lightLogo.style.display = isLight ? "block" : "none";
+}
+
+/* =========================
+   EVENT LISTENERS GLOBAIS
+   (unificados — sem duplicatas)
+========================= */
+
+// Único handler de click para fechar menus ao clicar fora
+document.addEventListener("click", (e) => {
+    const bottomNav = document.querySelector(".bottom-nav");
+
+    // Fechar engine menu
+    const engineMenu   = $("engineMenu");
+    const engineButton = document.querySelector(".search-engine");
+    if(engineMenu && engineButton){
+        if(engineMenu.classList.contains("active") &&
+           !engineMenu.contains(e.target) &&
+           !engineButton.contains(e.target)){
+            engineMenu.classList.remove("active");
+        }
+    }
+
+    // Fechar hive ao clicar fora — ignora cliques na bottom nav
+    const hivePanel = $("hivePanel");
+    if(hivePanel &&
+       hivePanel.classList.contains("active") &&
+       !hivePanel.contains(e.target) &&
+       !(bottomNav && bottomNav.contains(e.target))){
+        closeHive();
+    }
+});
+
+// Único handler de pointerdown — engine menu, suggestions, hive
+document.addEventListener("pointerdown", function(e){
+    const addDialog     = $("addDialog");
+    const removeDialog  = $("removeDialog");
+    const settingsPanel = $("settingsPanel");
+    const bottomNav     = document.querySelector(".bottom-nav");
+
+    // Não fechar nada se estiver em dialog/settings/nav
+    if(addDialog     && addDialog.contains(e.target))     return;
+    if(removeDialog  && removeDialog.contains(e.target))  return;
+    if(bottomNav     && bottomNav.contains(e.target))     return;
+    if(settingsPanel && settingsPanel.classList.contains("active") && settingsPanel.contains(e.target)) return;
+
+    const target = e.target;
+
+    // Engine menu
+    const engineMenu   = $("engineMenu");
+    const engineButton = document.querySelector(".search-engine");
+    if(engineMenu && engineButton){
+        if(engineMenu.classList.contains("active") &&
+           !engineMenu.contains(target) &&
+           !engineButton.contains(target)){
+            engineMenu.classList.remove("active");
+        }
+    }
+
+    // Search suggestions
+    const suggestions = $("searchSuggestions");
+    const searchArea  = document.querySelector(".home-search");
+    if(suggestions && searchArea){
+        if(suggestions.classList.contains("active") && !searchArea.contains(target)){
+            suggestions.classList.remove("active");
+        }
+    }
+
+    // Hive panel — não fecha se o clique veio da nav
+    const hivePanel = $("hivePanel");
+    if(hivePanel){
+        if(hivePanel.classList.contains("active") && !hivePanel.contains(target)){
+            hivePanel.classList.remove("active");
+            setBottomTab("main");
+        }
+    }
+});
+
+// Swipe para fechar o Hive (só fecha, nunca abre por gesto)
+document.addEventListener("touchstart", function(e){
+    const panel = $("hivePanel");
+    if(!panel || !panel.classList.contains("active")) return;
+    const grid = $("hiveGrid");
+    if(grid && grid.contains(e.target)) return;
+    window._hiveSwipeStartY = e.touches[0].clientY;
+});
+
+document.addEventListener("touchend", function(e){
+    if(window._hiveSwipeStartY == null) return;
+    const panel = $("hivePanel");
+    if(!panel || !panel.classList.contains("active")){
+        window._hiveSwipeStartY = null;
+        return;
+    }
+    const diff = window._hiveSwipeStartY - e.changedTouches[0].clientY;
+    window._hiveSwipeStartY = null;
+    // Só fecha se swipe para baixo (diff negativo > 80px)
+    if(diff < -80){
+        closeHive();
+    }
+});
+
+// Stoppers de propagação
+(function(){
+    const engineMenu = $("engineMenu");
+    if(engineMenu) engineMenu.addEventListener("pointerdown", e => e.stopPropagation());
+
+    const hivePanel = $("hivePanel");
+    if(hivePanel) hivePanel.addEventListener("click", e => e.stopPropagation());
+})();
+
+/* =========================
+   SAUDAÇÃO PERSONALIZADA
+========================= */
+const USER_NAME_KEY = "wasp_user_name";
+
+function getUserName(){
+    // 1. Nome definido nas settings
+    const name = localStorage.getItem(USER_NAME_KEY);
+    if(name && name.trim()) return name.trim();
+
+    // 2. Fallback: wallet name da Bee Engine
+    try {
+        const bee = localStorage.getItem("wasp_bee_panel_switch_v4");
+        if(bee){
+            const state = JSON.parse(bee);
+            if(state.walletName && state.walletName.trim()){
+                return state.walletName.trim();
+            }
+        }
+    } catch(e){}
+
+    // 3. Sem nome
+    return null;
+}
+
+function saveUserName(value){
+    localStorage.setItem(USER_NAME_KEY, value.trim());
+    initGreeting(); // atualiza saudação em tempo real
+}
+
+function initGreeting(){
+    const el    = $("greetingText");
+    const emoji = $("greetingEmoji");
+    if(!el) return;
+
+    const h = new Date().getHours();
+    let saudacao, em;
+
+    if(h >= 5  && h < 12){ saudacao = "Bom dia";    em = "☀️"; }
+    else if(h >= 12 && h < 18){ saudacao = "Boa tarde";  em = "🌤"; }
+    else if(h >= 18 && h < 23){ saudacao = "Boa noite";  em = "🌙"; }
+    else                       { saudacao = "Olá";        em = "⭐"; }
+
+    const nome = getUserName();
+    el.textContent = nome ? saudacao + ", " + nome : saudacao + ", Wasp";
+    if(emoji) emoji.textContent = em;
+}
+
+/* =========================
+   CARD BEE ENGINE NA HOME
+========================= */
+function initBeeHomeCard(){
+    updateBeeHomeCard();
+    setInterval(updateBeeHomeCard, 30000);
+}
+
+function updateBeeHomeCard(){
+    const statusEl = $("beeHomeStatus");
+    const wpEl     = $("beeHomeWP");
+    const saldoEl  = $("beeHomeSaldo") || $("beeHomeUptime");
+    const card     = document.querySelector(".bee-home-card");
+
+    if(!statusEl) return;
+
+    // Saldo WP sempre do localStorage (Central WP)
+    const saldo   = parseInt(localStorage.getItem("wasp_wp") || "0", 10);
+    if(saldoEl) saldoEl.textContent = saldo;
+
+    // WP ganhos hoje — lê chave diária simples
+    function getWpToday(){
+        try {
+            const todayKey = "wasp_wp_today_" + new Date().toDateString();
+            return parseInt(localStorage.getItem(todayKey) || "0", 10);
+        } catch(_){ return 0; }
+    }
+
+    // Tenta bridge Android
+    if(window.AndroidBee && typeof AndroidBee.getMiningStatus === "function"){
+        try {
+            const raw    = AndroidBee.getMiningStatus();
+            const status = raw ? JSON.parse(raw) : null;
+
+            if(status && status.running){
+                statusEl.textContent = "Minerando ⚡";
+                statusEl.style.color = "#37d67a";
+                if(card) card.classList.add("bee-card-active");
+                if(wpEl){
+                    const wp = (status.wpToday || 0) + getWpToday();
+                    wpEl.textContent = wp > 0 ? "+" + wp : "0";
+                }
+            } else {
+                statusEl.textContent = "Toque para abrir";
+                statusEl.style.color = "rgba(255,255,255,0.50)";
+                if(card) card.classList.remove("bee-card-active");
+                if(wpEl) wpEl.textContent = getWpToday() || "0";
+            }
+            return;
+        } catch(e){}
+    }
+
+    // Sem bridge — mostra WP do localStorage
+    statusEl.textContent = "Toque para abrir";
+    statusEl.style.color = "rgba(255,255,255,0.50)";
+    if(card) card.classList.remove("bee-card-active");
+    if(wpEl) wpEl.textContent = getWpToday() || "0";
+}
+
+/* =========================
+   SEARCH FOCUS OVERLAY
+========================= */
+function initSearchFocus(){
+    const input = $("homeInput");
+    const wrap  = $("homeSearchWrap");
+
+    if(!input) return;
+
+    input.addEventListener("focus", () => {
+        if(wrap) wrap.classList.add("search-focused");
+    });
+
+    input.addEventListener("blur", () => {
+        setTimeout(() => {
+            if(wrap) wrap.classList.remove("search-focused");
+        }, 150);
+    });
+
+    // Sticky search ao rolar — suave com rAF
+    const homeEl = $("home");
+    const hero   = document.querySelector(".home-hero");
+    if(homeEl && hero){
+        let ticking = false;
+        let isScrolled = false;
+
+        homeEl.addEventListener("scroll", () => {
+            if(!ticking){
+                requestAnimationFrame(() => {
+                    const scrolled = homeEl.scrollTop > 60;
+                    if(scrolled !== isScrolled){
+                        isScrolled = scrolled;
+                        hero.classList.toggle("scrolled", scrolled);
+                    }
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+}
+
+function blurSearch(){
+    const input = $("homeInput");
+    if(input) input.blur();
+    const wrap = $("homeSearchWrap");
+    if(wrap) wrap.classList.remove("search-focused");
+    hideSuggestions();
+}
+
+/* =========================
+   ÚNICO DOMContentLoaded
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+
+    // Saudação personalizada
+    initGreeting();
+
+    // Card Bee Engine na home
+    initBeeHomeCard();
+
+    // Overlay de foco da busca
+    initSearchFocus();
+
+    // Tema salvo
+    const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+    applyTheme(savedTheme);
+    updateLogoByTheme();
+
+    // Inicializações
+    initEngine();
+    renderHive();
+    renderRecents();
+    openScreen("home");
+    setDailyBackground();
+
+    // Sugestões de busca
+    const input = $("homeInput");
+    if(input){
+        function renderFromHistory(filter = ""){
+            let history = loadHistory();
+            if(filter){
+                history = history.filter(item =>
+                    item.q.toLowerCase().includes(filter.toLowerCase())
+                );
+            }
+            history = history.slice(0, 5);
+            if(history.length === 0){ hideSuggestions(); return; }
+            showNativeSuggestions(history.map(h => ({ phrase: h.q })));
+        }
+
+        input.addEventListener("focus", () => renderFromHistory());
+
+        input.addEventListener("input", async function(){
+            const value = this.value.trim();
+            if(value.length === 0){ renderFromHistory(); return; }
+
+            let history = loadHistory()
+                .filter(item => item.q.toLowerCase().includes(value.toLowerCase()))
+                .slice(0, 3)
+                .map(h => ({ phrase: h.q }));
+
+            let google = [];
+            try { google = await fetchGoogleSuggestions(value); } catch(e){}
+
+            const combined = [...history, ...google].slice(0, 6);
+            if(combined.length > 0){
+                showNativeSuggestions(combined);
+            } else {
+                hideSuggestions();
+            }
+        });
+    }
+
+    // Mercado (carga inicial + intervalo)
+    waspUpdateMarketAll();
+    setInterval(waspUpdateMarketAll, 60000);
+
+    // Wasp Blog feed (cache de 6h)
+    if (typeof loadWaspFeed === "function") {
+        loadWaspFeed();
+    }
+
+    // Tap game (se existir)
+    if(typeof startWaspTapGame === "function"){
+        startWaspTapGame();
+    }
+
+    // Hints Hive
+    showHiveHint();
+    demoHiveFirstTime();
+});
+
+/* =========================
+   LOAD EVENTS
+========================= */
+window.addEventListener("load", () => {
+    document.body.style.opacity = "1";
+});

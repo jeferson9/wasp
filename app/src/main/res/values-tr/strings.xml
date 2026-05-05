@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wasp Browser</string>
+    <string name="menu_section_navigation">GEZİNME</string>
+    <string name="menu_translate">Sayfayı çevir</string>
+    <string name="menu_translate_sub">In-place translation</string>
+    <string name="menu_favorites">Favoriler</string>
+    <string name="menu_favorites_sub">Kaydedilen siteler</string>
+    <string name="menu_history">Geçmiş</string>
+    <string name="menu_history_sub">Visited pages</string>
+    <string name="menu_downloads">İndirmeler</string>
+    <string name="menu_downloads_sub">Downloaded files</string>
+    <string name="menu_section_web3">WEB3</string>
+    <string name="menu_web3">Web3 Hub</string>
+    <string name="menu_web3_sub">DApps and wallets</string>
+    <string name="menu_bee">Bee Engine</string>
+    <string name="menu_bee_sub">Active mining</string>
+    <string name="menu_settings">Ayarlar</string>
+    <string name="menu_about">Wasp Hakkında</string>
+    <string name="menu_reload">Yenile</string>
+    <string name="menu_forward">İleri</string>
+    <string name="menu_share">Paylaş</string>
+    <string name="menu_new_tab">Yeni sekme</string>
+    <string name="toolbar_new_tab">+ Yeni sekme</string>
+    <string name="toast_new_tab">New tab opened</string>
+    <string name="toast_tab_duplicated">Tab duplicated</string>
+    <string name="tab_singular">sekme</string>
+    <string name="tab_plural">sekme</string>
+    <string name="toast_added_favorite">Favorilere eklendi</string>
+    <string name="toast_removed_favorite">Favorilerden kaldırıldı</string>
+    <string name="download_started">İndirme başladı</string>
+    <string name="download_error">Could not start download</string>
+    <string name="download_image_title">Image</string>
+    <string name="download_image_confirm">Download</string>
+    <string name="error_no_app">No app found for this link</string>
+    <string name="error_load_title">Failed to load</string>
+    <string name="error_load_body">Wasp could not open this page.</string>
+    <string name="perm_location_title">Location permission</string>
+    <string name="perm_location_body">%s wants to access your location</string>
+    <string name="perm_media_title">Media access</string>
+    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_allow">İzin ver</string>
+    <string name="perm_camera">camera</string>
+    <string name="perm_microphone">microphone</string>
+    <string name="translate_title">Sayfayı şuna çevir:</string>
+    <string name="translate_subtitle">Texts replaced directly on the page</string>
+    <string name="translate_search_hint">🔍  Dil ara...</string>
+    <string name="translate_not_found">Dil bulunamadı</string>
+    <string name="translate_done">Sayfa çevrildi ✓</string>
+    <string name="translate_done_to">Translated to: %s</string>
+    <string name="translate_change">Translate to another language</string>
+    <string name="translate_change_sub">Choose from %d languages</string>
+    <string name="translate_revert">View original</string>
+    <string name="translate_revert_sub">Reload page without translation</string>
+    <string name="translate_loading">⟳ Çevriliyor...</string>
+    <string name="translate_error">Error starting translation</string>
+    <string name="translate_none">Çevrilecek sayfa yok</string>
+    <string name="settings_title">Ayarlar</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_language">Dil</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_language">Uygulama dili</string>
+    <string name="settings_language_system">Sistemi takip et</string>
+    <string name="settings_language_changed">Dil değiştirildi. Uygulamak için uygulamayı yeniden başlatın.</string>
+    <string name="settings_search_engine">Search engine</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_bee">Bee Engine</string>
+    <string name="settings_about">About Wasp</string>
+    <string name="settings_version">Sürüm</string>
+    <string name="dialog_image_title">Image</string>
+    <string name="dialog_cancel">İptal</string>
+    <string name="dialog_confirm">Onayla</string>
+    <string name="bee_engine_started">Bee Engine Started</string>
+    <string-array name="search_engines">
+        <item>Google</item>
+        <item>Bing</item>
+        <item>DuckDuckGo</item>
+    </string-array>
+</resources>

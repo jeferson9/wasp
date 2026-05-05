@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wasp Browser</string>
+    <string name="menu_section_navigation">NAVEGAÇÃO</string>
+    <string name="menu_translate">Traduzir página</string>
+    <string name="menu_translate_sub">Tradução direto na página</string>
+    <string name="menu_favorites">Favoritos</string>
+    <string name="menu_favorites_sub">Sites salvos</string>
+    <string name="menu_history">Histórico</string>
+    <string name="menu_history_sub">Páginas visitadas</string>
+    <string name="menu_downloads">Downloads</string>
+    <string name="menu_downloads_sub">Arquivos baixados</string>
+    <string name="menu_section_web3">WEB3</string>
+    <string name="menu_web3">Web3 Hub</string>
+    <string name="menu_web3_sub">DApps e carteiras</string>
+    <string name="menu_bee">Bee Engine</string>
+    <string name="menu_bee_sub">Mineração ativa</string>
+    <string name="menu_settings">Configurações</string>
+    <string name="menu_about">Sobre o Wasp</string>
+    <string name="menu_reload">Recarregar</string>
+    <string name="menu_forward">Avançar</string>
+    <string name="menu_share">Compartilhar</string>
+    <string name="menu_new_tab">Nova aba</string>
+    <string name="toolbar_new_tab">+ Nova aba</string>
+    <string name="toast_new_tab">Nova aba aberta</string>
+    <string name="toast_tab_duplicated">Aba duplicada</string>
+    <string name="tab_singular">aba</string>
+    <string name="tab_plural">abas</string>
+    <string name="toast_added_favorite">Adicionado aos favoritos</string>
+    <string name="toast_removed_favorite">Removido dos favoritos</string>
+    <string name="download_started">Download iniciado</string>
+    <string name="download_error">Não foi possível iniciar o download</string>
+    <string name="download_image_title">Imagem</string>
+    <string name="download_image_confirm">Baixar</string>
+    <string name="error_no_app">Nenhum app encontrado para este link</string>
+    <string name="error_load_title">Erro ao carregar</string>
+    <string name="error_load_body">O Wasp não conseguiu abrir esta página.</string>
+    <string name="perm_location_title">Permissão de localização</string>
+    <string name="perm_location_body">%s quer acessar sua localização</string>
+    <string name="perm_media_title">Acesso de mídia</string>
+    <string name="perm_media_body">%s quer acessar: %s</string>
+    <string name="perm_allow">Permitir</string>
+    <string name="perm_camera">câmera</string>
+    <string name="perm_microphone">microfone</string>
+    <string name="translate_title">Traduzir página para</string>
+    <string name="translate_subtitle">Textos substituídos direto na página</string>
+    <string name="translate_search_hint">🔍  Buscar idioma...</string>
+    <string name="translate_not_found">Nenhum idioma encontrado</string>
+    <string name="translate_done">Página traduzida ✓</string>
+    <string name="translate_done_to">Traduzida para: %s</string>
+    <string name="translate_change">Traduzir para outro idioma</string>
+    <string name="translate_change_sub">Escolher entre %d idiomas</string>
+    <string name="translate_revert">Ver original</string>
+    <string name="translate_revert_sub">Recarregar a página sem tradução</string>
+    <string name="translate_loading">⟳ Traduzindo...</string>
+    <string name="translate_error">Erro ao iniciar tradução</string>
+    <string name="translate_none">Nenhuma página para traduzir</string>
+    <string name="settings_title">Configurações</string>
+    <string name="settings_section_appearance">Aparência</string>
+    <string name="settings_section_language">Idioma</string>
+    <string name="settings_section_privacy">Privacidade</string>
+    <string name="settings_section_about">Sobre</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_dark">Escuro</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_language">Idioma do app</string>
+    <string name="settings_language_system">Seguir o sistema</string>
+    <string name="settings_language_changed">Idioma alterado. Reinicie o app para aplicar.</string>
+    <string name="settings_search_engine">Motor de busca</string>
+    <string name="settings_privacy">Privacidade</string>
+    <string name="settings_bee">Bee Engine</string>
+    <string name="settings_about">Sobre o Wasp</string>
+    <string name="settings_version">Versão</string>
+    <string name="dialog_image_title">Image</string>
+    <string name="dialog_cancel">Cancelar</string>
+    <string name="dialog_confirm">Confirmar</string>
+    <string name="bee_engine_started">Bee Engine Iniciado</string>
+    <string-array name="search_engines">
+        <item>Google</item>
+        <item>Bing</item>
+        <item>DuckDuckGo</item>
+    </string-array>
+</resources>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wasp Browser</string>
+    <string name="menu_section_navigation">नेविगेशन</string>
+    <string name="menu_translate">पृष्ठ अनुवाद करें</string>
+    <string name="menu_translate_sub">पृष्ठ पर सीधे अनुवाद</string>
+    <string name="menu_favorites">पसंदीदा</string>
+    <string name="menu_favorites_sub">सहेजी गई साइटें</string>
+    <string name="menu_history">इतिहास</string>
+    <string name="menu_history_sub">देखे गए पृष्ठ</string>
+    <string name="menu_downloads">डाउनलोड</string>
+    <string name="menu_downloads_sub">डाउनलोड की गई फ़ाइलें</string>
+    <string name="menu_section_web3">WEB3</string>
+    <string name="menu_web3">Web3 Hub</string>
+    <string name="menu_web3_sub">DApps and wallets</string>
+    <string name="menu_bee">Bee Engine</string>
+    <string name="menu_bee_sub">Active mining</string>
+    <string name="menu_settings">सेटिंग्स</string>
+    <string name="menu_about">Wasp के बारे में</string>
+    <string name="menu_reload">पुनः लोड करें</string>
+    <string name="menu_forward">आगे</string>
+    <string name="menu_share">साझा करें</string>
+    <string name="menu_new_tab">नया टैब</string>
+    <string name="toolbar_new_tab">+ नया टैब</string>
+    <string name="toast_new_tab">New tab opened</string>
+    <string name="toast_tab_duplicated">Tab duplicated</string>
+    <string name="tab_singular">tab</string>
+    <string name="tab_plural">tabs</string>
+    <string name="toast_added_favorite">पसंदीदा में जोड़ा गया</string>
+    <string name="toast_removed_favorite">पसंदीदा से हटाया गया</string>
+    <string name="download_started">डाउनलोड शुरू हुआ</string>
+    <string name="download_error">Could not start download</string>
+    <string name="download_image_title">Image</string>
+    <string name="download_image_confirm">Download</string>
+    <string name="error_no_app">No app found for this link</string>
+    <string name="error_load_title">Failed to load</string>
+    <string name="error_load_body">Wasp could not open this page.</string>
+    <string name="perm_location_title">Location permission</string>
+    <string name="perm_location_body">%s wants to access your location</string>
+    <string name="perm_media_title">Media access</string>
+    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_allow">अनुमति दें</string>
+    <string name="perm_camera">camera</string>
+    <string name="perm_microphone">microphone</string>
+    <string name="translate_title">पृष्ठ का अनुवाद करें</string>
+    <string name="translate_subtitle">Texts replaced directly on the page</string>
+    <string name="translate_search_hint">🔍  भाषा खोजें...</string>
+    <string name="translate_not_found">कोई भाषा नहीं मिली</string>
+    <string name="translate_done">पृष्ठ अनुवादित ✓</string>
+    <string name="translate_done_to">Translated to: %s</string>
+    <string name="translate_change">Translate to another language</string>
+    <string name="translate_change_sub">Choose from %d languages</string>
+    <string name="translate_revert">View original</string>
+    <string name="translate_revert_sub">Reload page without translation</string>
+    <string name="translate_loading">⟳ अनुवाद हो रहा है...</string>
+    <string name="translate_error">Error starting translation</string>
+    <string name="translate_none">अनुवाद के लिए कोई पृष्ठ नहीं</string>
+    <string name="settings_title">सेटिंग्स</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_language">भाषा</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_language">ऐप की भाषा</string>
+    <string name="settings_language_system">सिस्टम का पालन करें</string>
+    <string name="settings_language_changed">भाषा बदली गई। लागू करने के लिए ऐप पुनः शुरू करें।</string>
+    <string name="settings_search_engine">Search engine</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_bee">Bee Engine</string>
+    <string name="settings_about">About Wasp</string>
+    <string name="settings_version">संस्करण</string>
+    <string name="dialog_image_title">Image</string>
+    <string name="dialog_cancel">रद्द करें</string>
+    <string name="dialog_confirm">पुष्टि करें</string>
+    <string name="bee_engine_started">Bee Engine Started</string>
+    <string-array name="search_engines">
+        <item>Google</item>
+        <item>Bing</item>
+        <item>DuckDuckGo</item>
+    </string-array>
+</resources>

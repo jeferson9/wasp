@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wasp Browser</string>
+    <string name="menu_section_navigation">НАВИГАЦИЯ</string>
+    <string name="menu_translate">Перевести страницу</string>
+    <string name="menu_translate_sub">Перевод прямо на странице</string>
+    <string name="menu_favorites">Избранное</string>
+    <string name="menu_favorites_sub">Сохранённые сайты</string>
+    <string name="menu_history">История</string>
+    <string name="menu_history_sub">Посещённые страницы</string>
+    <string name="menu_downloads">Загрузки</string>
+    <string name="menu_downloads_sub">Скачанные файлы</string>
+    <string name="menu_section_web3">WEB3</string>
+    <string name="menu_web3">Web3 Hub</string>
+    <string name="menu_web3_sub">DApps и кошельки</string>
+    <string name="menu_bee">Bee Engine</string>
+    <string name="menu_bee_sub">Активный майнинг</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="menu_about">О Wasp</string>
+    <string name="menu_reload">Обновить</string>
+    <string name="menu_forward">Вперёд</string>
+    <string name="menu_share">Поделиться</string>
+    <string name="menu_new_tab">Новая вкладка</string>
+    <string name="toolbar_new_tab">+ Новая вкладка</string>
+    <string name="toast_new_tab">Новая вкладка открыта</string>
+    <string name="toast_tab_duplicated">Вкладка дублирована</string>
+    <string name="tab_singular">вкладка</string>
+    <string name="tab_plural">вкладки</string>
+    <string name="toast_added_favorite">Добавлено в избранное</string>
+    <string name="toast_removed_favorite">Удалено из избранного</string>
+    <string name="download_started">Загрузка начата</string>
+    <string name="download_error">Не удалось начать загрузку</string>
+    <string name="download_image_title">Image</string>
+    <string name="download_image_confirm">Скачать</string>
+    <string name="error_no_app">Приложение для этой ссылки не найдено</string>
+    <string name="error_load_title">Ошибка загрузки</string>
+    <string name="error_load_body">Wasp не смог открыть эту страницу.</string>
+    <string name="perm_location_title">Разрешение на геолокацию</string>
+    <string name="perm_location_body">%s хочет получить доступ к вашему местоположению</string>
+    <string name="perm_media_title">Media access</string>
+    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_allow">Разрешить</string>
+    <string name="perm_camera">камера</string>
+    <string name="perm_microphone">микрофон</string>
+    <string name="translate_title">Перевести страницу на</string>
+    <string name="translate_subtitle">Тексты заменяются прямо на странице</string>
+    <string name="translate_search_hint">🔍  Поиск языка...</string>
+    <string name="translate_not_found">Язык не найден</string>
+    <string name="translate_done">Страница переведена ✓</string>
+    <string name="translate_done_to">Переведено на: %s</string>
+    <string name="translate_change">Перевести на другой язык</string>
+    <string name="translate_change_sub">Выбрать из %d языков</string>
+    <string name="translate_revert">Показать оригинал</string>
+    <string name="translate_revert_sub">Перезагрузить страницу без перевода</string>
+    <string name="translate_loading">⟳ Перевод...</string>
+    <string name="translate_error">Ошибка запуска перевода</string>
+    <string name="translate_none">Нет страницы для перевода</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_section_appearance">Внешний вид</string>
+    <string name="settings_section_language">Язык</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_language">Язык приложения</string>
+    <string name="settings_language_system">Следовать системе</string>
+    <string name="settings_language_changed">Язык изменён. Перезапустите приложение для применения.</string>
+    <string name="settings_search_engine">Search engine</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_bee">Bee Engine</string>
+    <string name="settings_about">About Wasp</string>
+    <string name="settings_version">Версия</string>
+    <string name="dialog_image_title">Image</string>
+    <string name="dialog_cancel">Отмена</string>
+    <string name="dialog_confirm">Подтвердить</string>
+    <string name="bee_engine_started">Bee Engine Started</string>
+    <string-array name="search_engines">
+        <item>Google</item>
+        <item>Bing</item>
+        <item>DuckDuckGo</item>
+    </string-array>
+</resources>

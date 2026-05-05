@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#111420"
+    android:fitsSystemWindows="true">
+
+    <!-- TOPBAR -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="58dp"
+        android:background="#111420"
+        android:gravity="center_vertical"
+        android:paddingStart="6dp"
+        android:paddingEnd="16dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/wasp_tb_btn_bg"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="#6B7A99"
+            android:padding="9dp"
+            android:contentDescription="Voltar"/>
+
+        <EditText
+            android:id="@+id/urlInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Favoritos"
+            android:textColor="#C8D0E0"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:gravity="start|center_vertical"
+            android:background="@null"
+            android:enabled="false"/>
+
+        <Button
+            android:id="@+id/btnUrl"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/btnClearFavorites"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:text="Limpar"
+            android:textColor="#EF4444"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:background="@android:color/transparent"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"/>
+
+    </LinearLayout>
+
+    <!-- DIVIDER -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1A1E2E"/>
+
+    <!-- LISTA -->
+    <ListView
+        android:id="@+id/listFavorites"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:scrollbars="none"/>
+
+</LinearLayout>
