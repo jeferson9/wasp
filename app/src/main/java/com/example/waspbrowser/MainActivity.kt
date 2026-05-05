@@ -407,6 +407,32 @@ class MainActivity : AppCompatActivity() {
     // DIALOGS / TOAST
     // =========================================================
 
+    private var translateBadgeView: TextView? = null
+
+    private fun injectTranslatorJS(js: String) {
+        try {
+            getActiveSession().loadUri("javascript:(function(){$js})();")
+        } catch (e: Exception) {
+            showWaspToast("Erro ao iniciar tradução")
+        }
+    }
+
+    private fun updateTranslateBadge(badgeView: TextView?) {
+        val old = topBar.findViewWithTag<View>("translate_badge")
+        (old?.parent as? android.view.ViewGroup)?.removeView(old)
+        translateBadgeView = null
+        if (badgeView == null) return
+        translateBadgeView = badgeView
+        // Adiciona o badge na toolbar ao lado da URL
+        val urlRow = topBar.findViewById<android.view.ViewGroup>(R.id.urlDisplay) ?: return
+        val dp = resources.displayMetrics.density
+        val lp = android.view.ViewGroup.MarginLayoutParams(
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+            (28 * dp).toInt()
+        ).apply { marginStart = (6 * dp).toInt() }
+        urlRow.addView(badgeView, lp)
+    }
+
     private fun showWaspToast(message: String) {
         val layout = layoutInflater.inflate(R.layout.wasp_toast, null)
         layout.findViewById<TextView>(R.id.txtToast).text = message
@@ -674,6 +700,21 @@ class MainActivity : AppCompatActivity() {
                     "downloads"  -> startActivity(Intent(this, DownloadsActivity::class.java))
                     "web3"       -> startActivity(Intent(this, Web3Activity::class.java))
                     "bee"        -> openBeePanel()
+                    "translate"  -> {
+                        if (currentUrl.isBlank() || currentUrl.startsWith("about:")) {
+                            showWaspToast("Nenhuma página para traduzir")
+                        } else {
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                WaspTranslator.show(
+                                    context        = this,
+                                    currentUrl     = currentUrl,
+                                    onBadgeRequest = { badgeView -> runOnUiThread { updateTranslateBadge(badgeView) } },
+                                    onInjectJS     = { js -> runOnUiThread { injectTranslatorJS(js) } },
+                                    onReload       = { runOnUiThread { getActiveSession().reload() } }
+                                )
+                            }, 250)
+                        }
+                    }
                     "settings"   -> startActivity(Intent(this, SettingsActivity::class.java))
                     "about"      -> startActivity(Intent(this, AboutActivity::class.java))
                 }
@@ -806,6 +847,7 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     urlDomain.text = getCleanDomain(safeUrl)
                     updateSecurityIcon(safeUrl)
+                    WaspTranslator.onNavigate(safeUrl) { badgeView -> updateTranslateBadge(badgeView) }
                 }
                 finishPopupLoginIfNeeded(session, safeUrl)
             }
