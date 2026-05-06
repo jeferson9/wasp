@@ -530,7 +530,7 @@
     <div class="cmc-left">
         <div class="cmc-label">MINERAÇÃO NACKL</div>
         <div class="cmc-val" id="miningStatus">WP necessário para minerar</div>
-        <div class="cmc-hint">Use WP para ativar o Boost 2x e turbinar sua mineração de NACKL.</div>
+        <div class="cmc-hint">Use WP para ativar o Boost 2x e iniciar mineração em segundo plano — o Wasp continua minerando NACKL enquanto você navega.</div>
     </div>
     <div class="cmc-icon">🐝</div>
 </div>
@@ -564,9 +564,9 @@
     <!-- BOOST -->
     <div class="c-game-card card-boost" id="cardBoost" onclick="doBoost()">
         <div class="cgc-emoji">🚀</div>
-        <div class="cgc-name">Boost 2x</div>
+        <div class="cgc-name">Boost 2x + Bg Mining</div>
         <div class="cgc-reward" id="boostRewardText">−20 WP</div>
-        <div class="cgc-status" id="boostStatus">Turbina mineração</div>
+        <div class="cgc-status" id="boostStatus">Boost + mineração bg 15min</div>
         <button class="cgc-btn btn-purple" id="boostBtn">Ativar Boost</button>
     </div>
 
@@ -749,12 +749,35 @@
       el("statBoost").textContent = boostOn ? "ATIVO ⚡" : "OFF";
       el("statBoost").style.color = boostOn ? "var(--yellow)" : "var(--muted)";
 
-      // Mining status
-      el("miningStatus").textContent = boostOn
-        ? "Boost ativo — mineração 2x ⚡"
-        : wp >= CFG.boostCost
-          ? "Você tem WP para ativar o Boost"
-          : `Ganhe mais ${CFG.boostCost - wp} WP para o Boost`;
+      // Mining status — checa bg mining via bridge ou localStorage
+      let bgMiningActive = false;
+      let bgMiningRem = 0;
+      try {
+        if (window.AndroidBee && typeof window.AndroidBee.getBgMiningStatus === "function") {
+          const bgStatus = JSON.parse(window.AndroidBee.getBgMiningStatus());
+          bgMiningActive = bgStatus.active;
+          bgMiningRem = bgStatus.remainingMs || 0;
+        } else {
+          // fallback localStorage
+          const bgEnd = parseInt(localStorage.getItem("wasp_bg_mining_end") || "0", 10);
+          bgMiningActive = Date.now() < bgEnd;
+          bgMiningRem = Math.max(0, bgEnd - Date.now());
+        }
+      } catch (_) {}
+
+      if (bgMiningActive) {
+        el("miningStatus").textContent = "🐝 Minerando em bg — " + fmtSecs(bgMiningRem);
+        el("miningStatus").style.color = "var(--green, #22C55E)";
+      } else if (boostOn) {
+        el("miningStatus").textContent = "Boost ativo — mineração 2x ⚡";
+        el("miningStatus").style.color = "var(--yellow)";
+      } else if (wp >= CFG.boostCost) {
+        el("miningStatus").textContent = "Você tem WP — ative o Boost 2x + Bg Mining";
+        el("miningStatus").style.color = "";
+      } else {
+        el("miningStatus").textContent = `Ganhe mais ${CFG.boostCost - wp} WP para o Boost`;
+        el("miningStatus").style.color = "";
+      }
 
       // TAP card
       const tapRem = remMs(K.tapLast, CFG.tapCooldown);

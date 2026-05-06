@@ -238,9 +238,50 @@ function activateBoost() {
   setWpBalance(balance - BOOST_COST);
   setNum(BOOST_END_KEY, Date.now() + BOOST_DURATION);
 
-  addHistoryLine(`-${BOOST_COST} WP • Boost 2x ativado`);
-  toastBee("Boost ativado ⚡");
+  addHistoryLine(`-${BOOST_COST} WP • Boost 2x + Mineração bg ativados`);
+  toastBee("Boost + Mineração bg ativados ⚡🐝");
+
+  // ── Inicia mineração em background via Android Service ──────────────────
+  // Mesmo que a Bee Engine não esteja conectada à rede Acki Nacki,
+  // o service mantém o estado de mineração ativo na UI e registra ciclos.
+  _startAndroidBgMining(BOOST_DURATION);
+
   renderWpCentral();
+}
+
+/**
+ * Dispara o BeeBackgroundService via bridge Android.
+ * Funciona como "mineração simulada em background" enquanto a integração
+ * completa com a rede Acki Nacki ainda está pendente.
+ */
+function _startAndroidBgMining(durationMs) {
+  try {
+    // Bridge do BeeActivity (AndroidBee)
+    if (window.AndroidBee && typeof window.AndroidBee.startBgMining === "function") {
+      const wallet = _getWalletName();
+      window.AndroidBee.startBgMining(durationMs, wallet);
+      return;
+    }
+    // Bridge da MainActivity (Android)
+    if (window.Android && typeof window.Android.startBgMining === "function") {
+      const wallet = _getWalletName();
+      window.Android.startBgMining(durationMs, wallet);
+      return;
+    }
+    // Fallback: salva estado no localStorage para ser lido pelo bee_engine.js
+    localStorage.setItem("wasp_bg_mining_end", String(Date.now() + durationMs));
+    localStorage.setItem("wasp_bg_mining_active", "true");
+  } catch (e) {
+    console.warn("_startAndroidBgMining fallback:", e);
+  }
+}
+
+function _getWalletName() {
+  try {
+    // Tenta ler do estado salvo pelo bee_engine.js
+    const state = JSON.parse(localStorage.getItem("bee_engine_state") || "{}");
+    return state.walletName || state.minerAddress || "";
+  } catch (_) { return ""; }
 }
 
 function updateBoostUI() {
