@@ -301,6 +301,44 @@ class BeeActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         }
+
+        // ─── Background Mining via WP ─────────────────────────────────────────
+
+        @JavascriptInterface
+        fun startBgMining(durationMs: Long, walletName: String) {
+            Log.d(TAG, "startBgMining: ${durationMs/60000}min wallet=$walletName")
+            try {
+                val intent = BeeBackgroundService.buildStartIntent(
+                    this@BeeActivity, durationMs, walletName
+                )
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "startBgMining error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun stopBgMining() {
+            try {
+                startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
+            } catch (e: Exception) {
+                Log.e(TAG, "stopBgMining error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun getBgMiningStatus(): String {
+            val active = BeeBackgroundService.isActive(this@BeeActivity)
+            val remaining = BeeBackgroundService.remainingMs(this@BeeActivity)
+            val prefs = getSharedPreferences(BeeBackgroundService.PREFS_BG, MODE_PRIVATE)
+            val cycles = prefs.getInt(BeeBackgroundService.KEY_CYCLES, 0)
+            val wallet = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
+            return """{"active":$active,"remainingMs":$remaining,"cycles":$cycles,"wallet":"$wallet"}"""
+        }
     }
 
     override fun onResume() {
@@ -320,10 +358,14 @@ class BeeActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Garante que o indicador da toolbar volta para cinza quando a Bee fecha.
-        // Sem isso, "mining_active = true" fica gravado e o dot fica verde para sempre.
-        getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
-            .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
+        // Só limpa o indicador de mining se o bg service também não estiver ativo.
+        // Sem essa checagem, fechar a BeeActivity apagava o estado mesmo com o
+        // BeeBackgroundService rodando em background.
+        val bgStillActive = BeeBackgroundService.isActive(this)
+        if (!bgStillActive) {
+            getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
+                .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
+        }
         beeWebView.destroy()
         super.onDestroy()
     }
