@@ -890,10 +890,38 @@
       setN(K.wp, wp - CFG.boostCost);
       setN(K.boostEnd, Date.now() + CFG.boostDuration);
       const hist = getJ(K.history, []);
-      hist.unshift(`[${new Date().toLocaleString("pt-BR")}] -${CFG.boostCost} WP • Boost 2x ativado`);
+      hist.unshift(`[${new Date().toLocaleString("pt-BR")}] -${CFG.boostCost} WP • Boost 2x + Bg Mining ativados`);
       setJ(K.history, hist.slice(0,100));
       renderAll();
-      toast("Boost 2x ativado por 15 min! 🚀");
+      toast("Boost 2x + Mineração bg ativados! 🚀🐝");
+
+      // ── Inicia BeeBackgroundService via bridge ──────────────────────────
+      _startBgMining(CFG.boostDuration);
+    }
+
+    function _startBgMining(durationMs) {
+      try {
+        // Lê wallet do estado do bee_engine
+        let wallet = "";
+        try {
+          const s = JSON.parse(localStorage.getItem("bee_engine_state") || "{}");
+          wallet = s.walletName || s.minerAddress || "";
+        } catch(_) {}
+
+        if (window.AndroidBee && typeof window.AndroidBee.startBgMining === "function") {
+          window.AndroidBee.startBgMining(durationMs, wallet);
+          return;
+        }
+        if (window.Android && typeof window.Android.startBgMining === "function") {
+          window.Android.startBgMining(durationMs, wallet);
+          return;
+        }
+        // fallback localStorage
+        localStorage.setItem("wasp_bg_mining_end", String(Date.now() + durationMs));
+        localStorage.setItem("wasp_bg_mining_active", "true");
+      } catch(e) {
+        console.warn("_startBgMining error:", e);
+      }
     }
 
     /* ══════════════════════════════════════════
