@@ -588,7 +588,6 @@ object WaspTranslator {
     // ─────────────────────────────────────────────────────
     private fun buildTranslatorJS(targetLang: String): String = """
 (function() {
-    if (window.__waspTranslating) return;
     window.__waspTranslating = true;
 
     var TARGET = '$targetLang';

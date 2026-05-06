@@ -411,26 +411,38 @@ class MainActivity : AppCompatActivity() {
 
     private fun injectTranslatorJS(js: String) {
         try {
-            getActiveSession().loadUri("javascript:(function(){$js})();")
+            val loader = GeckoSession.Loader().uri("javascript:(function(){$js})();")
+            getActiveSession().load(loader)
         } catch (e: Exception) {
             showWaspToast("Erro ao iniciar tradução")
         }
     }
 
     private fun updateTranslateBadge(badgeView: TextView?) {
-        val old = topBar.findViewWithTag<View>("translate_badge")
-        (old?.parent as? android.view.ViewGroup)?.removeView(old)
         translateBadgeView = null
-        if (badgeView == null) return
-        translateBadgeView = badgeView
-        // Adiciona o badge na toolbar ao lado da URL
-        val urlRow = topBar.findViewById<android.view.ViewGroup>(R.id.urlDisplay) ?: return
-        val dp = resources.displayMetrics.density
-        val lp = android.view.ViewGroup.MarginLayoutParams(
-            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-            (28 * dp).toInt()
-        ).apply { marginStart = (6 * dp).toInt() }
-        urlRow.addView(badgeView, lp)
+        if (badgeView == null) {
+            // Restaura domínio original
+            urlDomain.text = getCleanDomain(currentUrl)
+            urlDomain.setTextColor(android.graphics.Color.parseColor("#6B7A99"))
+            urlDomain.background = null
+            urlDomain.setPadding(0, 0, 0, 0)
+        } else {
+            // Reutiliza o urlDomain como badge — sem adicionar views novas
+            translateBadgeView = badgeView
+            urlDomain.text = badgeView.text
+            urlDomain.setTextColor(android.graphics.Color.parseColor("#60A5FA"))
+            // Propaga mudanças de texto do badge para o urlDomain
+            badgeView.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    urlDomain.text = s
+                    if (s?.startsWith("🌐") == true) {
+                        urlDomain.setTextColor(android.graphics.Color.parseColor("#22C55E"))
+                    }
+                }
+            })
+        }
     }
 
     private fun showWaspToast(message: String) {
@@ -876,7 +888,8 @@ class MainActivity : AppCompatActivity() {
                 val lowerUrl = url.lowercase()
 
                 val nativeScheme = !url.startsWith("http://") && !url.startsWith("https://") &&
-                        !url.startsWith("about:") && !url.startsWith("data:") && !url.startsWith("blob:")
+                        !url.startsWith("about:") && !url.startsWith("data:") &&
+                        !url.startsWith("blob:") && !url.startsWith("javascript:")
 
                 if (nativeScheme) {
                     runOnUiThread { openExternalApp(url) }

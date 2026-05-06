@@ -102,8 +102,10 @@ class SettingsActivity : AppCompatActivity() {
             title    = getString(R.string.settings_language),
             subtitle = "$currentLangFlag  $currentLangLabel",
             emoji    = "🌍"
-        ) { 
-            showLanguagePicker() 
+        ) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                showLanguagePicker()
+            }, 150)
         })
 
         content.addView(divider())
