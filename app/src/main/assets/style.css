@@ -684,7 +684,20 @@ body[data-theme="light"] .bottom-tab.active {
 
 .bottom-tab:active { transform: scale(.94); }
 
-.bottom-icon  { font-size: clamp(18px, 4vw, 22px); line-height: 1; }
+.bottom-icon  { 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.bottom-icon svg {
+  width: clamp(20px, 4.5vw, 24px);
+  height: clamp(20px, 4.5vw, 24px);
+  transition: stroke .2s ease;
+}
+.bottom-tab.active .bottom-icon svg {
+  filter: drop-shadow(0 0 6px rgba(247,198,0,0.5));
+}
 .bottom-label { font-size: clamp(10px, 2.5vw, 13px); font-weight: 700; line-height: 1; }
 
 /* Padding inferior para não ficar atrás do nav */
