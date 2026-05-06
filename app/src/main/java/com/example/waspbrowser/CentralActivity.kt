@@ -174,6 +174,47 @@ class CentralActivity : AppCompatActivity() {
         
         @JavascriptInterface
         fun log(m: String) { android.util.Log.d("CentralJS", m) }
+
+        // ─── Background Mining via WP ─────────────────────────────────────
+
+        @JavascriptInterface
+        fun startBgMining(durationMs: Long, walletName: String) {
+            android.util.Log.d(TAG, "startBgMining: ${durationMs/60000}min wallet=$walletName")
+            try {
+                val intent = BeeBackgroundService.buildStartIntent(
+                    this@CentralActivity, durationMs, walletName
+                )
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+                handler.post {
+                    Toast.makeText(this@CentralActivity, "🐝 Minerando em background!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "startBgMining error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun stopBgMining() {
+            try {
+                startService(BeeBackgroundService.buildStopIntent(this@CentralActivity))
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "stopBgMining error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun getBgMiningStatus(): String {
+            val active = BeeBackgroundService.isActive(this@CentralActivity)
+            val remaining = BeeBackgroundService.remainingMs(this@CentralActivity)
+            val prefs = getSharedPreferences(BeeBackgroundService.PREFS_BG, MODE_PRIVATE)
+            val cycles = prefs.getInt(BeeBackgroundService.KEY_CYCLES, 0)
+            val wallet = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
+            return """{"active":$active,"remainingMs":$remaining,"cycles":$cycles,"wallet":"$wallet"}"""
+        }
     }
 
     private fun evaluateJs(jsFunc: String) {
