@@ -1086,7 +1086,6 @@ class MainActivity : AppCompatActivity() {
 
     fun openBeePanel() {
         startActivity(Intent(this, BeeActivity::class.java))
-        overridePendingTransition(0, 0)
     }
 
     // =========================================================

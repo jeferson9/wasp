@@ -6,16 +6,39 @@
         <item name="android:navigationBarColor">#0b0f1a</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:windowBackground">#111420</item>
         <item name="colorPrimary">#FFD400</item>
         <item name="colorPrimaryDark">#111420</item>
         <item name="colorSurface">#111420</item>
         <item name="colorOnSurface">#C8D0E0</item>
+        <!-- Transições suaves entre Activities — elimina flash branco -->
+        <item name="android:windowAnimationStyle">@style/WaspWindowAnimation</item>
+    </style>
+
+    <!-- Animações de janela globais -->
+    <style name="WaspWindowAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/fade_out</item>
     </style>
 
     <style name="WaspPopupMenu" parent="Widget.AppCompat.PopupMenu">
         <item name="android:popupBackground">@drawable/menu_glass</item>
     </style>
 
+
+    <!-- Variante slide-up para CentralActivity (painel WP) -->
+    <style name="Theme.WaspBrowser.SlideUp" parent="Theme.WaspBrowser">
+        <item name="android:windowAnimationStyle">@style/WaspWindowAnimation.SlideUp</item>
+    </style>
+
+    <style name="WaspWindowAnimation.SlideUp" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_up</item>
+        <item name="android:activityOpenExitAnimation">@anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_down</item>
+    </style>
 
     <!-- Tema do Splash — fundo escuro imediato, sem flash branco -->
     <style name="Theme.WaspBrowser.Splash" parent="Theme.WaspBrowser">

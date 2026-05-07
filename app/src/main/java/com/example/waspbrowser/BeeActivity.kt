@@ -210,7 +210,6 @@ class BeeActivity : AppCompatActivity() {
             putExtra("navigate_to", screen)
         }
         startActivity(intent)
-        overridePendingTransition(0, 0)
     }
 
     inner class BeeBridge {

@@ -90,6 +90,7 @@
             android:name=".CentralActivity"
             android:screenOrientation="portrait"
             android:noHistory="false"
+            android:theme="@style/Theme.WaspBrowser.SlideUp"
             android:windowSoftInputMode="adjustResize"/>
 
         <activity android:name=".FavoritesActivity" />
