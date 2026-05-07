@@ -22,12 +22,14 @@
         <WebView
             android:id="@+id/webAppView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="#111420" />
 
         <org.mozilla.geckoview.GeckoView
             android:id="@+id/geckoView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="#111420"
             android:visibility="gone" />
 
         <ProgressBar
