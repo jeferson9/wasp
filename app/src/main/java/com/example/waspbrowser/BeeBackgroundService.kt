@@ -163,6 +163,7 @@ class BeeBackgroundService : Service() {
 
             // ── KEEP-ALIVE broadcast: acorda o BeeActivity/WebView para manter o miner vivo
             sendBroadcast(Intent(ACTION_KEEP_ALIVE).apply {
+                setPackage(packageName)
                 putExtra("cycles", cycles)
                 putExtra("remaining_ms", endTime - now)
                 putExtra("wallet", walletName)

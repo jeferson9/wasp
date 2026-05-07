@@ -370,8 +370,19 @@ class BeeActivity : AppCompatActivity() {
         super.onResume()
         beeWebView.onResume()
         beeWebView.resumeTimers()
-        registerReceiver(keepAliveReceiver,
-            IntentFilter(BeeBackgroundService.ACTION_KEEP_ALIVE))
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                keepAliveReceiver,
+                IntentFilter(BeeBackgroundService.ACTION_KEEP_ALIVE),
+                RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(
+                keepAliveReceiver,
+                IntentFilter(BeeBackgroundService.ACTION_KEEP_ALIVE)
+            )
+        }
         evaluateJs("if(window.onAppResume) window.onAppResume()")
     }
 
