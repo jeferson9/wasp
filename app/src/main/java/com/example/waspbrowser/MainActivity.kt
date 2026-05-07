@@ -707,10 +707,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     "newtab"     -> { newTab(currentUrl); showWaspToast("Aba duplicada") }
                     "hive"       -> goHome()
-                    "favorites"  -> startActivity(Intent(this, FavoritesActivity::class.java))
-                    "history"    -> startActivity(Intent(this, HistoryActivity::class.java))
-                    "downloads"  -> startActivity(Intent(this, DownloadsActivity::class.java))
-                    "web3"       -> startActivity(Intent(this, Web3Activity::class.java))
+                    "favorites"  -> startActivityFade(Intent(this, FavoritesActivity::class.java))
+                    "history"    -> startActivityFade(Intent(this, HistoryActivity::class.java))
+                    "downloads"  -> startActivityFade(Intent(this, DownloadsActivity::class.java))
+                    "web3"       -> startActivityFade(Intent(this, Web3Activity::class.java))
                     "bee"        -> openBeePanel()
                     "translate"  -> {
                         if (currentUrl.isBlank() || currentUrl.startsWith("about:")) {
@@ -727,8 +727,8 @@ class MainActivity : AppCompatActivity() {
                             }, 250)
                         }
                     }
-                    "settings"   -> startActivity(Intent(this, SettingsActivity::class.java))
-                    "about"      -> startActivity(Intent(this, AboutActivity::class.java))
+                    "settings"   -> startActivityFade(Intent(this, SettingsActivity::class.java))
+                    "about"      -> startActivityFade(Intent(this, AboutActivity::class.java))
                 }
             }
         }
@@ -1084,8 +1084,15 @@ class MainActivity : AppCompatActivity() {
             .hideSoftInputFromWindow(urlInput.windowToken, 0)
     }
 
+    // ── Transição fade para todas as telas ───────────────────────────────────
+    private fun startActivityFade(intent: Intent) {
+        startActivity(intent)
+        @Suppress("DEPRECATION")
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+    }
+
     fun openBeePanel() {
-        startActivity(Intent(this, BeeActivity::class.java))
+        startActivityFade(Intent(this, BeeActivity::class.java))
     }
 
     // =========================================================
@@ -1202,6 +1209,7 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread {
             val intent = android.content.Intent(this@MainActivity, CentralActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(R.anim.slide_up, R.anim.fade_out)
         }
     }
 

@@ -210,6 +210,8 @@ class BeeActivity : AppCompatActivity() {
             putExtra("navigate_to", screen)
         }
         startActivity(intent)
+        @Suppress("DEPRECATION")
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
     }
 
     inner class BeeBridge {

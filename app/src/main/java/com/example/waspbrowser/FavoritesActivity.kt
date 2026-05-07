@@ -29,7 +29,7 @@ class FavoritesActivity : AppCompatActivity() {
         urlInput.setText("FAVORITOS")
         urlInput.isEnabled = false
         btnUrl.visibility  = View.GONE
-        btnBack.setOnClickListener { finish() }
+        btnBack.setOnClickListener { finish(); @Suppress("DEPRECATION") overridePendingTransition(R.anim.fade_in, R.anim.fade_out) }
 
         btnClear.setOnClickListener {
             WaspDialogs.confirm(this, "Limpar favoritos", "Apagar todos os favoritos?", "Apagar") {

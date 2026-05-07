@@ -169,7 +169,13 @@ class CentralActivity : AppCompatActivity() {
         fun openWpAd() { handler.post { showRewardedAd() } }
         
         @JavascriptInterface
-        fun closeCentral() { handler.post { finish() } }
+        fun closeCentral() {
+            handler.post {
+                finish()
+                @Suppress("DEPRECATION")
+                overridePendingTransition(R.anim.fade_in, R.anim.slide_down)
+            }
+        }
 
         @JavascriptInterface
         fun toast(m: String) { handler.post { Toast.makeText(this@CentralActivity, m, Toast.LENGTH_SHORT).show() } }
@@ -228,6 +234,8 @@ class CentralActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(R.anim.fade_in, R.anim.slide_down)
     }
 
     override fun onResume() { super.onResume(); webView.onResume() }

@@ -31,7 +31,7 @@ class DownloadsActivity : AppCompatActivity() {
 
         btnUrl.visibility = View.GONE
 
-        btnBack.setOnClickListener { finish() }
+        btnBack.setOnClickListener { finish(); @Suppress("DEPRECATION") overridePendingTransition(R.anim.fade_in, R.anim.fade_out) }
         btnClear.setOnClickListener {
 
             showWaspConfirmDialog(

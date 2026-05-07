@@ -6,31 +6,41 @@
         <item name="android:navigationBarColor">#0b0f1a</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <!-- Fundo escuro imediato — evita flash branco antes do layout renderizar -->
         <item name="android:windowBackground">#111420</item>
+        <item name="android:windowContentOverlay">@null</item>
         <item name="colorPrimary">#FFD400</item>
         <item name="colorPrimaryDark">#111420</item>
         <item name="colorSurface">#111420</item>
         <item name="colorOnSurface">#C8D0E0</item>
-        <!-- Transições suaves entre Activities — elimina flash branco -->
+        <!-- Desativa a animação padrão horizontal do sistema — aplicamos via código -->
         <item name="android:windowAnimationStyle">@style/WaspWindowAnimation</item>
     </style>
 
-    <!-- Animações de janela globais -->
+    <!-- Sem nenhuma animação — usada quando controlamos via ActivityOptions no código -->
     <style name="WaspWindowAnimation" parent="@android:style/Animation.Activity">
         <item name="android:activityOpenEnterAnimation">@anim/fade_in</item>
         <item name="android:activityOpenExitAnimation">@anim/fade_out</item>
         <item name="android:activityCloseEnterAnimation">@anim/fade_in</item>
         <item name="android:activityCloseExitAnimation">@anim/fade_out</item>
+        <item name="android:taskOpenEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskOpenExitAnimation">@anim/fade_out</item>
+        <item name="android:taskCloseEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskCloseExitAnimation">@anim/fade_out</item>
+        <item name="android:taskToFrontEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskToFrontExitAnimation">@anim/fade_out</item>
+        <item name="android:taskToBackEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskToBackExitAnimation">@anim/fade_out</item>
     </style>
 
     <style name="WaspPopupMenu" parent="Widget.AppCompat.PopupMenu">
         <item name="android:popupBackground">@drawable/menu_glass</item>
     </style>
 
-
-    <!-- Variante slide-up para CentralActivity (painel WP) -->
+    <!-- CentralActivity — sobe de baixo como bottom sheet -->
     <style name="Theme.WaspBrowser.SlideUp" parent="Theme.WaspBrowser">
         <item name="android:windowAnimationStyle">@style/WaspWindowAnimation.SlideUp</item>
+        <item name="android:windowBackground">#111420</item>
     </style>
 
     <style name="WaspWindowAnimation.SlideUp" parent="@android:style/Animation.Activity">
@@ -40,7 +50,7 @@
         <item name="android:activityCloseExitAnimation">@anim/slide_down</item>
     </style>
 
-    <!-- Tema do Splash — fundo escuro imediato, sem flash branco -->
+    <!-- Splash — preto imediato, zero flash -->
     <style name="Theme.WaspBrowser.Splash" parent="Theme.WaspBrowser">
         <item name="android:windowBackground">#08090d</item>
         <item name="android:statusBarColor">#08090d</item>

@@ -68,7 +68,7 @@ class SettingsActivity : AppCompatActivity() {
             textSize = 22f
             setTextColor(Color.parseColor("#C8D0E0"))
             setPadding(0, 0, 16.dp(), 0)
-            setOnClickListener { finish() }
+            setOnClickListener { finish(); @Suppress("DEPRECATION") overridePendingTransition(R.anim.fade_in, R.anim.fade_out) }
         })
         header.addView(TextView(this).apply {
             text = getString(R.string.settings_title)
