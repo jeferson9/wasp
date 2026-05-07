@@ -329,25 +329,40 @@
   }
 
   // ─── PROPAGAÇÃO EM BACKGROUND ────────────────────────────────────────────
+  // Versão robusta: retry automático a cada 30s até confirmar propagação,
+  // máximo 10 tentativas (~5 minutos). Log explícito antes do get_reward().
+  var _propagateAttempts = 0;
+  var _propagateMaxAttempts = 10;
+  var _propagateRetryMs = 30000;
+
   async function tryPropagateBackground() {
     if (saved.propagated || !saved.minerAddress || !saved.publicKey) return;
-    log("Verificando propagação em background...", "linf");
-    // Passa max_attempts direto para o SDK — ele faz o poll internamente
-    // 20 tentativas × 5s = 100s máximo, sem loop externo
-    window.BeeSDK.ensure_mining_keys_propagated({
-      client_config: { network: { endpoints: ENDPOINTS } },
-      miner_address: saved.minerAddress,
-      app_id: APP_ID,
-      expected_owner_public: saved.publicKey,
-      max_attempts: 20,
-      interval_ms: 5000
-    }).then(function() {
+    _propagateAttempts++;
+    log("🔍 Verificando propagação em background... (tentativa " + _propagateAttempts + "/" + _propagateMaxAttempts + ")", "linf");
+
+    try {
+      await window.BeeSDK.ensure_mining_keys_propagated({
+        client_config: { network: { endpoints: ENDPOINTS } },
+        miner_address: saved.minerAddress,
+        app_id: APP_ID,
+        expected_owner_public: saved.publicKey,
+        max_attempts: 5,
+        interval_ms: 4000
+      });
+      // ✅ Confirmada — só a partir daqui o get_reward() será chamado com segurança
       saved.propagated = true; saveSaved();
-      log("✅ Propagação confirmada em background!", "lok");
+      log("✅ Propagação confirmada", "lok");
       var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmada";
-    }).catch(function(e) {
-      log("Propagação bg: " + (e&&e.message?e.message.substring(0,60):String(e)), "linf");
-    });
+    } catch(e) {
+      var em = e && e.message ? e.message.substring(0, 80) : String(e);
+      log("⏳ Propagação pendente: " + em, "linf");
+      if (_propagateAttempts < _propagateMaxAttempts) {
+        log("🔁 Tentando novamente em " + (_propagateRetryMs/1000) + "s...", "linf");
+        setTimeout(tryPropagateBackground, _propagateRetryMs);
+      } else {
+        log("⚠️ Propagação não confirmada após " + _propagateMaxAttempts + " tentativas — mineração pode falhar no claim.", "lwrn");
+      }
+    }
   }
 
   // ─── SETUP ───────────────────────────────────────────────────────────────
@@ -642,6 +657,45 @@
       handleEpochEnd("timeout");
     }, MINING_DURATION_MS + 3000); // +3s de margem após a sessão terminar
 
+    // ─── CLAIM SEGURO ─────────────────────────────────────────────────────
+    // Garante que "✅ Propagação confirmada" apareça no log ANTES do claim.
+    // Aguarda propagação (máx 60s) e só então dispara get_reward().
+    function claimRewardSafe(claimMiner) {
+      return new Promise(function(resolve) {
+        function doClaim() {
+          if (!saved.propagated) {
+            log("⚠️ Propagação ainda não confirmada — aguardando mais 10s antes do claim...", "lwrn");
+            setTimeout(doClaim, 10000);
+            return;
+          }
+          log("✅ Propagação confirmada — chamando get_reward()...", "lok");
+          log("💰 Chamando get_reward() na instância que minerou...", "linf");
+          claimMiner.get_reward().then(function() {
+            log("✅ get_reward() executado com sucesso! Reward enviado para a blockchain.", "lok");
+            log("💎 Verifique sua AN Wallet — o saldo NACKL será atualizado em breve.", "lok");
+            var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
+            toast("Reward NACKL enviado! Verifique sua wallet ✅");
+          }).catch(function(e) {
+            var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
+            log("❌ get_reward() falhou: " + errMsg, "lerr");
+            log("ℹ️ Possíveis causas: Mambaboard inativo, rede instável, ou epoch sem taps suficientes.", "lwrn");
+          }).finally(function() {
+            try { claimMiner.stop(); } catch(_) {}
+            resolve();
+          });
+        }
+        // Se já propagado, claim imediato; senão aguarda até 60s
+        var waitStart = Date.now();
+        (function waitPropagated() {
+          if (saved.propagated || (Date.now() - waitStart) > 60000) {
+            doClaim();
+          } else {
+            setTimeout(waitPropagated, 5000);
+          }
+        })();
+      });
+    }
+
     function handleEpochEnd(reason) {
       if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
       if (window._epochTimer)    { clearTimeout(window._epochTimer);     window._epochTimer    = null; }
@@ -671,21 +725,7 @@
           return;
         }
         log("💰 Chamando get_reward() na instância que minerou...", "linf");
-        // FIX: get_reward() retorna Promise<void> — não há valor de retorno.
-        // O reward é creditado diretamente na AN Wallet na blockchain.
-        claimMiner.get_reward().then(function() {
-          log("✅ get_reward() executado com sucesso! Reward enviado para a blockchain.", "lok");
-          log("💎 Verifique sua AN Wallet — o saldo NACKL será atualizado em breve.", "lok");
-          var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
-          toast("Reward NACKL enviado! Verifique sua wallet ✅");
-        }).catch(function(e) {
-          var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
-          log("❌ get_reward() falhou: " + errMsg, "lerr");
-          log("ℹ️ Possíveis causas: Mambaboard inativo, rede instável, ou epoch sem taps suficientes.", "lwrn");
-        }).finally(function() {
-          try { claimMiner.stop(); } catch(_) {}
-          scheduleRestart();
-        });
+        claimRewardSafe(claimMiner).finally(scheduleRestart);
       }, 16000);
 
       function scheduleRestart() {

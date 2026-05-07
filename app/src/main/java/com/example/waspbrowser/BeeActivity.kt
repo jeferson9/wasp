@@ -1,7 +1,10 @@
 package com.example.waspbrowser
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -44,6 +47,25 @@ class BeeActivity : AppCompatActivity() {
     private var adMode: String? = null
     private var pageLoaded = false
     private var isAdShowing = false
+
+    // ─── Keep-Alive Receiver ────────────────────────────────────────────────
+    // Recebe o broadcast do BeeBackgroundService a cada tick e garante que
+    // o WebView / miner continuam ativos sem serem suspensos pelo Android.
+    private val keepAliveReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != BeeBackgroundService.ACTION_KEEP_ALIVE) return
+            val remaining = intent.getLongExtra("remaining_ms", 0L)
+            Log.d(TAG, "Keep-alive recebido | restam ${remaining / 1000}s")
+            evaluateJs("""
+                (function(){
+                    if(window.BeeEngine && window.BeeEngine.isRunning && !window.BeeEngine.isRunning()){
+                        if(window.startMining) window.startMining();
+                    }
+                    if(window.onAppResume) window.onAppResume();
+                })()
+            """.trimIndent())
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -348,11 +370,14 @@ class BeeActivity : AppCompatActivity() {
         super.onResume()
         beeWebView.onResume()
         beeWebView.resumeTimers()
+        registerReceiver(keepAliveReceiver,
+            IntentFilter(BeeBackgroundService.ACTION_KEEP_ALIVE))
         evaluateJs("if(window.onAppResume) window.onAppResume()")
     }
 
     override fun onPause() {
         super.onPause()
+        try { unregisterReceiver(keepAliveReceiver) } catch (_: Exception) {}
         evaluateJs("if(window.onAppPause) window.onAppPause()")
     }
 

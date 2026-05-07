@@ -51,6 +51,7 @@ class BeeBackgroundService : Service() {
         const val EXTRA_DURATION = "duration_ms"
         const val EXTRA_WALLET = "wallet_name"
         const val ACTION_STOP = "com.example.waspbrowser.BEE_STOP"
+        const val ACTION_KEEP_ALIVE = "com.example.waspbrowser.BEE_KEEP_ALIVE"
 
         fun buildStartIntent(context: Context, durationMs: Long, walletName: String): Intent {
             return Intent(context, BeeBackgroundService::class.java).apply {
@@ -159,6 +160,13 @@ class BeeBackgroundService : Service() {
             val cycles = prefs.getInt(KEY_CYCLES, 0) + 1
             prefs.edit().putInt(KEY_CYCLES, cycles).apply()
             Log.d(TAG, "Tick #$cycles | restam ${(endTime - now) / 1000}s")
+
+            // ── KEEP-ALIVE broadcast: acorda o BeeActivity/WebView para manter o miner vivo
+            sendBroadcast(Intent(ACTION_KEEP_ALIVE).apply {
+                putExtra("cycles", cycles)
+                putExtra("remaining_ms", endTime - now)
+                putExtra("wallet", walletName)
+            })
 
             // Atualiza notificação com tempo restante
             val remaining = endTime - now
