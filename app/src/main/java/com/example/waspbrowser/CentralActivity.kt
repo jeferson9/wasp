@@ -47,8 +47,12 @@ class CentralActivity : AppCompatActivity() {
         webView.setBackgroundColor(0xFF08090D.toInt())
         setContentView(webView)
 
-        configureWebView()
-        
+        configureWebView()  // já faz clearCache(true) + LOAD_NO_CACHE
+
+        val bridge = CentralBridge()
+        webView.addJavascriptInterface(bridge, "AndroidBee")
+        webView.addJavascriptInterface(bridge, "Android")
+
         // Configuração de Dispositivo de Teste (importante para evitar erro No Fill)
         val testDeviceIds = listOf("C2BDD20251E0A65AA97DD561F37883A1")
         val configuration = RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build()
@@ -60,10 +64,7 @@ class CentralActivity : AppCompatActivity() {
             loadRewardedAd() 
         }
 
-        val bridge = CentralBridge()
-        webView.addJavascriptInterface(bridge, "AndroidBee")
-        webView.addJavascriptInterface(bridge, "Android")
-        
+        // Carrega DEPOIS do bridge estar registrado
         webView.loadUrl("file:///android_asset/bee/central.html")
     }
 
@@ -73,8 +74,9 @@ class CentralActivity : AppCompatActivity() {
             domStorageEnabled = true
             allowFileAccess = true
             allowContentAccess = true
-            cacheMode = WebSettings.LOAD_DEFAULT
+            cacheMode = WebSettings.LOAD_NO_CACHE  // sempre recarrega assets frescos
         }
+        webView.clearCache(true)
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = WebChromeClient()
     }
@@ -221,6 +223,11 @@ class CentralActivity : AppCompatActivity() {
         // Lógica de injeção segura: verifica se a função existe no HTML antes de chamar
         val script = "if(typeof window.$jsFunc === 'function') { window.$jsFunc(); } else if(window.$jsFunc) { window.$jsFunc(); }"
         webView.post { webView.evaluateJavascript(script, null) }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        finish()
     }
 
     override fun onResume() { super.onResume(); webView.onResume() }
