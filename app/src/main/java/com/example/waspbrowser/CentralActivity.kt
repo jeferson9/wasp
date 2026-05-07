@@ -171,9 +171,9 @@ class CentralActivity : AppCompatActivity() {
         @JavascriptInterface
         fun closeCentral() {
             handler.post {
-                finish()
                 @Suppress("DEPRECATION")
                 overridePendingTransition(R.anim.fade_in, R.anim.slide_down)
+                finish()
             }
         }
 
@@ -233,9 +233,13 @@ class CentralActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        finish()
+        val opts = android.app.ActivityOptions
+            .makeCustomAnimation(this, R.anim.fade_in, R.anim.slide_down)
+        // finish com animação via ActivityOptions não é suportado diretamente,
+        // então usamos finishAfterTransition + overridePendingTransition
         @Suppress("DEPRECATION")
         overridePendingTransition(R.anim.fade_in, R.anim.slide_down)
+        finish()
     }
 
     override fun onResume() { super.onResume(); webView.onResume() }

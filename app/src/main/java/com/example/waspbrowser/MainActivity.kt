@@ -1086,9 +1086,9 @@ class MainActivity : AppCompatActivity() {
 
     // ── Transição fade para todas as telas ───────────────────────────────────
     private fun startActivityFade(intent: Intent) {
-        startActivity(intent)
-        @Suppress("DEPRECATION")
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+        val opts = android.app.ActivityOptions
+            .makeCustomAnimation(this, R.anim.fade_in, R.anim.fade_out)
+        startActivity(intent, opts.toBundle())
     }
 
     fun openBeePanel() {
@@ -1208,8 +1208,9 @@ class MainActivity : AppCompatActivity() {
     fun openCentral() {
         runOnUiThread {
             val intent = android.content.Intent(this@MainActivity, CentralActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(R.anim.slide_up, R.anim.fade_out)
+            val opts = android.app.ActivityOptions
+                .makeCustomAnimation(this@MainActivity, R.anim.slide_up, R.anim.fade_out)
+            startActivity(intent, opts.toBundle())
         }
     }
 

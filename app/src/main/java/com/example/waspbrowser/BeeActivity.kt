@@ -209,9 +209,9 @@ class BeeActivity : AppCompatActivity() {
             addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             putExtra("navigate_to", screen)
         }
-        startActivity(intent)
-        @Suppress("DEPRECATION")
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+        val opts = android.app.ActivityOptions
+            .makeCustomAnimation(this, R.anim.fade_in, R.anim.fade_out)
+        startActivity(intent, opts.toBundle())
     }
 
     inner class BeeBridge {
@@ -299,7 +299,9 @@ class BeeActivity : AppCompatActivity() {
             mainHandler.post {
                 val intent = Intent(this@BeeActivity, CentralActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
+                val opts = android.app.ActivityOptions
+                    .makeCustomAnimation(this@BeeActivity, R.anim.slide_up, R.anim.fade_out)
+                startActivity(intent, opts.toBundle())
             }
         }
 
