@@ -187,9 +187,7 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener {
                 dialog.dismiss()
                 newTab("https://www.google.com")
-                webAppView.visibility = View.GONE
-                geckoView.visibility = View.VISIBLE
-                topBar.visibility = View.VISIBLE
+                crossfadeToGecko()
                 updateTopBarForHome(false)
             }
         })
@@ -218,9 +216,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener {
                     dialog.dismiss()
                     switchToTab(index)
-                    webAppView.visibility = View.GONE
-                    geckoView.visibility = View.VISIBLE
-                    topBar.visibility = View.VISIBLE
+                    crossfadeToGecko()
                     updateTopBarForHome(false)
                 }
             }
@@ -541,13 +537,11 @@ class MainActivity : AppCompatActivity() {
             popupSession = null
             try { geckoView.setSession(geckoSession) } catch (e: Exception) { e.printStackTrace() }
             try { currentPopup?.close() } catch (_: Exception) {}
-            webAppView.visibility = View.GONE
-            geckoView.visibility = View.VISIBLE
-            topBar.visibility = View.VISIBLE
             urlInput.visibility = View.GONE
             urlDisplay.visibility = View.VISIBLE
             pageProgress.visibility = View.GONE
             updateTopBarForHome(false)
+            crossfadeToGecko()
             try { geckoSession.reload() } catch (e: Exception) { e.printStackTrace() }
         }
     }
@@ -664,9 +658,7 @@ class MainActivity : AppCompatActivity() {
 
         btnHome.setOnLongClickListener {
             newTab("https://www.google.com")
-            webAppView.visibility = View.GONE
-            geckoView.visibility = View.VISIBLE
-            topBar.visibility = View.VISIBLE
+            crossfadeToGecko()
             updateTopBarForHome(false)
             showWaspToast("Nova aba aberta")
             true
@@ -997,9 +989,6 @@ class MainActivity : AppCompatActivity() {
             try { geckoSession.setActive(true) } catch (_: Exception) {}
         }
 
-        webAppView.visibility = View.GONE
-        geckoView.visibility = View.VISIBLE
-        topBar.visibility = View.VISIBLE
         urlInput.visibility = View.GONE
         urlDisplay.visibility = View.VISIBLE
         pageProgress.visibility = View.VISIBLE
@@ -1007,6 +996,33 @@ class MainActivity : AppCompatActivity() {
         updateTopBarForHome(false)
         webAppView.pauseTimers()
         getActiveSession().loadUri(url)
+        crossfadeToGecko()
+    }
+
+    /** Troca suave: WebView (home) → GeckoView (browser) */
+    private fun crossfadeToGecko() {
+        if (geckoView.visibility == View.VISIBLE) return
+        geckoView.alpha = 0f
+        geckoView.visibility = View.VISIBLE
+        topBar.alpha = 0f
+        topBar.visibility = View.VISIBLE
+        geckoView.animate().alpha(1f).setDuration(180).withEndAction {
+            webAppView.visibility = View.GONE
+        }.start()
+        topBar.animate().alpha(1f).setDuration(180).start()
+    }
+
+    /** Troca suave: GeckoView (browser) → WebView (home) */
+    private fun crossfadeToHome(onEnd: () -> Unit = {}) {
+        if (webAppView.visibility == View.VISIBLE) { onEnd(); return }
+        webAppView.alpha = 0f
+        webAppView.visibility = View.VISIBLE
+        webAppView.animate().alpha(1f).setDuration(180).withEndAction {
+            geckoView.visibility = View.GONE
+            topBar.visibility = View.GONE
+            pageProgress.visibility = View.GONE
+            onEnd()
+        }.start()
     }
 
     fun goHome() {
@@ -1014,16 +1030,14 @@ class MainActivity : AppCompatActivity() {
         try { tabs.forEach { it.session.setActive(false) } } catch (_: Exception) {}
 
         runOnUiThread {
-            topBar.visibility = View.GONE
-            geckoView.visibility = View.GONE
-            pageProgress.visibility = View.GONE
-            webAppView.visibility = View.VISIBLE
-            urlInput.setText("")
-            urlInput.clearFocus()
             webAppView.onResume()
             webAppView.resumeTimers()
-            webAppView.requestFocus(View.FOCUS_DOWN)
+            urlInput.setText("")
+            urlInput.clearFocus()
             webAppView.evaluateJavascript("resetHome()", null)
+            crossfadeToHome {
+                webAppView.requestFocus(View.FOCUS_DOWN)
+            }
         }
     }
 
