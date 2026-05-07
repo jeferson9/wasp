@@ -658,41 +658,41 @@
     }, MINING_DURATION_MS + 3000); // +3s de margem após a sessão terminar
 
     // ─── CLAIM SEGURO ─────────────────────────────────────────────────────
-    // Garante que "✅ Propagação confirmada" apareça no log ANTES do claim.
-    // Aguarda propagação (máx 60s) e só então dispara get_reward().
+    // Aguarda propagacao (max 90s) e dispara get_reward() mesmo sem confirmar.
+    // Propagacao pendente NAO deve bloquear o claim -- a rede aceita mesmo assim.
     function claimRewardSafe(claimMiner) {
       return new Promise(function(resolve) {
+        var waitStart = Date.now();
+        var MAX_WAIT = 90000; // 90s maximo esperando propagacao
+
         function doClaim() {
-          if (!saved.propagated) {
-            log("⚠️ Propagação ainda não confirmada — aguardando mais 10s antes do claim...", "lwrn");
+          if (!saved.propagated && (Date.now() - waitStart) < MAX_WAIT) {
+            var waited = Math.round((Date.now() - waitStart) / 1000);
+            log("⏳ Propagacao pendente (" + waited + "s) — aguardando mais 10s...", "linf");
             setTimeout(doClaim, 10000);
             return;
           }
-          log("✅ Propagação confirmada — chamando get_reward()...", "lok");
-          log("💰 Chamando get_reward() na instância que minerou...", "linf");
+          if (saved.propagated) {
+            log("✅ Propagacao confirmada — chamando get_reward()...", "lok");
+          } else {
+            log("⚠️ Propagacao nao confirmada apos " + Math.round(MAX_WAIT/1000) + "s — tentando claim mesmo assim...", "lwrn");
+          }
+          log("💰 Chamando get_reward()...", "linf");
           claimMiner.get_reward().then(function() {
-            log("✅ get_reward() executado com sucesso! Reward enviado para a blockchain.", "lok");
-            log("💎 Verifique sua AN Wallet — o saldo NACKL será atualizado em breve.", "lok");
+            log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
+            log("💎 Verifique sua AN Wallet — saldo NACKL atualizado em breve.", "lok");
             var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
-            toast("Reward NACKL enviado! Verifique sua wallet ✅");
+            toast("Reward NACKL enviado! ✅");
           }).catch(function(e) {
             var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
             log("❌ get_reward() falhou: " + errMsg, "lerr");
-            log("ℹ️ Possíveis causas: Mambaboard inativo, rede instável, ou epoch sem taps suficientes.", "lwrn");
+            log("ℹ️ Causas: Mambaboard inativo, rede instavel, ou epoch sem taps.", "lwrn");
           }).finally(function() {
             try { claimMiner.stop(); } catch(_) {}
             resolve();
           });
         }
-        // Se já propagado, claim imediato; senão aguarda até 60s
-        var waitStart = Date.now();
-        (function waitPropagated() {
-          if (saved.propagated || (Date.now() - waitStart) > 60000) {
-            doClaim();
-          } else {
-            setTimeout(waitPropagated, 5000);
-          }
-        })();
+        doClaim();
       });
     }
 
@@ -918,27 +918,24 @@
 
   // Tenta coletar reward pendente de sessão anterior
   // Chama o callback ao terminar (com ou sem reward)
-  function tryClaimPendingReward(callback) {
+  async function tryClaimPendingReward(callback) {
     if (!wasmReady || !saved.minerAddress) { if (callback) callback(); return; }
+    var tmpMiner = null;
     try {
-      var tmpMiner = window.BeeSDK.Miner.new(
+      // FIX: Miner.new() e async -- precisa de await ou tmpMiner sera uma Promise
+      tmpMiner = await window.BeeSDK.Miner.new(
         ENDPOINTS, APP_ID, saved.minerAddress, saved.publicKey, saved.secretKey
       );
       log("Verificando reward pendente...", "linf");
-      // FIX: get_reward() retorna Promise<void> — credita direto na blockchain, sem valor de retorno
-      tmpMiner.get_reward().then(function() {
-        log("get_reward (resume): executado ✅ — verifique sua AN Wallet", "lok");
-        toast("Reward pendente enviado para a wallet ✅");
-        var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
-      }).catch(function(e) {
-        // Sem reward pendente — normal após epoch incompleto
-        log("Sem reward pendente: " + (e&&e.message?e.message.substring(0,80):String(e)), "linf");
-      }).finally(function() {
-        try { tmpMiner.stop(); } catch(_) {}
-        if (callback) callback();
-      });
+      await tmpMiner.get_reward();
+      log("get_reward (resume): executado ✅ -- verifique sua AN Wallet", "lok");
+      toast("Reward pendente enviado para a wallet ✅");
+      var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
     } catch(e) {
-      log("tryClaimPendingReward erro: " + e.message, "lwrn");
+      // Sem reward pendente -- normal apos epoch incompleto
+      log("Sem reward pendente: " + (e&&e.message?e.message.substring(0,80):String(e)), "linf");
+    } finally {
+      try { if (tmpMiner) tmpMiner.stop(); } catch(_) {}
       if (callback) callback();
     }
   }
