@@ -51,6 +51,12 @@ android {
         compose = true
     }
 
+    androidResources {
+        // WASM não pode ser comprimido — Android corromperia o arquivo no APK
+        // O WebViewClient serve diretamente dos assets sem descompressão
+        noCompress += listOf("wasm", "js")
+    }
+
     packaging {
         resources {
             excludes += setOf(
