@@ -2666,11 +2666,11 @@ body[data-theme="light"] .central-wp-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
+  margin-bottom: 28px;
 }
 
 .home-logo-center img {
-  height: clamp(38px, 10vw, 52px);
+  height: clamp(114px, 30vw, 156px);
   width: auto;
   object-fit: contain;
 }
