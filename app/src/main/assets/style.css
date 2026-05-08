@@ -2692,3 +2692,27 @@ body[data-theme="light"] .logo-center-light { display: block; }
   text-align: left;
 }
 
+
+/* =========================
+   FORCE WASP YELLOW — override global
+========================= */
+.tech-tag,
+.scroll-hint-label {
+  color: #f7c600 !important;
+  text-shadow: 0 0 10px rgba(247,198,0,0.7), 0 0 20px rgba(247,198,0,0.35) !important;
+  font-weight: 700 !important;
+}
+
+.scroll-hint-arrow,
+.scroll-hint-arrow svg {
+  color: #f7c600 !important;
+  stroke: #f7c600 !important;
+  filter: drop-shadow(0 0 4px rgba(247,198,0,0.7)) !important;
+}
+
+.panel-title,
+.panel-title svg {
+  color: #f7c600 !important;
+  stroke: #f7c600 !important;
+  text-shadow: 0 0 8px rgba(247,198,0,0.4) !important;
+}
