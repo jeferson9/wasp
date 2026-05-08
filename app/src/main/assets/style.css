@@ -2641,3 +2641,49 @@ body[data-theme="light"] .central-wp-btn {
   justify-content: center;
 }
 
+
+/* =========================
+   HOME — LOGO CENTRO + SAUDAÇÃO TOPO
+========================= */
+
+/* Saudação no topo substitui o logo */
+.home-greeting-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(15px, 3.8vw, 18px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.home-greeting-topbar .greeting-emoji {
+  font-size: clamp(16px, 4vw, 20px);
+}
+
+/* Logo centralizado no hero */
+.home-logo-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.home-logo-center img {
+  height: clamp(38px, 10vw, 52px);
+  width: auto;
+  object-fit: contain;
+}
+
+/* Dark/light visibility */
+body[data-theme="dark"]  .logo-center-dark  { display: block; }
+body[data-theme="dark"]  .logo-center-light { display: none;  }
+body[data-theme="light"] .logo-center-dark  { display: none;  }
+body[data-theme="light"] .logo-center-light { display: block; }
+
+/* Sobrescreve o estilo da saudação original quando está no topo */
+.home-hero-full .home-greeting.home-greeting-topbar {
+  font-size: clamp(15px, 3.8vw, 18px);
+  text-align: left;
+}
+
