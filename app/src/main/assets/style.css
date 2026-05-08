@@ -2536,7 +2536,7 @@ body[data-theme="light"] .central-wp-btn {
   justify-content: flex-start;
   gap: 16px;
   padding: 0 clamp(14px, 4vw, 20px);
-  padding-top: clamp(35px, 10vw, 55px);
+  padding-top: clamp(75px, 18vw, 100px);
 }
 
 /* Linha tech animada */
