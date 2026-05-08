@@ -663,11 +663,10 @@ function fetchGoogleSuggestions(query){
 let currentEngine = localStorage.getItem("searchEngine") || "google";
 
 const engines = {
-    google:  { icon: "img/google.webp",  url: "https://www.google.com/search?q=" },
-    brave:   { icon: "img/brave.webp",   url: "https://search.brave.com/search?q=" },
-    bing:    { icon: "img/bing.webp",    url: "https://www.bing.com/search?q=" },
-    duck:    { icon: "img/duck.webp",    url: "https://duckduckgo.com/?q=" },
-    firefox: { icon: "img/firefox.svg",  url: "https://www.google.com/search?q=" }
+    google: { icon: "img/google.webp", url: "https://www.google.com/search?q=" },
+    brave:  { icon: "img/brave.webp",  url: "https://search.brave.com/search?q=" },
+    bing:   { icon: "img/bing.webp",   url: "https://www.bing.com/search?q=" },
+    duck:   { icon: "img/duck.webp",   url: "https://duckduckgo.com/?q=" }
 };
 
 function initEngine(){
