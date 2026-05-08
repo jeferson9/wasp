@@ -29,7 +29,7 @@
     <!-- LOGO -->
     <ImageView
         android:id="@+id/splashLogo"
-        android:layout_width="220dp"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_launcher_foreground"
         android:scaleType="fitCenter"
@@ -101,8 +101,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0%"
-            android:textColor="#55ffc107"
-            android:textSize="11sp"
+            android:textColor="#f7c600"
+            android:textSize="13sp"
             android:fontFamily="monospace"
             android:layout_gravity="end"
             android:layout_marginTop="6dp" />
