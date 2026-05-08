@@ -294,6 +294,12 @@
   }
 
   function onSdkReady() {
+    // Habilitar botão de setup agora que o WASM está pronto
+    if (btnSetup) {
+      btnSetup.disabled = false;
+      btnSetup.textContent = "Iniciar configuração";
+      btnSetup.onclick = runSetup;
+    }
     updateMetrics();
     if (saved.authorized && saved.walletName && saved.minerAddress) {
       setStatus("on", "Bee pronta ✅", "Wallet: " + saved.walletName);
@@ -979,6 +985,11 @@
   function init() {
     grabElements();
     loadSaved();
+    // Desabilitar botão até WASM carregar — evita __wbindgen_malloc
+    if (btnSetup) {
+      btnSetup.disabled = true;
+      btnSetup.textContent = "Carregando SDK...";
+    }
     updateMetrics();
     bindEvents();
     setStep(1);
