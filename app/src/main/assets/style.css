@@ -2536,7 +2536,8 @@ body[data-theme="light"] .central-wp-btn {
   justify-content: center;
   gap: 16px;
   padding: 0 clamp(14px, 4vw, 20px);
-  padding-top: 20px;
+  padding-top: 0;
+  margin-top: -30px;
 }
 
 /* Linha tech animada */
@@ -2670,7 +2671,7 @@ body[data-theme="light"] .central-wp-btn {
 }
 
 .home-logo-center img {
-  height: clamp(64px, 18vw, 90px);
+  height: clamp(80px, 22vw, 115px);
   width: auto;
   object-fit: contain;
 }
