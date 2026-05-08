@@ -329,8 +329,8 @@ body[data-theme="light"] .home-search input::placeholder { color: rgba(0,0,0,.38
 }
 
 .search-engine img {
-  width: clamp(24px, 6vw, 30px);
-  height: clamp(24px, 6vw, 30px);
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
   object-fit: contain;
 }
 
