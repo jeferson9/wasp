@@ -2513,3 +2513,131 @@ body[data-theme="light"] .central-wp-btn {
   border-color: rgba(255,193,7,0.35);
   box-shadow: 0 8px 24px rgba(255,193,7,0.12), 0 2px 6px rgba(0,0,0,0.08);
 }
+/* =========================
+   HOME — HERO FULL (novo layout)
+========================= */
+
+/* Hero ocupa 100% da viewport — foco total na busca */
+.home-hero-full {
+  position: relative;
+  min-height: calc(100vh - 64px); /* descontando bottom nav */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0;
+}
+
+/* Centro vertical do hero */
+.home-hero-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 clamp(14px, 4vw, 20px);
+  padding-top: 20px;
+}
+
+/* Linha tech animada */
+.home-tech-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.7;
+  animation: techFade 2.5s ease-in-out infinite alternate;
+}
+
+.tech-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+.tech-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+}
+
+@keyframes techFade {
+  from { opacity: 0.5; }
+  to   { opacity: 0.9; }
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1);   opacity: 0.8; }
+  50%       { transform: scale(1.5); opacity: 1;   }
+}
+
+/* Indicador de scroll */
+.home-scroll-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 20px;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+  animation: hintBounce 2.2s ease-in-out infinite;
+}
+
+.home-scroll-hint:active { opacity: 0.9; }
+
+.scroll-hint-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+}
+
+.scroll-hint-arrow {
+  color: var(--accent);
+}
+
+@keyframes hintBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(5px); }
+}
+
+/* Painéis ganham padding-top para respiro */
+.home-panels {
+  padding-top: clamp(8px, 2vw, 12px);
+}
+
+/* Topbar dentro do hero-full fica fixo ao topo */
+.home-hero-full .home-topbar-mini {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: clamp(12px, 3vw, 16px) clamp(14px, 4vw, 18px);
+}
+
+/* Saudação centralizada no hero */
+.home-hero-full .home-greeting {
+  text-align: center;
+  font-size: clamp(22px, 5.5vw, 30px);
+  margin-bottom: 0;
+}
+
+/* Barra de busca no hero-full fica larga */
+.home-hero-full .home-search {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* Status pill centralizado */
+.home-hero-full .wasp-status {
+  justify-content: center;
+}
+

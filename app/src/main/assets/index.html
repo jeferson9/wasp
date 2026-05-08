@@ -17,27 +17,41 @@
 <section id="home" class="screen active">
     <div class="home-wrap">
 
-        <div class="home-topbar-mini">
-            <div class="topbar-logo-wrap">
-                <img class="logo-topbar logo-topbar-dark" src="img/wasp-topbar-dark.webp" alt="Wasp Browser">
-                <img class="logo-topbar logo-topbar-light" src="img/wasp-topbar-light.webp" alt="Wasp Browser">
-            </div>
-            <button class="home-menu-btn" onclick="toggleMenu()">☰</button>
-        </div>
+        <!-- ── HERO FULL: ocupa a tela toda, foco na busca ── -->
+        <div class="home-hero-full" id="homeHeroFull">
 
-        <!-- SAUDAÇÃO -->
-        <div class="home-greeting">
-            <span id="greetingText">Olá, Wasp</span>
-            <span id="greetingEmoji" class="greeting-emoji">🐝</span>
-        </div>
-
-        <div class="home-hero">
-            <div class="home-search" id="homeSearchWrap">
-                <div class="search-engine" onclick="toggleEngineMenu()">
-                    <img id="engineIcon" src="img/google.webp" alt="Motor de busca">
-                    <span class="engine-arrow">▼</span>
+            <!-- Topbar flutuante -->
+            <div class="home-topbar-mini">
+                <div class="topbar-logo-wrap">
+                    <img class="logo-topbar logo-topbar-dark" src="img/wasp-topbar-dark.webp" alt="Wasp Browser">
+                    <img class="logo-topbar logo-topbar-light" src="img/wasp-topbar-light.webp" alt="Wasp Browser">
                 </div>
-                <input
+                <button class="home-menu-btn" onclick="toggleMenu()">☰</button>
+            </div>
+
+            <!-- Centro do hero -->
+            <div class="home-hero-center">
+
+                <!-- Saudação -->
+                <div class="home-greeting">
+                    <span id="greetingText">Olá, Wasp</span>
+                    <span id="greetingEmoji" class="greeting-emoji">🐝</span>
+                </div>
+
+                <!-- Linha tech animada -->
+                <div class="home-tech-line">
+                    <span class="tech-dot"></span>
+                    <span class="tech-tag">Web3 · Bee Engine · NACKL</span>
+                    <span class="tech-dot"></span>
+                </div>
+
+                <!-- Barra de busca -->
+                <div class="home-search" id="homeSearchWrap">
+                    <div class="search-engine" onclick="toggleEngineMenu()">
+                        <img id="engineIcon" src="img/google.webp" alt="Motor de busca">
+                        <span class="engine-arrow">▼</span>
+                    </div>
+                    <input
                         id="homeInput"
                         type="text"
                         placeholder="Buscar ou digitar URL..."
@@ -45,30 +59,46 @@
                         autocorrect="off"
                         autocapitalize="none"
                         spellcheck="false"
-                />
-                <button class="home-go" onclick="searchFrom('homeInput')">➜</button>
-                <div id="engineMenu" class="engine-menu">
-                    <div class="engine-item" onclick="setEngine('google')">
-                        <img id="engine-google" src="img/google.webp" alt=""> Google
+                    />
+                    <button class="home-go" onclick="searchFrom('homeInput')">➜</button>
+                    <div id="engineMenu" class="engine-menu">
+                        <div class="engine-item" onclick="setEngine('google')">
+                            <img id="engine-google" src="img/google.webp" alt=""> Google
+                        </div>
+                        <div class="engine-item" onclick="setEngine('brave')">
+                            <img id="engine-brave" src="img/brave.webp" alt=""> Brave
+                        </div>
+                        <div class="engine-item" onclick="setEngine('bing')">
+                            <img id="engine-bing" src="img/bing.webp" alt=""> Bing
+                        </div>
+                        <div class="engine-item" onclick="setEngine('duck')">
+                            <img id="engine-duck" src="img/duck.webp" alt=""> DuckDuckGo
+                        </div>
                     </div>
-                    <div class="engine-item" onclick="setEngine('brave')">
-                        <img id="engine-brave" src="img/brave.webp" alt=""> Brave
-                    </div>
-                    <div class="engine-item" onclick="setEngine('bing')">
-                        <img id="engine-bing" src="img/bing.webp" alt=""> Bing
-                    </div>
-                    <div class="engine-item" onclick="setEngine('duck')">
-                        <img id="engine-duck" src="img/duck.webp" alt=""> DuckDuckGo
-                    </div>
+                    <div id="searchSuggestions" class="search-suggestions"></div>
                 </div>
-                <div id="searchSuggestions" class="search-suggestions"></div>
+
+                <!-- Status pill -->
+                <div class="wasp-status">
+                    <span class="wasp-status-pill">🛡 Powered by Wasp Browser</span>
+                </div>
+
             </div>
-            <div class="wasp-status">
-                <span class="wasp-status-pill">🛡 Powered by Wasp Browser</span>
+
+            <!-- Indicador de scroll para o conteúdo -->
+            <div class="home-scroll-hint" onclick="document.getElementById('homePanels').scrollIntoView({behavior:'smooth'})">
+                <span class="scroll-hint-label">Recentes · Blog · NACKL</span>
+                <div class="scroll-hint-arrow">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
             </div>
+
         </div>
 
-        <div class="home-panels">
+        <!-- ── PAINÉIS: revelados ao rolar ── -->
+        <div class="home-panels" id="homePanels">
 
             <!-- NACKL TICKER -->
             <div class="nackl-ticker" onclick="openNativeUrl('https://www.coingecko.com/en/coins/acki-nacki')">
@@ -84,8 +114,8 @@
                     <span class="nackl-change" id="nacklChange">--</span>
                 </div>
                 <div class="nackl-mcap-wrap">
-                    <span class="nackl-mcap-label">Mkt Cap</span>
-                    <span class="nackl-mcap" id="nacklMcap">--</span>
+                    <span class="nackl-mcap-label">MKT CAP</span>
+                    <span class="nackl-mcap" id="nacklMcap">Pré-lançamento</span>
                 </div>
             </div>
 
@@ -117,27 +147,9 @@
                     <button class="panel-action" onclick="openNativeUrl('https://waspblogblockchain.blogspot.com')">Ver tudo</button>
                 </div>
                 <div id="waspFeedList" class="wasp-feed-list">
-                    <div class="feed-skeleton">
-                        <div class="feed-sk-img"></div>
-                        <div class="feed-sk-lines">
-                            <div class="feed-sk-line long"></div>
-                            <div class="feed-sk-line short"></div>
-                        </div>
-                    </div>
-                    <div class="feed-skeleton">
-                        <div class="feed-sk-img"></div>
-                        <div class="feed-sk-lines">
-                            <div class="feed-sk-line long"></div>
-                            <div class="feed-sk-line short"></div>
-                        </div>
-                    </div>
-                    <div class="feed-skeleton">
-                        <div class="feed-sk-img"></div>
-                        <div class="feed-sk-lines">
-                            <div class="feed-sk-line long"></div>
-                            <div class="feed-sk-line short"></div>
-                        </div>
-                    </div>
+                    <div class="feed-skeleton"><div class="feed-sk-img"></div><div class="feed-sk-lines"><div class="feed-sk-line long"></div><div class="feed-sk-line short"></div></div></div>
+                    <div class="feed-skeleton"><div class="feed-sk-img"></div><div class="feed-sk-lines"><div class="feed-sk-line long"></div><div class="feed-sk-line short"></div></div></div>
+                    <div class="feed-skeleton"><div class="feed-sk-img"></div><div class="feed-sk-lines"><div class="feed-sk-line long"></div><div class="feed-sk-line short"></div></div></div>
                 </div>
             </div>
 
