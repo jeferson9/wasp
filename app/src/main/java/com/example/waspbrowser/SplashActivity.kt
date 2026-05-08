@@ -88,7 +88,7 @@ class SplashActivity : AppCompatActivity() {
                 // fallback silencioso — asset não encontrado
             }
         }
-        center.addView(logoImage, LinearLayout.LayoutParams(dp(220), dp(60)))
+        center.addView(logoImage, LinearLayout.LayoutParams(dp(300), dp(80)))
 
         val line = View(this).apply {
             setBackgroundColor(Color.parseColor("#33ffc107"))
@@ -149,8 +149,8 @@ class SplashActivity : AppCompatActivity() {
 
         tvPercent = TextView(this).apply {
             text = "0%"
-            setTextColor(Color.parseColor("#55ffc107"))
-            textSize = 11f
+            setTextColor(Color.parseColor("#f7c600"))
+            textSize = 13f
             typeface = Typeface.MONOSPACE
             gravity = Gravity.END
         }
