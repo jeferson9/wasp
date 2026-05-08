@@ -2533,10 +2533,10 @@ body[data-theme="light"] .central-wp-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 16px;
   padding: 0 clamp(14px, 4vw, 20px);
-  padding-top: clamp(75px, 18vw, 100px);
+  padding-top: 20px;
 }
 
 /* Linha tech animada */
@@ -2670,7 +2670,7 @@ body[data-theme="light"] .central-wp-btn {
 }
 
 .home-logo-center img {
-  height: clamp(80px, 22vw, 115px);
+  height: clamp(38px, 10vw, 52px);
   width: auto;
   object-fit: contain;
 }
