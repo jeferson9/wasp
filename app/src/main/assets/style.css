@@ -2670,7 +2670,7 @@ body[data-theme="light"] .central-wp-btn {
 }
 
 .home-logo-center img {
-  height: clamp(38px, 10vw, 52px);
+  height: clamp(64px, 18vw, 90px);
   width: auto;
   object-fit: contain;
 }
