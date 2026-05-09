@@ -774,12 +774,52 @@
     updateMetrics();
     log("✅ Mineração iniciada! Epoch de 5 min — reward coletado automaticamente no fim.", "lok");
     toast("Mineração NACKL iniciada! ⚡");
+
+    // ─── AUTO-TAP ────────────────────────────────────────────────────────
+    // 100 taps por epoch de 5 min = 1 tap a cada 3s
+    // Para imediatamente quando mining=false (stop ou fim de epoch)
+    if (window._autoTapTimer) clearInterval(window._autoTapTimer);
+    var autoTapCount = 0;
+    var AUTO_TAP_TOTAL = 100;
+    var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3000ms
+    window._autoTapTimer = setInterval(async function() {
+      if (!mining || !miner) {
+        clearInterval(window._autoTapTimer);
+        window._autoTapTimer = null;
+        return;
+      }
+      if (autoTapCount >= AUTO_TAP_TOTAL) {
+        clearInterval(window._autoTapTimer);
+        window._autoTapTimer = null;
+        return;
+      }
+      try {
+        await miner.add_tap(
+          Math.floor(Math.random() * 300 + 50),
+          Math.floor(Math.random() * 300 + 50)
+        );
+        autoTapCount++;
+        window._tapCount = (window._tapCount || 0) + 1;
+        if (autoTapCount % 10 === 0) {
+          log("🤖 Auto-tap: " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
+        }
+        // Animar botão TAP visualmente
+        if (btnTap) {
+          btnTap.style.transform = "scale(0.95)";
+          setTimeout(function(){ btnTap.style.transform = ""; }, 100);
+        }
+      } catch(e) {
+        log("Auto-tap erro: " + e.message, "lwrn");
+      }
+    }, AUTO_TAP_INTERVAL);
+    log("🤖 Auto-tap ativado: " + AUTO_TAP_TOTAL + " taps / epoch (1 a cada " + (AUTO_TAP_INTERVAL/1000) + "s)", "linf");
   }
 
   // ─── STOP ────────────────────────────────────────────────────────────────
   function stopMining() {
     if (!mining) return;
     if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
+    if (window._autoTapTimer)  { clearInterval(window._autoTapTimer);  window._autoTapTimer  = null; }
     try { if (miner) miner.stop(); } catch(_) {}
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
