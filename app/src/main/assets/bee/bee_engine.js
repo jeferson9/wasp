@@ -415,7 +415,8 @@
       setStatus("warn", "Gerando chaves...", "Criando identidade de mineração");
       log("Chamando gen_mining_keys...", "linf");
 
-      var result = await window.BeeSDK.gen_mining_keys(APP_ID);
+      // SDK novo: gen_mining_keys(app_id, username)
+      var result = await window.BeeSDK.gen_mining_keys(APP_ID, saved.walletName);
       saved.walletName = walletName;
       saved.publicKey  = result.public;
       saved.secretKey  = result.secret;
