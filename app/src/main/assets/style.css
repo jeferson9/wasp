@@ -2755,3 +2755,29 @@ body[data-theme="light"] .home-search-sticky {
 .home-search-placeholder.active {
   display: block;
 }
+
+/* =========================
+   HOME SEARCH — STICKY NATIVO CSS
+========================= */
+.home-search-sticky-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  width: 100%;
+  padding: 8px 0;
+  background: transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Quando rolar, adiciona fundo via JS class .scrolled */
+.home-search-sticky-wrap.scrolled {
+  background: rgba(11,11,13,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(247,198,0,0.12);
+}
+
+body[data-theme="light"] .home-search-sticky-wrap.scrolled {
+  background: rgba(255,255,255,0.95);
+}
