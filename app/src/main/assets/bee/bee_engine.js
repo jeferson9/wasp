@@ -346,8 +346,8 @@
         miner_address: saved.minerAddress,
         app_id: APP_ID,
         expected_owner_public: saved.publicKey,
-        max_attempts: 5,
-        interval_ms: 4000
+        max_attempts: 30,
+        interval_ms: 1000
       });
       // ✅ Confirmada — só a partir daqui o get_reward() será chamado com segurança
       saved.propagated = true; saveSaved();
@@ -491,8 +491,8 @@
           miner_address: minerAddr,
           app_id: APP_ID,
           expected_owner_public: saved.publicKey,
-          max_attempts: 60,
-          interval_ms: 3000
+          max_attempts: 30,
+          interval_ms: 1000
         }).then(function() {
           saved.propagated = true; saveSaved();
           log("✅ Propagação confirmada em background!", "lok");
