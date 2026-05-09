@@ -715,10 +715,10 @@
     /* ── Block Visualizer ── */
     (function() {
         var TOTAL = 32;
-        var tapCount = 0;
         var activeIdx = 0;
         var animTimer = null;
-        var lastTransform = '';
+        var pollTimer = null;
+        var lastTapCount = 0;
 
         function rndHex(len) {
             var h = '', chars = '0123456789abcdef';
@@ -748,28 +748,29 @@
             }, 550);
         }
 
-        function onTapConfirmed() {
-            tapCount++;
+        function onTapConfirmed(total) {
+            // Atualiza contador
             var el = document.getElementById('tapCounterDisplay');
-            if (el) el.textContent = tapCount + ' tap' + (tapCount !== 1 ? 's' : '');
+            if (el) el.textContent = total + ' tap' + (total !== 1 ? 's' : '');
 
-            // Para o pulso do bloco atual
+            // Flash no bloco atual
             var cur = document.getElementById('blk' + activeIdx);
-            if (cur) { cur.classList.remove('active'); cur.classList.add('flash'); }
-            setTimeout(function() {
-                var b = document.getElementById('blk' + activeIdx);
-                if (b) { b.classList.remove('flash'); b.classList.add('done'); }
-                // Avança
-                activeIdx = (activeIdx + 1) % TOTAL;
-                if (activeIdx === 0) {
-                    // Reinicia grade
-                    for (var i = 0; i < TOTAL; i++) {
-                        var bb = document.getElementById('blk' + i);
-                        if (bb) bb.className = 'blk';
+            if (cur) {
+                cur.classList.remove('active');
+                cur.classList.add('flash');
+                setTimeout(function() {
+                    var b = document.getElementById('blk' + activeIdx);
+                    if (b) { b.classList.remove('flash'); b.classList.add('done'); }
+                    activeIdx = (activeIdx + 1) % TOTAL;
+                    if (activeIdx === 0) {
+                        for (var i = 0; i < TOTAL; i++) {
+                            var bb = document.getElementById('blk' + i);
+                            if (bb) bb.className = 'blk';
+                        }
                     }
-                }
-                setActivePulse();
-            }, 180);
+                    setActivePulse();
+                }, 180);
+            }
 
             // Atualiza hash
             var hashEl = document.getElementById('hashDisplay');
@@ -778,35 +779,35 @@
             }
         }
 
+        function startPolling() {
+            if (pollTimer) return;
+            pollTimer = setInterval(function() {
+                var current = window._tapCount || 0;
+                if (current !== lastTapCount) {
+                    var diff = current - lastTapCount;
+                    lastTapCount = current;
+                    // dispara uma vez por novo tap (ou batch)
+                    for (var i = 0; i < Math.min(diff, 3); i++) {
+                        (function(delay) {
+                            setTimeout(function() { onTapConfirmed(current); }, delay);
+                        })(i * 120);
+                    }
+                }
+            }, 300);
+        }
+
         window.addEventListener('DOMContentLoaded', function() {
             buildGrid();
             setActivePulse();
+            startPolling();
 
-            // Observa style.transform do btnTap — disparado pelo bee_engine.js
-            // quando o tap é aceito (scale(0.95) → "")
-            function attachObserver() {
-                var btn = document.getElementById('btnTap');
-                if (!btn) return;
-                new MutationObserver(function() {
-                    var t = btn.style.transform || '';
-                    // Engine seta scale(0.95) ao enviar → dispara ao voltar para ""
-                    if (t === '' && lastTransform.indexOf('scale') !== -1) {
-                        onTapConfirmed();
-                    }
-                    lastTransform = t;
-                }).observe(btn, { attributes: true, attributeFilter: ['style'] });
-            }
-
-            attachObserver();
-
-            // Se tapSection ficar visível depois (engine mostra após setup)
             var section = document.getElementById('tapSection');
             if (section) {
                 new MutationObserver(function() {
                     if (!section.classList.contains('hidden')) {
                         buildGrid();
                         setActivePulse();
-                        attachObserver();
+                        startPolling();
                     }
                 }).observe(section, { attributes: true, attributeFilter: ['class'] });
             }
