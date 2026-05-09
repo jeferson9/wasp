@@ -2794,3 +2794,22 @@ body[data-theme="light"] .home-search-sticky-wrap.scrolled {
   max-width: 100% !important;
   margin: 0 !important;
 }
+
+/* =========================
+   RODAPE — FUNDO PRETO ABAIXO DO NAV
+========================= */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(max(var(--safe-bottom, 0px), env(safe-area-inset-bottom, 0px)) + clamp(10px, 3vw, 16px));
+  background: #050608;
+  z-index: 99998;
+  pointer-events: none;
+}
+
+body[data-theme="light"]::after {
+  background: #f0f2f5;
+}
