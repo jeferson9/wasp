@@ -2764,20 +2764,31 @@ body[data-theme="light"] .home-search-sticky {
   top: 0;
   z-index: 200;
   width: 100%;
-  padding: 8px 0;
+  padding: 8px 12px;
   background: transparent;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+  /* Escondida por padrão — aparece só ao rolar */
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* Quando rolar, adiciona fundo via JS class .scrolled */
 .home-search-sticky-wrap.scrolled {
-  background: rgba(11,11,13,0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.4);
-  border-bottom: 1px solid rgba(247,198,0,0.12);
+  opacity: 1;
+  pointer-events: all;
+  background: rgba(11,11,13,0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  border-bottom: 1px solid rgba(247,198,0,0.15);
+  animation: slideDown 0.2s ease;
 }
 
 body[data-theme="light"] .home-search-sticky-wrap.scrolled {
-  background: rgba(255,255,255,0.95);
+  background: rgba(255,255,255,0.96);
+}
+
+/* Clone da busca dentro do sticky */
+.home-search-clone {
+  max-width: 100% !important;
+  margin: 0 !important;
 }

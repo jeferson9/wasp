@@ -1502,15 +1502,36 @@ function blurSearch(){
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Sticky search — fundo aparece ao rolar
+    // Sticky search — aparece quando a busca original sai da tela
     (function() {
-        var home = document.getElementById("home");
-        var wrap = document.querySelector(".home-search-sticky-wrap");
-        if (!home || !wrap) return;
+        var home       = document.getElementById("home");
+        var origSearch = document.getElementById("homeSearchWrap");
+        var stickyWrap = document.getElementById("stickySearchWrap");
+        var stickyInput = document.getElementById("homeInputSticky");
+        var stickyIcon  = document.getElementById("engineIconSticky");
+        var origIcon    = document.getElementById("engineIcon");
+        if (!home || !origSearch || !stickyWrap) return;
+
         home.addEventListener("scroll", function() {
-            if (home.scrollTop > 10) wrap.classList.add("scrolled");
-            else wrap.classList.remove("scrolled");
+            var rect = origSearch.getBoundingClientRect();
+            var homeRect = home.getBoundingClientRect();
+            // Quando a busca original sair completamente do topo do #home
+            if (rect.bottom < homeRect.top) {
+                stickyWrap.classList.add("scrolled");
+                // Sincroniza ícone do motor
+                if (stickyIcon && origIcon) stickyIcon.src = origIcon.src;
+            } else {
+                stickyWrap.classList.remove("scrolled");
+            }
         }, { passive: true });
+
+        // Sincroniza input sticky com o original ao digitar
+        if (stickyInput) {
+            stickyInput.addEventListener("input", function() {
+                var orig = document.getElementById("homeInput");
+                if (orig) orig.value = stickyInput.value;
+            });
+        }
     })();
 
     // Saudação personalizada

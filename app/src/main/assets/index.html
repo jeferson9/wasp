@@ -45,8 +45,7 @@
                     <span class="tech-dot"></span>
                 </div>
 
-                <!-- Barra de busca — wrapper sticky -->
-                <div class="home-search-sticky-wrap">
+                <!-- Barra de busca -->
                 <div class="home-search" id="homeSearchWrap">
                     <div class="search-engine" onclick="toggleEngineMenu()">
                         <img id="engineIcon" src="img/google.webp" alt="Motor de busca">
@@ -78,7 +77,6 @@
                     </div>
                     <div id="searchSuggestions" class="search-suggestions"></div>
                 </div>
-                </div><!-- /home-search-sticky-wrap -->
 
                 <!-- Status pill -->
                 <div class="wasp-status">
@@ -97,6 +95,26 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- ── BUSCA STICKY: gruda no topo ao rolar ── -->
+        <div class="home-search-sticky-wrap" id="stickySearchWrap">
+            <div class="home-search home-search-clone" id="homeSearchSticky">
+                <div class="search-engine" onclick="toggleEngineMenu()">
+                    <img id="engineIconSticky" src="img/google.webp" alt="">
+                    <span class="engine-arrow">▼</span>
+                </div>
+                <input
+                    id="homeInputSticky"
+                    type="text"
+                    placeholder="Buscar ou digitar URL..."
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="none"
+                    spellcheck="false"
+                />
+                <button class="home-go" onclick="searchFrom('homeInputSticky')">➜</button>
+            </div>
         </div>
 
         <!-- ── PAINÉIS: revelados ao rolar ── -->
