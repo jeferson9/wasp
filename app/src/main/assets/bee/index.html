@@ -6,453 +6,626 @@
     <title>Bee Engine</title>
     <style>
         :root {
-            --text: #f0f0f0;
-            --muted: #888;
-            --yellow: #ffc107;
-            --green: #31c46d;
-            --red: #ff5f57;
-            --blue: #64a8ff;
-            --border: rgba(255,255,255,0.08);
-            --card: rgba(255,255,255,0.05);
+            --bg:      #080a0f;
+            --bg2:     #0d1117;
+            --bg3:     #111620;
+            --border:  rgba(255,255,255,0.07);
+            --border2: rgba(255,255,255,0.12);
+            --text:    #e8eaf0;
+            --muted:   #5a6070;
+            --muted2:  #7a8090;
+            --yellow:  #f5c518;
+            --yellow2: #ffdd55;
+            --green:   #00e676;
+            --red:     #ff3d57;
+            --blue:    #448aff;
+            --cyan:    #00e5ff;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body {
             min-height: 100%;
-            background: #0b0b0d;
+            background: var(--bg);
             color: var(--text);
-            font-family: Arial, sans-serif;
-            padding: 20px 16px 60px;
+            font-family: -apple-system, Arial, sans-serif;
+            padding: 0 0 80px;
+            overflow-x: hidden;
         }
-        h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-        .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
 
-        /* ── BOTÃO CENTRAL WP ── */
-        .central-wp-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 16px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,193,7,0.30);
-            background: linear-gradient(135deg, rgba(255,193,7,0.12), rgba(16,18,26,0.95));
-            cursor: pointer;
-            margin-bottom: 14px;
-            transition: transform .15s ease, opacity .15s ease;
+        /* HERO */
+        .hero {
             position: relative;
+            padding: 48px 20px 24px;
             overflow: hidden;
         }
-        .central-wp-btn:active { transform: scale(.97); opacity: .9; }
-        .cwb-left { display: flex; align-items: center; gap: 12px; }
-        .cwb-icon {
-            font-size: 24px;
-            width: 44px; height: 44px;
-            border-radius: 12px;
-            background: rgba(255,193,7,0.15);
-            border: 1px solid rgba(255,193,7,0.25);
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60px; left: -60px;
+            width: 260px; height: 260px;
+            background: radial-gradient(circle, rgba(245,197,24,0.12) 0%, transparent 70%);
+            pointer-events: none;
         }
-        .cwb-info { display: flex; flex-direction: column; gap: 2px; text-align: left; }
-        .cwb-title { font-size: 14px; font-weight: 900; color: var(--yellow); }
-        .cwb-sub   { font-size: 11px; color: var(--muted); font-weight: 600; }
-        .cwb-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .cwb-bal   { font-size: 15px; font-weight: 900; color: var(--yellow); }
-        .cwb-arrow { font-size: 20px; color: var(--muted); }
-
-        .status-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245,197,24,0.4), transparent);
         }
-        .dot {
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            background: var(--muted);
-            transition: background .3s, box-shadow .3s;
-        }
-        .dot.on   { background: var(--green); box-shadow: 0 0 10px rgba(49,196,109,0.8); }
-        .dot.warn { background: var(--yellow); box-shadow: 0 0 10px rgba(255,193,7,0.8); }
-        .dot.err  { background: var(--red); }
-        .status-text { flex: 1; min-width: 0; }
-        .status-title { font-weight: 700; font-size: 15px; }
-        .status-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; word-break: break-word; }
-
-        .switch-row {
+        .hero-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 14px;
         }
-        .switch { position: relative; width: 52px; height: 30px; flex-shrink: 0; }
-        .switch input { opacity: 0; width: 0; height: 0; }
+        .hero-logo { display: flex; align-items: center; gap: 10px; }
+        .hero-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, rgba(245,197,24,0.18), rgba(245,197,24,0.05));
+            border: 1px solid rgba(245,197,24,0.28);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+        .hero-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+        .hero-sub   { font-size: 11px; color: var(--muted2); letter-spacing: 0.04em; margin-top: 1px; }
+
+        /* STATUS PILL */
+        .status-pill {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(90,96,112,0.12);
+            border: 1px solid rgba(90,96,112,0.2);
+            font-size: 12px; font-weight: 600;
+            color: var(--muted2);
+            transition: all 0.3s;
+        }
+        .status-pill.on   { background: rgba(0,230,118,0.1);   border-color: rgba(0,230,118,0.25);   color: var(--green); }
+        .status-pill.warn { background: rgba(245,197,24,0.1);  border-color: rgba(245,197,24,0.25);  color: var(--yellow); }
+        .status-pill.err  { background: rgba(255,61,87,0.1);   border-color: rgba(255,61,87,0.25);   color: var(--red); }
+        .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        .pulse-dot.live { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+
+        /* WP BUTTON */
+        .wp-btn {
+            display: flex; align-items: center; gap: 14px;
+            width: calc(100% - 32px);
+            margin: 8px 16px 6px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(245,197,24,0.1), rgba(245,197,24,0.03));
+            border: 1px solid rgba(245,197,24,0.2);
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+        }
+        .wp-btn:active { transform: scale(0.98); opacity: 0.9; }
+        .wp-icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: rgba(245,197,24,0.14);
+            border: 1px solid rgba(245,197,24,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .wp-info { flex: 1; min-width: 0; }
+        .wp-label { font-size: 13px; font-weight: 700; color: var(--yellow); }
+        .wp-desc  { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+        .wp-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .wp-bal   { font-size: 14px; font-weight: 800; color: var(--yellow); }
+        .wp-arrow { font-size: 16px; color: var(--muted); }
+
+        /* SECTION */
+        .section { padding: 0 16px; margin-bottom: 10px; }
+
+        /* STATUS BANNER */
+        .status-banner {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .status-banner.active { border-color: rgba(0,230,118,0.22); background: linear-gradient(135deg, rgba(0,230,118,0.06), var(--bg3)); }
+        .status-banner.warn   { border-color: rgba(245,197,24,0.22); background: linear-gradient(135deg, rgba(245,197,24,0.06), var(--bg3)); }
+        .status-banner.err    { border-color: rgba(255,61,87,0.22);  background: linear-gradient(135deg, rgba(255,61,87,0.06), var(--bg3)); }
+        .dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+            background: var(--muted); transition: background 0.3s, box-shadow 0.3s;
+        }
+        .dot.on   { background: var(--green);  box-shadow: 0 0 10px rgba(0,230,118,0.6); animation: pulse 2s ease-in-out infinite; }
+        .dot.warn { background: var(--yellow); box-shadow: 0 0 10px rgba(245,197,24,0.5); }
+        .dot.err  { background: var(--red); }
+        .status-text { flex: 1; min-width: 0; }
+        .status-title { font-weight: 600; font-size: 14px; }
+        .status-desc  { font-size: 12px; color: var(--muted2); margin-top: 2px; word-break: break-word; line-height: 1.4; }
+
+        /* SWITCH */
+        .switch-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+        }
+        .switch-label { font-weight: 600; font-size: 14px; }
+        .switch-sub   { font-size: 11px; color: var(--muted2); margin-top: 3px; }
+        .switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
         .slider {
             position: absolute; inset: 0;
-            background: rgba(255,255,255,0.15);
-            border-radius: 999px;
-            cursor: pointer;
-            transition: .25s;
+            background: rgba(255,255,255,0.1); border-radius: 999px;
+            cursor: pointer; transition: .25s;
+            border: 1px solid rgba(255,255,255,0.08);
         }
         .slider:before {
-            content: "";
-            position: absolute;
-            width: 22px; height: 22px;
-            left: 4px; top: 4px;
-            background: #ddd;
-            border-radius: 50%;
-            transition: .25s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            content: ''; position: absolute;
+            width: 20px; height: 20px; left: 4px; top: 3px;
+            background: #ccc; border-radius: 50%;
+            transition: .25s; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         }
-        input:checked + .slider { background: var(--yellow); }
+        input:checked + .slider { background: var(--yellow); border-color: rgba(245,197,24,0.4); box-shadow: 0 0 14px rgba(245,197,24,0.25); }
         input:checked + .slider:before { transform: translateX(22px); background: #111; }
-        input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
+        input:disabled + .slider { opacity: .35; cursor: not-allowed; }
 
-        .metrics {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-        .metric-card {
-            background: var(--card);
+        /* METRICS */
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .metric {
+            background: var(--bg3);
             border: 1px solid var(--border);
             border-radius: 14px;
-            padding: 14px;
+            padding: 14px 16px;
+            position: relative; overflow: hidden;
         }
-        .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing:.06em; margin-bottom: 6px; }
-        .metric-value { font-size: 20px; font-weight: 800; }
-        .mv-green  { color: var(--green); }
+        .metric::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 2px; opacity: 0; transition: opacity 0.3s;
+        }
+        .metric.m-yellow::before { background: linear-gradient(90deg,transparent,var(--yellow),transparent); opacity:1; }
+        .metric.m-cyan::before   { background: linear-gradient(90deg,transparent,var(--cyan),transparent); opacity:1; }
+        .metric.m-green::before  { background: linear-gradient(90deg,transparent,var(--green),transparent); opacity:1; }
+        .metric.m-blue::before   { background: linear-gradient(90deg,transparent,var(--blue),transparent); opacity:1; }
+        .metric.m-full { grid-column: span 2; }
+        .metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; margin-bottom: 8px; }
+        .metric-value { font-size: 22px; font-weight: 800; letter-spacing: -.5px; line-height: 1; }
         .mv-yellow { color: var(--yellow); }
-        .mv-small  { font-size: 13px; word-break: break-all; }
+        .mv-cyan   { color: var(--cyan); }
+        .mv-green  { color: var(--green); }
+        .mv-blue   { color: var(--blue); }
+        .mv-small  { font-size: 13px; font-weight: 600; word-break: break-all; }
 
+        /* SETUP CARD */
         .card {
-            background: var(--card);
+            background: var(--bg3);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 14px;
+            padding: 18px 16px;
         }
-        .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--yellow); }
-
-        .step {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-        }
+        .card h3 { font-size: 12px; font-weight: 700; color: var(--yellow); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px; }
+        .step { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
         .step:last-of-type { border-bottom: none; padding-bottom: 0; }
         .step-num {
-            width: 24px; height: 24px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: var(--muted);
-            font-size: 11px; font-weight: 800;
+            width: 26px; height: 26px; border-radius: 50%;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--muted2); font-size: 11px; font-weight: 700;
             display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            transition: all .3s;
+            flex-shrink: 0; transition: all .3s;
         }
-        .step-num.active { background: rgba(255,193,7,0.2); border-color: var(--yellow); color: var(--yellow); }
-        .step-num.done   { background: rgba(49,196,109,0.2); border-color: var(--green); color: var(--green); }
+        .step-num.active { background: rgba(245,197,24,0.14); border-color: rgba(245,197,24,0.4); color: var(--yellow); }
+        .step-num.done   { background: rgba(0,230,118,0.14);  border-color: rgba(0,230,118,0.4);  color: var(--green); }
         .step-body { flex: 1; }
-        .step-title { font-size: 13px; font-weight: 700; }
-        .step-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+        .step-title { font-size: 13px; font-weight: 600; }
+        .step-desc  { font-size: 12px; color: var(--muted2); margin-top: 3px; line-height: 1.4; }
 
         input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: rgba(0,0,0,0.3);
-            color: var(--text);
-            font-size: 14px;
-            outline: none;
-            margin-top: 10px;
+            width: 100%; padding: 12px 14px;
+            border-radius: 12px; border: 1px solid var(--border2);
+            background: rgba(0,0,0,0.3); color: var(--text);
+            font-size: 14px; outline: none; margin-top: 10px; transition: border-color .2s;
         }
-        input[type="text"]:focus { border-color: rgba(255,193,7,0.5); }
+        input[type="text"]:focus { border-color: rgba(245,197,24,0.5); }
 
+        /* BUTTONS */
         .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            margin-top: 10px;
-            background: linear-gradient(135deg,#ffc107,#ffcf40);
-            color: #111;
-            transition: transform .15s, opacity .15s;
+            width: 100%; padding: 14px; border: none; border-radius: 14px;
+            font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px;
+            background: linear-gradient(135deg, var(--yellow), var(--yellow2));
+            color: #0d0d0d; transition: transform .12s, opacity .12s;
+            letter-spacing: -.1px;
         }
-        .btn:active  { transform: scale(0.97); }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .btn.ghost  { background: transparent; color: var(--yellow); border: 1px solid rgba(255,193,7,0.35); }
-        .btn.danger { background: var(--red); color: #fff; }
+        .btn:active  { transform: scale(.97); }
+        .btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+        .btn.ghost  { background: transparent; color: var(--yellow); border: 1px solid rgba(245,197,24,0.25); }
+        .btn.danger { background: linear-gradient(135deg, var(--red), #ff6b6b); color: #fff; }
         .btn.small  { padding: 10px; font-size: 13px; margin-top: 8px; }
         .btn.tap-btn {
-            font-size: 20px; padding: 22px;
-            background: linear-gradient(135deg,#ffc107,#ffdd55);
-            box-shadow: 0 0 30px rgba(255,193,7,0.35);
+            font-size: 18px; font-weight: 800; padding: 22px; letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--yellow), var(--yellow2));
+            box-shadow: 0 0 30px rgba(245,197,24,0.2), 0 8px 24px rgba(0,0,0,0.4);
+            border-radius: 18px;
         }
-
-        .log-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
-        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .log-header span { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-        .log-clear { font-size: 11px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
-        #logBox { font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; color: #ccc; line-height: 1.6; }
-        .lok  { color: var(--green); }
-        .lwrn { color: var(--yellow); }
-        .lerr { color: var(--red); }
-        .linf { color: var(--blue); }
-
-        .hidden { display: none !important; }
+        .btn.tap-btn:active { transform: scale(.96); }
         .spinner {
-            display: inline-block;
-            width: 14px; height: 14px;
-            border: 2px solid rgba(255,193,7,0.3);
-            border-top-color: var(--yellow);
-            border-radius: 50%;
-            animation: spin .8s linear infinite;
-            vertical-align: middle;
-            margin-right: 6px;
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(13,13,13,.3); border-top-color: #0d0d0d;
+            border-radius: 50%; animation: spin .8s linear infinite;
+            vertical-align: middle; margin-right: 6px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* TAP CARD */
+        .tap-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px; text-align: center; }
+        .tap-card h3 { font-size: 12px; font-weight: 700; color: var(--yellow); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+        .tap-card p  { font-size: 12px; color: var(--muted2); margin-bottom: 16px; line-height: 1.5; }
+
+        /* LOG */
+        .log-wrap { background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .log-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+        .log-head-left { display: flex; align-items: center; gap: 8px; }
+        .log-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px rgba(0,230,118,.5); animation: pulse 2s ease-in-out infinite; }
+        .log-title { font-size: 11px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: .1em; }
+        .log-clear { font-size: 11px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted2); cursor: pointer; }
+        #logBox { font-family: 'Menlo','Courier New',monospace; font-size: 11px; max-height: 180px; overflow-y: auto; color: #8090a0; line-height: 1.7; padding: 10px 14px; }
+        #logBox::-webkit-scrollbar { width: 3px; }
+        #logBox::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+        .lok  { color: #00c853 !important; }
+        .lwrn { color: #ffab00 !important; }
+        .lerr { color: #ff3d57 !important; }
+        .linf { color: #448aff !important; }
+
+        /* DIAGNÓSTICO */
+        .diag-btn {
+            width: 100%; padding: 12px; background: transparent;
+            border: 1px solid var(--border); border-radius: 12px;
+            color: var(--muted2); font-size: 12px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+            letter-spacing: .04em; transition: color .2s, border-color .2s;
+        }
+        .diag-btn .arrow { transition: transform .2s; }
+        .diag-btn.open .arrow { transform: rotate(180deg); }
+        .diag-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .diag-panel h3 { font-size: 11px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: .08em; padding: 12px 14px 8px; border-bottom: 1px solid var(--border); }
+        .diag-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .diag-row:last-child { border-bottom: none; }
+        .diag-key { color: var(--muted2); flex-shrink: 0; }
+        .diag-val { color: var(--text); text-align: right; word-break: break-all; font-family: 'Menlo',monospace; font-size: 11px; }
+        .diag-refresh { width: calc(100% - 28px); margin: 10px 14px 12px; padding: 9px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px; color: var(--muted2); font-size: 12px; font-weight: 600; cursor: pointer; }
+
+        /* MAMBA */
+        .mamba-card { background: linear-gradient(135deg,rgba(245,197,24,.07),var(--bg3)); border: 1px solid rgba(245,197,24,.25); border-radius: 16px; padding: 16px; }
+        .mamba-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .mamba-title { font-weight: 700; font-size: 14px; color: var(--yellow); }
+        .mamba-sub   { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+        .mamba-body  { font-size: 12px; color: #bbc; line-height: 1.6; margin-bottom: 12px; }
+
+        /* FIRST TAP */
+        .first-tap-card { background: var(--bg3); border: 1px solid rgba(245,197,24,.2); border-radius: 16px; padding: 20px 16px; text-align: center; }
+        .first-tap-card h3 { font-size: 14px; font-weight: 700; color: var(--yellow); margin-bottom: 8px; }
+        .first-tap-card p  { font-size: 12px; color: var(--muted2); line-height: 1.6; margin-bottom: 6px; }
+
+        /* UTILS */
+        .hidden { display: none !important; }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
     </style>
 </head>
 <body>
 
-<h1>🐝 Bee Engine</h1>
-<p class="sub">Mineração NACKL — Wasp Browser</p>
-
-<!-- ── BOTÃO CENTRAL WP ── -->
-<button class="central-wp-btn" onclick="openCentralWP()">
-    <div class="cwb-left">
-        <div class="cwb-icon">⚡</div>
-        <div class="cwb-info">
-            <span class="cwb-title">Central WP</span>
-            <span class="cwb-sub">Tap Game · Anúncios · Boost · Login Diário</span>
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-top">
+        <div class="hero-logo">
+            <div class="hero-icon">🐝</div>
+            <div>
+                <div class="hero-title">Bee Engine</div>
+                <div class="hero-sub">NACKL · Acki Nacki Network</div>
+            </div>
+        </div>
+        <div class="status-pill" id="headerStatusPill">
+            <div class="pulse-dot" id="headerPulseDot"></div>
+            <span id="headerStatusText">Carregando</span>
         </div>
     </div>
-    <div class="cwb-right">
-        <span class="cwb-bal" id="wpBalDisplay">-- WP</span>
-        <span class="cwb-arrow">›</span>
+</div>
+
+<!-- CENTRAL WP -->
+<button class="wp-btn" onclick="openCentralWP()">
+    <div class="wp-icon">⚡</div>
+    <div class="wp-info">
+        <div class="wp-label">Central WP</div>
+        <div class="wp-desc">Tap · Anúncios · Boost · Login Diário</div>
+    </div>
+    <div class="wp-right">
+        <span class="wp-bal" id="wpBalDisplay">-- WP</span>
+        <span class="wp-arrow">›</span>
     </div>
 </button>
 
-<div class="status-card">
-    <div class="dot" id="dotStatus"></div>
-    <div class="status-text">
-        <div class="status-title" id="txtStatusTitle">Carregando SDK...</div>
-        <div class="status-desc"  id="txtStatusDesc">Aguarde</div>
-    </div>
-</div>
-
-<!-- Status da wallet (usado pelo app.js) -->
-<div class="status-card hidden" id="walletStatusCard">
-    <div class="dot" id="walletStatusDot"></div>
-    <div class="status-text">
-        <div class="status-title" id="walletStatusTitle">—</div>
-        <div class="status-desc"  id="walletStatusDesc">—</div>
-    </div>
-</div>
-
-<div class="switch-row">
-    <div>
-        <div style="font-weight:700;font-size:15px;">Mineração</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="switchSub">Configure primeiro</div>
-    </div>
-    <label class="switch">
-        <input type="checkbox" id="miningSwitch" disabled>
-        <span class="slider"></span>
-    </label>
-</div>
-
-<div class="metrics">
-    <div class="metric-card">
-        <div class="metric-label">Engine</div>
-        <div class="metric-value" id="mEngine">Parada</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-label">Ciclos</div>
-        <div class="metric-value mv-yellow" id="mCycles">0</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-label">Uptime</div>
-        <div class="metric-value mv-green" id="mUptime">00:00:00</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-label">Wallet</div>
-        <div class="metric-value mv-small" id="mWallet">—</div>
-    </div>
-    <div class="metric-card" style="grid-column: span 2;">
-        <div class="metric-label">Reward acumulado</div>
-        <div class="metric-value mv-yellow" id="mReward">—</div>
-    </div>
-</div>
-
-<div class="card" id="setupCard">
-    <h3>Configurar Bee Engine</h3>
-    <div class="step">
-        <div class="step-num" id="n1">1</div>
-        <div class="step-body">
-            <div class="step-title">Wallet name da AN Wallet</div>
-            <div class="step-desc">Nome que você escolheu ao criar sua carteira</div>
-            <input type="text" id="walletInput" placeholder="ex: jeferson" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+<!-- STATUS PRINCIPAL -->
+<div class="section">
+    <div class="status-banner" id="statusBanner">
+        <div class="dot" id="dotStatus"></div>
+        <div class="status-text">
+            <div class="status-title" id="txtStatusTitle">Carregando SDK...</div>
+            <div class="status-desc"  id="txtStatusDesc">Aguarde</div>
         </div>
     </div>
-    <div class="step">
-        <div class="step-num" id="n2">2</div>
-        <div class="step-body">
-            <div class="step-title">Gerar chaves de mineração</div>
-            <div class="step-desc">Par de chaves criptográficas único para este app</div>
-        </div>
-    </div>
-    <div class="step">
-        <div class="step-num" id="n3">3</div>
-        <div class="step-body">
-            <div class="step-title">Autorizar na AN Wallet</div>
-            <div class="step-desc">Abre a carteira para confirmar o registro das chaves</div>
-        </div>
-    </div>
-    <div class="step">
-        <div class="step-num" id="n4">4</div>
-        <div class="step-body">
-            <div class="step-title">Aguardar confirmação blockchain</div>
-            <div class="step-desc">Verificação na rede Acki Nacki (pode levar ~1 min)</div>
-        </div>
-    </div>
-    <button class="btn" id="btnSetup">Iniciar configuração</button>
-    <button class="btn ghost small hidden" id="btnConnectWallet">Conectar AN Wallet</button>
-    <button class="btn ghost small hidden" id="btnManageWallet">Gerenciar Wallet</button>
-    <button class="btn ghost small hidden" id="btnOpenWalletAgain">Abrir AN Wallet novamente</button>
-    <button class="btn danger small hidden" id="btnReset">Resetar configuração</button>
 </div>
 
-<!-- Aviso Mambaboard — requisito para rewards -->
-<div id="mambaCard" class="card hidden" style="margin-bottom:14px;border:1px solid rgba(255,193,7,0.35);background:linear-gradient(135deg,rgba(255,193,7,0.08),rgba(11,11,13,0.95));">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <span style="font-size:22px;">⚠️</span>
+<!-- WALLET STATUS -->
+<div class="section">
+    <div class="status-banner hidden" id="walletStatusCard">
+        <div class="dot" id="walletStatusDot"></div>
+        <div class="status-text">
+            <div class="status-title" id="walletStatusTitle">—</div>
+            <div class="status-desc"  id="walletStatusDesc">—</div>
+        </div>
+    </div>
+</div>
+
+<!-- SWITCH MINERAÇÃO -->
+<div class="section">
+    <div class="switch-row">
         <div>
-            <div style="font-weight:800;font-size:14px;color:var(--yellow);">Ativação de Rewards Necessária</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Requisito obrigatório da rede Acki Nacki</div>
+            <div class="switch-label">Mineração</div>
+            <div class="switch-sub" id="switchSub">Configure primeiro</div>
         </div>
-    </div>
-    <p style="font-size:13px;color:#ccc;line-height:1.6;margin-bottom:12px;">
-        Para receber NACKL, você precisa ativar sua participação no ecossistema:<br><br>
-        <strong style="color:var(--yellow);">1.</strong> Acesse um dos apps oficiais abaixo<br>
-        <strong style="color:var(--yellow);">2.</strong> Complete a tarefa inicial<br>
-        <strong style="color:var(--yellow);">3.</strong> Coloque sua primeira parte no <strong>Mambaboard</strong>
-    </p>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="btn" style="background:rgba(255,193,7,0.18);border:1px solid rgba(255,193,7,0.4);font-size:13px;padding:10px;" onclick="openMambaApp('batteries')">🔋 Batteries (Telegram)</button>
-        <button class="btn ghost small" onclick="openMambaApp('ludo')">🎮 Ludo (alternativo)</button>
-        <button class="btn ghost small" style="opacity:0.6;" onclick="hideMambaCard()">Já ativei — fechar aviso</button>
+        <label class="switch">
+            <input type="checkbox" id="miningSwitch" disabled>
+            <span class="slider"></span>
+        </label>
     </div>
 </div>
 
-<!-- Primeiro tap obrigatório -->
-<div id="firstTapCard" class="card hidden" style="margin-bottom:14px;text-align:center;">
-    <h3>Ativar Bee Engine</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.5;">
-        Um tap é necessário para verificar sua identidade<br>e registrar o binding com o contrato Miner.
-    </p>
-    <button class="btn tap-btn" id="btnFirstTap" style="margin-top:12px;">
-        TAP para ativar
+<!-- MÉTRICAS -->
+<div class="section">
+    <div class="metrics">
+        <div class="metric m-yellow">
+            <div class="metric-label">Engine</div>
+            <div class="metric-value mv-yellow" id="mEngine">Parada</div>
+        </div>
+        <div class="metric m-cyan">
+            <div class="metric-label">Ciclos</div>
+            <div class="metric-value mv-cyan" id="mCycles">0</div>
+        </div>
+        <div class="metric m-green">
+            <div class="metric-label">Uptime</div>
+            <div class="metric-value mv-green" id="mUptime">00:00:00</div>
+        </div>
+        <div class="metric m-blue">
+            <div class="metric-label">Wallet</div>
+            <div class="metric-value mv-small" id="mWallet">—</div>
+        </div>
+        <div class="metric m-full">
+            <div class="metric-label">Reward acumulado</div>
+            <div class="metric-value mv-yellow" id="mReward">—</div>
+        </div>
+    </div>
+</div>
+
+<!-- SETUP CARD -->
+<div class="section">
+    <div class="card" id="setupCard">
+        <h3>Configurar Bee Engine</h3>
+        <div class="step">
+            <div class="step-num" id="n1">1</div>
+            <div class="step-body">
+                <div class="step-title">Wallet name da AN Wallet</div>
+                <div class="step-desc">Nome escolhido ao criar sua carteira</div>
+                <input type="text" id="walletInput" placeholder="ex: jeferson" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num" id="n2">2</div>
+            <div class="step-body">
+                <div class="step-title">Gerar chaves de mineração</div>
+                <div class="step-desc">Par de chaves criptográficas para este app</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num" id="n3">3</div>
+            <div class="step-body">
+                <div class="step-title">Autorizar na AN Wallet</div>
+                <div class="step-desc">Abre a carteira para confirmar o registro</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num" id="n4">4</div>
+            <div class="step-body">
+                <div class="step-title">Aguardar confirmação blockchain</div>
+                <div class="step-desc">Verificação na rede Acki Nacki (~1 min)</div>
+            </div>
+        </div>
+        <button class="btn" id="btnSetup">Iniciar configuração</button>
+        <button class="btn ghost small hidden" id="btnConnectWallet">Conectar AN Wallet</button>
+        <button class="btn ghost small hidden" id="btnManageWallet">Gerenciar Wallet</button>
+        <button class="btn ghost small hidden" id="btnOpenWalletAgain">Abrir AN Wallet novamente</button>
+        <button class="btn danger small hidden" id="btnReset">Resetar configuração</button>
+    </div>
+</div>
+
+<!-- MAMBA CARD -->
+<div class="section">
+    <div class="mamba-card hidden" id="mambaCard">
+        <div class="mamba-head">
+            <span style="font-size:22px">⚠️</span>
+            <div>
+                <div class="mamba-title">Ativação de Rewards Necessária</div>
+                <div class="mamba-sub">Requisito da rede Acki Nacki</div>
+            </div>
+        </div>
+        <p class="mamba-body">
+            Para receber NACKL, ative sua participação:<br><br>
+            <strong style="color:var(--yellow)">1.</strong> Acesse um app oficial abaixo<br>
+            <strong style="color:var(--yellow)">2.</strong> Complete a tarefa inicial<br>
+            <strong style="color:var(--yellow)">3.</strong> Coloque sua parte no <strong>Mambaboard</strong>
+        </p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn" style="background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);color:var(--yellow);font-size:13px;padding:11px" onclick="openMambaApp('batteries')">🔋 Batteries (Telegram)</button>
+            <button class="btn ghost small" onclick="openMambaApp('ludo')">🎮 Ludo (alternativo)</button>
+            <button class="btn ghost small" style="opacity:.6" onclick="hideMambaCard()">Já ativei — fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- PRIMEIRO TAP -->
+<div class="section">
+    <div class="first-tap-card hidden" id="firstTapCard">
+        <h3>Ativar Bee Engine</h3>
+        <p>Um tap é necessário para verificar sua identidade<br>e registrar o binding com o contrato Miner.</p>
+        <button class="btn tap-btn" id="btnFirstTap" style="margin-top:14px">⚡ TAP para ativar</button>
+    </div>
+</div>
+
+<!-- TAP SECTION -->
+<div class="section hidden" id="tapSection">
+    <div class="tap-card">
+        <h3>Aumentar recompensa</h3>
+        <p>Cada tap adiciona uma ação ao Merkle Tree<br>com dificuldade aumentada</p>
+        <button class="btn tap-btn" id="btnTap">⚡  TAP</button>
+    </div>
+</div>
+
+<!-- LOG -->
+<div class="section">
+    <div class="log-wrap">
+        <div class="log-head">
+            <div class="log-head-left">
+                <div class="log-dot"></div>
+                <span class="log-title">Log</span>
+            </div>
+            <button class="log-clear" onclick="clearLog()">Limpar</button>
+        </div>
+        <div id="logBox"></div>
+    </div>
+</div>
+
+<!-- DIAGNÓSTICO -->
+<div class="section">
+    <button class="diag-btn" id="btnDiag" onclick="toggleDiag()">
+        <span>Diagnóstico</span>
+        <span class="arrow">▾</span>
     </button>
 </div>
 
-<div id="tapSection" class="hidden" style="margin-bottom:14px;">
-    <div class="card" style="text-align:center;">
-        <h3>Aumentar recompensa</h3>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:4px;">Cada tap adiciona uma ação ao Merkle Tree com dificuldade aumentada</p>
-        <button class="btn tap-btn" id="btnTap">⚡ TAP</button>
+<div class="section hidden" id="diagPanel">
+    <div class="diag-panel">
+        <h3>Diagnóstico do sistema</h3>
+        <div class="diag-row"><span class="diag-key">Bridge Android</span><span class="diag-val" id="dBridge">—</span></div>
+        <div class="diag-row"><span class="diag-key">SDK (BeeSDK)</span>   <span class="diag-val" id="dSdk">—</span></div>
+        <div class="diag-row"><span class="diag-key">WASM</span>           <span class="diag-val" id="dWasm">—</span></div>
+        <div class="diag-row"><span class="diag-key">Miner address</span>  <span class="diag-val" id="dAddr">—</span></div>
+        <div class="diag-row"><span class="diag-key">Mining ativo</span>   <span class="diag-val" id="dMining">—</span></div>
+        <div class="diag-row"><span class="diag-key">can_start()</span>    <span class="diag-val" id="dCanStart">—</span></div>
+        <div class="diag-row"><span class="diag-key">Reward atual</span>   <span class="diag-val" id="dReward">—</span></div>
+        <div class="diag-row"><span class="diag-key">Ciclos</span>         <span class="diag-val" id="dCycles">—</span></div>
+        <div class="diag-row"><span class="diag-key">Último evento</span>  <span class="diag-val" id="dLastEvent">—</span></div>
+        <div class="diag-row"><span class="diag-key">Propagação</span>     <span class="diag-val" id="dPropagated">—</span></div>
+        <div class="diag-row"><span class="diag-key">Mambaboard</span>     <span class="diag-val" id="dMamba">—</span></div>
+        <div class="diag-row"><span class="diag-key">Auto-tap</span>       <span class="diag-val" id="dAutoTap">—</span></div>
+        <div class="diag-row"><span class="diag-key">tapSum</span>         <span class="diag-val" id="dTapSum">—</span></div>
+        <button class="diag-refresh" onclick="runDiag()">↻ Atualizar diagnóstico</button>
     </div>
 </div>
 
-<div class="log-card">
-    <div class="log-header">
-        <span>Log</span>
-        <button class="log-clear" onclick="clearLog()">Limpar</button>
-    </div>
-    <div id="logBox"></div>
-</div>
-
-<button class="btn ghost small" id="btnDiag" onclick="toggleDiag()">Mostrar diagnóstico</button>
-<div id="diagPanel" class="hidden">
-    <div class="card" style="margin-top:10px;">
-        <h3>Diagnóstico</h3>
-        <div class="step"><div class="step-body"><div class="step-title">Bridge Android</div><div class="step-desc" id="dBridge">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">SDK (BeeSDK)</div><div class="step-desc" id="dSdk">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">WASM inicializado</div><div class="step-desc" id="dWasm">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Miner address</div><div class="step-desc" id="dAddr" style="word-break:break-all;">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Mining ativo</div><div class="step-desc" id="dMining">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">can_start() — disponibilidade</div><div class="step-desc" id="dCanStart">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Reward atual</div><div class="step-desc" id="dReward">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Ciclos (eventos recebidos)</div><div class="step-desc" id="dCycles">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Último evento</div><div class="step-desc" id="dLastEvent">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Propagação confirmada</div><div class="step-desc" id="dPropagated">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Mambaboard ativado</div><div class="step-desc" id="dMamba">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Auto-tap</div><div class="step-desc" id="dAutoTap">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">tapSum (taps contabilizados)</div><div class="step-desc" id="dTapSum">—</div></div></div>
-        <button class="btn ghost small" onclick="runDiag()">Atualizar diagnóstico</button>
-    </div>
-</div>
-
+<!-- SCRIPTS UI (não altera lógica) -->
 <script>
-    // ── Abre Central WP via bridge Android ou fallback ──
     function openCentralWP() {
         if (window.AndroidBee && typeof window.AndroidBee.openCentral === "function") {
-            window.AndroidBee.openCentral();
-            return;
+            window.AndroidBee.openCentral(); return;
         }
         window.location.href = "central.html";
     }
-
-    // ── Abre app de ativação Mambaboard ──
     function openMambaApp(which) {
         var urls = {
             batteries: "https://t.me/ackinacki_miner_bot/ackinacki_miner_app?startapp=",
-            ludo: "https://t.me/ackinackibot/ackinacki_app?startapp=",
-            popits: "https://t.me/LudoBidBot/LudoBid?startapp="
+            ludo: "https://t.me/ackinackibot/ackinacki_app?startapp="
         };
         var url = urls[which] || urls.batteries;
         if (window.AndroidBee && typeof window.AndroidBee.openUrl === "function") {
             window.AndroidBee.openUrl(url);
-        } else {
-            window.open(url, "_blank");
-        }
+        } else { window.open(url, "_blank"); }
     }
-
     function hideMambaCard() {
         var el = document.getElementById("mambaCard");
         if (el) el.classList.add("hidden");
         try { localStorage.setItem("wasp_mamba_dismissed", "1"); } catch(_) {}
     }
 
-    // ── Atualiza saldo WP no botão ──
+    /* WP balance */
     function refreshWpDisplay() {
         try {
-            const bal = parseInt(localStorage.getItem("wasp_wp") || "0", 10);
-            const el = document.getElementById("wpBalDisplay");
+            var bal = parseInt(localStorage.getItem("wasp_wp") || "0", 10);
+            var el = document.getElementById("wpBalDisplay");
             if (el) el.textContent = bal + " WP";
         } catch(_) {}
     }
-
-    // Atualiza ao carregar e a cada 5s
     refreshWpDisplay();
     setInterval(refreshWpDisplay, 5000);
+
+    /* Toggle diagnóstico */
+    window.toggleDiag = function() {
+        var p = document.getElementById("diagPanel");
+        var b = document.getElementById("btnDiag");
+        if (!p) return;
+        var isOpen = !p.classList.contains("hidden");
+        p.classList.toggle("hidden", isOpen);
+        if (b) b.classList.toggle("open", !isOpen);
+        if (!isOpen && window.runDiag) window.runDiag();
+    };
+
+    /* Sincroniza status pill no header com o dotStatus */
+    (function() {
+        function syncPill() {
+            var dot  = document.getElementById("dotStatus");
+            var pill = document.getElementById("headerStatusPill");
+            var pdot = document.getElementById("headerPulseDot");
+            var ptxt = document.getElementById("headerStatusText");
+            var ttl  = document.getElementById("txtStatusTitle");
+            if (!dot || !pill) return;
+            var c = dot.className;
+            pill.className = "status-pill";
+            pdot.className = "pulse-dot";
+            if (c.indexOf("on") !== -1) {
+                pill.classList.add("on"); pdot.classList.add("live");
+                if (ptxt) ptxt.textContent = "Minerando";
+            } else if (c.indexOf("warn") !== -1) {
+                pill.classList.add("warn");
+                if (ptxt && ttl) ptxt.textContent = ttl.textContent.substring(0, 18);
+                else if (ptxt) ptxt.textContent = "Aguardando";
+            } else if (c.indexOf("err") !== -1) {
+                pill.classList.add("err");
+                if (ptxt) ptxt.textContent = "Erro";
+            } else {
+                if (ptxt) ptxt.textContent = "Inativo";
+            }
+        }
+        /* Sincroniza classe do banner com o dot */
+        function syncBanner() {
+            var dot    = document.getElementById("dotStatus");
+            var banner = document.getElementById("statusBanner");
+            if (!dot || !banner) return;
+            var c = dot.className;
+            banner.className = "status-banner";
+            if (c.indexOf("on")   !== -1) banner.classList.add("active");
+            if (c.indexOf("warn") !== -1) banner.classList.add("warn");
+            if (c.indexOf("err")  !== -1) banner.classList.add("err");
+        }
+        window.addEventListener("DOMContentLoaded", function() {
+            var dot = document.getElementById("dotStatus");
+            var ttl = document.getElementById("txtStatusTitle");
+            if (dot) {
+                new MutationObserver(function() { syncPill(); syncBanner(); })
+                    .observe(dot, { attributes: true, attributeFilter: ["class"] });
+            }
+            if (ttl) {
+                new MutationObserver(syncPill)
+                    .observe(ttl, { childList: true, characterData: true, subtree: true });
+            }
+            syncPill(); syncBanner();
+        });
+    })();
 </script>
 
 <script src="js/sha256.min.js"></script>
@@ -480,7 +653,6 @@ async function initSDK() {
         document.head.appendChild(s);
     }
     try {
-        // Android WebView: fetch() nao funciona com file://, usar XHR
         const wasmBuf = await loadWasmXHR('file:///android_asset/bee/bee_sdk_bg.wasm');
         await init(wasmBuf);
         window.BeeSDK = BeeSDKModule;
