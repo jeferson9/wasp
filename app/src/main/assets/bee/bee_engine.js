@@ -221,6 +221,30 @@
   async function loadSdk() {
     setStatus("warn", "Carregando SDK...", "Inicializando WASM");
 
+    // SDK novo (ES module): WASM ja foi inicializado pelo <script type="module">
+    // Aguarda ate 10s pelo evento beeSDKReady ou window._sdkReady
+    if (typeof window.BeeSDK !== "undefined" && window._sdkReady === true) {
+      log("BeeSDK: ✅ encontrado e pronto (ES module)", "lok");
+      wasmReady = true;
+      onSdkReady();
+      return;
+    }
+    // Aguarda o evento se ainda nao chegou
+    if (typeof window.BeeSDK === "undefined" || window._sdkReady !== true) {
+      log("Aguardando BeeSDK ES module inicializar...", "linf");
+      await new Promise(function(resolve) {
+        if (window._sdkReady === true) { resolve(); return; }
+        document.addEventListener("beeSDKReady", resolve, { once: true });
+        setTimeout(resolve, 10000); // fallback 10s
+      });
+      if (window._sdkReady === true) {
+        log("BeeSDK: ✅ pronto (ES module)", "lok");
+        wasmReady = true;
+        onSdkReady();
+        return;
+      }
+    }
+
     // FIX: verificar bridge primeiro para diagnóstico antecipado
     if (window.AndroidBee) {
       log("Bridge Android: ✅ conectada", "lok");
