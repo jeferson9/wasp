@@ -455,26 +455,31 @@
     setInterval(refreshWpDisplay, 5000);
 </script>
 
+<script src="js/sha256.min.js"></script>
 <script type="module">
-import * as BeeSDKModule from './bee_sdk.js';
-// Inicializa o WASM e expõe BeeSDK globalmente para o bee_engine.js
+import init, * as BeeSDKModule from './bee_sdk.js';
 async function initSDK() {
     try {
         const wasmResp = await fetch('./bee_sdk_bg.wasm');
         const wasmBuf = await wasmResp.arrayBuffer();
-        await BeeSDKModule.default(wasmBuf);
+        await init(wasmBuf);
         window.BeeSDK = BeeSDKModule;
         window._sdkReady = true;
-        document.dispatchEvent(new Event('beeSDKReady'));
+        // Carrega bee_engine.js dinamicamente DEPOIS do SDK estar pronto
+        const s = document.createElement('script');
+        s.src = 'bee_engine.js';
+        document.head.appendChild(s);
     } catch(e) {
         console.error('BeeSDK init error: ' + e);
         window._sdkReady = false;
+        // Carrega mesmo assim para mostrar o erro no log da UI
+        const s = document.createElement('script');
+        s.src = 'bee_engine.js';
+        document.head.appendChild(s);
     }
 }
 initSDK();
 </script>
-<script src="js/sha256.min.js"></script>
-<script src="bee_engine.js"></script>
 
 </body>
 </html>
