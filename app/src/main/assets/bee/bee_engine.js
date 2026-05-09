@@ -4,7 +4,7 @@
   // ─── CONFIGURAÇÃO ────────────────────────────────────────────────────────
   // APP_ID oficial da rede Acki Nacki para mineração mobile
   // Fonte: https://docs.ackinacki.com/bee-sdk
-  var APP_ID = "0x0000000000000000000000000000000000000000000000000000000000000011";
+  var APP_ID = "0x0000000000000000000000000000000000000000000000000000000000000001";
   var ENDPOINTS = ["https://mainnet-cf.ackinacki.org"];
   var KEY_STATE = "wasp_bee_state_v6";        // v6 — limpa estado corrompido de versões anteriores
   var MINING_DURATION_MS = 5 * 60 * 1000;    // 5 min por sessão (padrão Acki Nacki)
