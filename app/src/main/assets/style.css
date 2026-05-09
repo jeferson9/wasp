@@ -497,6 +497,7 @@ body[data-theme="light"] .wasp-status-pill {
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 2.5vw, 14px);
+  padding-bottom: clamp(100px, 22vw, 130px);
 }
 
 .recents-panel {
