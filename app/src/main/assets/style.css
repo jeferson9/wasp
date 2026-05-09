@@ -497,7 +497,6 @@ body[data-theme="light"] .wasp-status-pill {
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 2.5vw, 14px);
-  padding-bottom: clamp(100px, 22vw, 130px);
 }
 
 .recents-panel {
@@ -2527,7 +2526,6 @@ body[data-theme="light"] .central-wp-btn {
   flex-direction: column;
   justify-content: space-between;
   padding: 0;
-  padding-bottom: clamp(90px, 18vw, 110px); /* espaco para o nav fixo */
 }
 
 /* Centro vertical do hero */
