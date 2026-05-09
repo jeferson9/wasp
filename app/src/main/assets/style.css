@@ -2764,16 +2764,18 @@ body[data-theme="light"] .home-search-sticky {
   top: 0;
   z-index: 200;
   width: 100%;
-  padding: 8px 12px;
+  padding: 0 12px;
+  height: 0;
+  overflow: hidden;
   background: transparent;
-  transition: background 0.25s ease, box-shadow 0.25s ease;
-  /* Escondida por padrão — aparece só ao rolar */
-  opacity: 0;
+  transition: background 0.25s ease, box-shadow 0.25s ease, height 0.2s ease, padding 0.2s ease;
   pointer-events: none;
 }
 
 .home-search-sticky-wrap.scrolled {
-  opacity: 1;
+  height: auto;
+  padding: 8px 12px;
+  overflow: visible;
   pointer-events: all;
   background: rgba(11,11,13,0.96);
   backdrop-filter: blur(14px);
