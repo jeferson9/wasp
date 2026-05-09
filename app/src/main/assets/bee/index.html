@@ -458,24 +458,39 @@
 <script src="js/sha256.min.js"></script>
 <script type="module">
 import init, * as BeeSDKModule from './bee_sdk.js';
+
+function loadWasmXHR(path) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function() {
+            if (xhr.status === 0 || xhr.status === 200) resolve(xhr.response);
+            else reject(new Error('XHR status ' + xhr.status));
+        };
+        xhr.onerror = function() { reject(new Error('XHR network error: ' + path)); };
+        xhr.send();
+    });
+}
+
 async function initSDK() {
+    function loadEngine() {
+        const s = document.createElement('script');
+        s.src = 'bee_engine.js';
+        document.head.appendChild(s);
+    }
     try {
-        const wasmResp = await fetch('./bee_sdk_bg.wasm');
-        const wasmBuf = await wasmResp.arrayBuffer();
+        // Android WebView: fetch() nao funciona com file://, usar XHR
+        const wasmBuf = await loadWasmXHR('file:///android_asset/bee/bee_sdk_bg.wasm');
         await init(wasmBuf);
         window.BeeSDK = BeeSDKModule;
         window._sdkReady = true;
-        // Carrega bee_engine.js dinamicamente DEPOIS do SDK estar pronto
-        const s = document.createElement('script');
-        s.src = 'bee_engine.js';
-        document.head.appendChild(s);
+        console.log('BeeSDK ES module: WASM inicializado com sucesso');
+        loadEngine();
     } catch(e) {
         console.error('BeeSDK init error: ' + e);
         window._sdkReady = false;
-        // Carrega mesmo assim para mostrar o erro no log da UI
-        const s = document.createElement('script');
-        s.src = 'bee_engine.js';
-        document.head.appendChild(s);
+        loadEngine();
     }
 }
 initSDK();

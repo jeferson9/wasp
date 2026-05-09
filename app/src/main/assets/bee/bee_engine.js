@@ -267,8 +267,8 @@
     }
 
     if (typeof window.BeeSDK === "undefined") {
-      log("❌ window.BeeSDK não encontrado! bee_sdk_classic.js não carregou.", "lerr");
-      setStatus("err", "SDK não encontrado", "Verifique se bee_sdk_classic.js está em assets/bee/");
+      log("❌ window.BeeSDK não encontrado!", "lerr");
+      setStatus("err", "SDK não encontrado", "Erro ao inicializar bee_sdk.js");
       return;
     }
 
