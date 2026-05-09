@@ -772,10 +772,31 @@
                 }, 180);
             }
 
-            // Atualiza hash
+            // Hash real: tenta extrair worker_id do último evento do engine
             var hashEl = document.getElementById('hashDisplay');
-            if (hashEl) {
-                hashEl.textContent = '0x' + rndHex(8) + '...' + rndHex(4) + ' · worker:' + rndHex(6);
+            if (!hashEl) return;
+            try {
+                var ev = window._lastMinerEvent || '';
+                var workerMatch = ev.match(/worker_id["\s:]+(\d+)/);
+                var workerId = workerMatch ? workerMatch[1].slice(-8) : null;
+
+                // minerAddress real do estado salvo
+                var stateRaw = localStorage.getItem('wasp_bee_state_v6') || '{}';
+                var state = JSON.parse(stateRaw);
+                var addr = state.minerAddress || '';
+                var addrShort = addr ? addr.slice(0, 6) + '...' + addr.slice(-4) : null;
+
+                if (workerId && addrShort) {
+                    hashEl.textContent = 'miner:' + addrShort + ' · worker:' + workerId;
+                } else if (addrShort) {
+                    hashEl.textContent = 'miner:' + addrShort + ' · tap #' + total;
+                } else if (workerId) {
+                    hashEl.textContent = 'worker:' + workerId + ' · tap #' + total;
+                } else {
+                    hashEl.textContent = 'tap #' + total + ' confirmado';
+                }
+            } catch(e) {
+                hashEl.textContent = 'tap #' + total + ' confirmado';
             }
         }
 
