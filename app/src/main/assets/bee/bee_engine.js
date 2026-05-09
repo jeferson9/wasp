@@ -5,7 +5,7 @@
   // APP_ID oficial da rede Acki Nacki para mineração mobile
   // Fonte: https://docs.ackinacki.com/bee-sdk
   var APP_ID = "0x0000000000000000000000000000000000000000000000000000000000000001";
-  var ENDPOINTS = ["https://mainnet-cf.ackinacki.org", "https://mainnet.ackinacki.org"];
+  var ENDPOINTS = ["https://mainnet-cf.ackinacki.org"];
   var KEY_STATE = "wasp_bee_state_v6";        // v6 — limpa estado corrompido de versões anteriores
   var MINING_DURATION_MS = 5 * 60 * 1000;    // 5 min por sessão (padrão Acki Nacki)
 
@@ -294,12 +294,6 @@
   }
 
   function onSdkReady() {
-    // Habilitar botão de setup agora que o WASM está pronto
-    if (btnSetup) {
-      btnSetup.disabled = false;
-      btnSetup.textContent = "Iniciar configuração";
-      btnSetup.onclick = runSetup;
-    }
     updateMetrics();
     if (saved.authorized && saved.walletName && saved.minerAddress) {
       setStatus("on", "Bee pronta ✅", "Wallet: " + saved.walletName);
@@ -985,11 +979,6 @@
   function init() {
     grabElements();
     loadSaved();
-    // Desabilitar botão até WASM carregar — evita __wbindgen_malloc
-    if (btnSetup) {
-      btnSetup.disabled = true;
-      btnSetup.textContent = "Carregando SDK...";
-    }
     updateMetrics();
     bindEvents();
     setStep(1);

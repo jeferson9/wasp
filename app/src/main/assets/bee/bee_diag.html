@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Bee Diagnóstico</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0b0b0d; color: #c8d0e0; font-family: monospace; font-size: 13px; padding: 16px; }
+        h2 { color: #ffd400; font-size: 15px; margin-bottom: 12px; }
+        .section { background: #111420; border: 1px solid #1e2435; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #1a1f30; }
+        .row:last-child { border-bottom: none; }
+        .label { color: #6b7a99; }
+        .val { text-align: right; max-width: 65%; word-break: break-all; }
+        .ok  { color: #22c55e; }
+        .err { color: #ef4444; }
+        .wrn { color: #f59e0b; }
+        .inf { color: #60a5fa; }
+        .btn { background: #1a1e2e; border: 1px solid #252a3d; color: #c8d0e0; padding: 10px 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 8px; font-size: 13px; font-family: monospace; }
+        .btn:active { opacity: 0.7; }
+        .btn-primary { background: #1a3a1a; border-color: #22c55e; color: #22c55e; }
+        #log { background: #080a10; border: 1px solid #1a1f30; border-radius: 8px; padding: 10px; height: 280px; overflow-y: auto; font-size: 11px; line-height: 1.6; }
+        .lok  { color: #22c55e; }
+        .lerr { color: #ef4444; }
+        .lwrn { color: #f59e0b; }
+        .linf { color: #60a5fa; }
+    </style>
+</head>
+<body>
+
+<h2>🐝 Bee Engine — Diagnóstico</h2>
+
+<div class="section">
+    <div class="row"><span class="label">AndroidBee bridge</span><span class="val" id="dBridge">—</span></div>
+    <div class="row"><span class="label">WASM nos assets</span><span class="val" id="dHasWasm">—</span></div>
+    <div class="row"><span class="label">Arquivos em bee/</span><span class="val" id="dAssets">—</span></div>
+    <div class="row"><span class="label">window.BeeSDK</span><span class="val" id="dSdk">—</span></div>
+    <div class="row"><span class="label">WASM inicializado</span><span class="val" id="dWasm">—</span></div>
+    <div class="row"><span class="label">gen_mining_keys</span><span class="val" id="dGenKeys">—</span></div>
+    <div class="row"><span class="label">Deep link gerado</span><span class="val" id="dDeepLink">—</span></div>
+</div>
+
+<button class="btn btn-primary" onclick="runFullDiag()">▶ Rodar diagnóstico completo</button>
+<button class="btn" onclick="runWasmOnly()">Testar só WASM</button>
+<button class="btn" onclick="runBridgeOnly()">Testar só Bridge</button>
+<button class="btn" onclick="document.getElementById('log').innerHTML=''">Limpar log</button>
+
+<div id="log"></div>
+
+<script>
+    function log(msg, cls) {
+      var lb = document.getElementById('log');
+      var t  = new Date().toLocaleTimeString('pt-BR');
+      var d  = document.createElement('div');
+      if (cls) d.className = cls;
+      d.textContent = '[' + t + '] ' + msg;
+      lb.appendChild(d);
+      lb.scrollTop = lb.scrollHeight;
+      console.log('[Diag] ' + msg);
+    }
+
+    function setVal(id, text, cls) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'val ' + (cls || '');
+    }
+
+    // ─── BRIDGE ──────────────────────────────────────────────────────────────
+    function runBridgeOnly() {
+      log('=== Testando Bridge ===', 'linf');
+      if (!window.AndroidBee) {
+        log('❌ window.AndroidBee não encontrado', 'lerr');
+        setVal('dBridge', '❌ Ausente', 'err');
+        return;
+      }
+      setVal('dBridge', '✅ Conectada', 'ok');
+      log('✅ AndroidBee encontrado', 'lok');
+
+      try {
+        var ping = window.AndroidBee.ping ? window.AndroidBee.ping() : 'sem ping()';
+        log('ping() = ' + ping, 'lok');
+      } catch(e) { log('ping() erro: ' + e.message, 'lerr'); }
+
+      try {
+        var hasWasm = window.AndroidBee.hasWasm ? window.AndroidBee.hasWasm() : null;
+        if (hasWasm === true) {
+          setVal('dHasWasm', '✅ Encontrado', 'ok');
+          log('✅ bee_sdk_bg.wasm encontrado nos assets', 'lok');
+        } else if (hasWasm === false) {
+          setVal('dHasWasm', '❌ NÃO encontrado!', 'err');
+          log('❌ bee_sdk_bg.wasm NÃO está em assets/bee/ — ESTE É O PROBLEMA!', 'lerr');
+        } else {
+          setVal('dHasWasm', '⚠️ hasWasm() ausente', 'wrn');
+          log('⚠️ AndroidBee.hasWasm() não disponível (BeeActivity desatualizado?)', 'lwrn');
+        }
+      } catch(e) { log('hasWasm() erro: ' + e.message, 'lerr'); }
+
+      try {
+        var assets = window.AndroidBee.checkAssets ? window.AndroidBee.checkAssets() : '—';
+        setVal('dAssets', assets || '(vazio)', assets ? 'ok' : 'err');
+        log('Assets em bee/: ' + (assets || '(nenhum)'), assets ? 'lok' : 'lerr');
+      } catch(e) { log('checkAssets() erro: ' + e.message, 'lerr'); }
+    }
+
+    // ─── WASM ─────────────────────────────────────────────────────────────────
+    async function runWasmOnly() {
+      log('=== Testando WASM ===', 'linf');
+
+      if (typeof window.BeeSDK === 'undefined') {
+        setVal('dSdk', '❌ Ausente', 'err');
+        log('❌ window.BeeSDK não encontrado — bee_sdk_classic.js não carregou!', 'lerr');
+        log('   Verifique se o <script src="bee_sdk_classic.js"> está no index.html', 'lwrn');
+        return;
+      }
+      setVal('dSdk', '✅ Encontrado', 'ok');
+      log('✅ window.BeeSDK encontrado', 'lok');
+
+      var isAndroid = !!(window.AndroidBee || navigator.userAgent.indexOf('Android') !== -1);
+      var paths = isAndroid
+        ? ['file:///android_asset/bee/bee_sdk_bg.wasm', './bee_sdk_bg.wasm', 'bee_sdk_bg.wasm']
+        : ['./bee_sdk_bg.wasm', 'bee_sdk_bg.wasm'];
+
+      for (var i = 0; i < paths.length; i++) {
+        var p = paths[i];
+        try {
+          log('Tentando: ' + p, 'linf');
+          var wasmBytes = await loadViaXhr(p);
+          log('XHR ok: ' + wasmBytes.byteLength + ' bytes', 'lok');
+          await window.BeeSDK.init(wasmBytes);
+          setVal('dWasm', '✅ Inicializado (' + p + ')', 'ok');
+          log('✅ WASM inicializado com sucesso via: ' + p, 'lok');
+          return;
+        } catch(e) {
+          log('❌ [' + p + ']: ' + (e.message || String(e)), 'lerr');
+        }
+      }
+
+      // Fallback sem argumento
+      try {
+        log('Tentativa final sem path...', 'lwrn');
+        await window.BeeSDK.init();
+        setVal('dWasm', '✅ Inicializado (path padrão)', 'ok');
+        log('✅ WASM inicializado via path padrão', 'lok');
+      } catch(e) {
+        setVal('dWasm', '❌ Falhou em todos os paths', 'err');
+        log('❌ WASM falhou em todos os paths: ' + (e.message || String(e)), 'lerr');
+        log('─── SOLUÇÃO ───────────────────────────────────────────', 'lwrn');
+        log('1. Confirme: app/src/main/assets/bee/bee_sdk_bg.wasm', 'lwrn');
+        log('2. Confirme: allowFileAccess = true no WebView', 'lwrn');
+        log('3. Confirme: allowFileAccessFromFileURLs = true', 'lwrn');
+        log('4. Confirme: shouldInterceptRequest serve o .wasm', 'lwrn');
+      }
+    }
+
+    function loadViaXhr(path) {
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function() {
+          if ((xhr.status === 0 || xhr.status === 200) && xhr.response && xhr.response.byteLength > 0) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error('status=' + xhr.status + ' size=' + (xhr.response ? xhr.response.byteLength : 0)));
+          }
+        };
+        xhr.onerror   = function() { reject(new Error('network error')); };
+        xhr.ontimeout = function() { reject(new Error('timeout')); };
+        xhr.timeout   = 15000;
+        xhr.send();
+      });
+    }
+
+    // ─── DIAGNÓSTICO COMPLETO ─────────────────────────────────────────────────
+    async function runFullDiag() {
+      document.getElementById('log').innerHTML = '';
+      log('=== Diagnóstico completo Bee Engine ===', 'linf');
+      log('User Agent: ' + navigator.userAgent, 'inf');
+
+      runBridgeOnly();
+
+      await new Promise(function(r){ setTimeout(r, 300); });
+
+      await runWasmOnly();
+
+      // Teste de gen_mining_keys se WASM OK
+      if (typeof window.BeeSDK !== 'undefined') {
+        try {
+          log('─── Testando gen_mining_keys... ───', 'linf');
+          var APP_ID = '0x0000000000000000000000000000000000000000000000000000000000000001';
+          var result = await window.BeeSDK.gen_mining_keys(APP_ID);
+          setVal('dGenKeys', '✅ OK', 'ok');
+          log('✅ gen_mining_keys OK!', 'lok');
+          log('  public: ' + result.public.substring(0,32) + '...', 'lok');
+          log('  secret: ' + (result.secret ? result.secret.substring(0,16) + '...' : 'null'), 'lok');
+          log('  deep_link (SDK): ' + (result.deep_link ? result.deep_link.substring(0,60)+'...' : 'null (normal — usamos buildManualDeepLink)'), result.deep_link ? 'lok' : 'lwrn');
+          setVal('dDeepLink', result.deep_link ? '✅ SDK gerou' : '⚠️ Null (normal)', result.deep_link ? 'ok' : 'wrn');
+        } catch(e) {
+          setVal('dGenKeys', '❌ ' + e.message.substring(0,40), 'err');
+          log('❌ gen_mining_keys falhou: ' + (e.message || String(e)), 'lerr');
+        }
+      }
+
+      log('─── Diagnóstico concluído ───', 'linf');
+    }
+
+    // Rodar bridge check ao carregar
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        setVal('dBridge', window.AndroidBee ? '✅ Conectada' : '⚠️ Não encontrada (sem app?)', window.AndroidBee ? 'ok' : 'wrn');
+        setVal('dSdk', typeof window.BeeSDK !== 'undefined' ? '✅ Encontrado' : '❌ Ausente (script não carregou?)', typeof window.BeeSDK !== 'undefined' ? 'ok' : 'err');
+      }, 500);
+    });
+</script>
+
+<!-- Carrega o SDK para diagnóstico -->
+<script src="bee_sdk_classic.js"></script>
+</body>
+</html>
