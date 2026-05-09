@@ -717,12 +717,11 @@
         var TOTAL = 32;
         var tapCount = 0;
         var activeIdx = 0;
-        var hashes = [];
         var animTimer = null;
+        var lastTransform = '';
 
         function rndHex(len) {
-            var h = '';
-            var chars = '0123456789abcdef';
+            var h = '', chars = '0123456789abcdef';
             for (var i = 0; i < len; i++) h += chars[Math.floor(Math.random() * 16)];
             return h;
         }
@@ -739,74 +738,75 @@
             }
         }
 
-        function flashBlock(idx) {
-            var b = document.getElementById('blk' + idx);
-            if (!b) return;
-            b.classList.add('flash');
-            setTimeout(function() {
-                b.classList.remove('flash');
-                b.classList.add('done');
-            }, 200);
-        }
-
-        function animateActive() {
-            // pulsa o bloco atual suavemente em loop
+        function setActivePulse() {
             if (animTimer) clearInterval(animTimer);
             animTimer = setInterval(function() {
                 var b = document.getElementById('blk' + activeIdx);
-                if (!b) return;
-                if (!b.classList.contains('done') && !b.classList.contains('flash')) {
+                if (b && !b.classList.contains('done') && !b.classList.contains('flash')) {
                     b.classList.toggle('active');
                 }
-            }, 600);
+            }, 550);
         }
 
-        function updateHash() {
-            var el = document.getElementById('hashDisplay');
-            if (!el) return;
-            var h = '0x' + rndHex(8) + '...' + rndHex(4) + ' | worker:' + rndHex(6);
-            el.textContent = h;
-        }
-
-        function onTap() {
+        function onTapConfirmed() {
             tapCount++;
             var el = document.getElementById('tapCounterDisplay');
             if (el) el.textContent = tapCount + ' tap' + (tapCount !== 1 ? 's' : '');
 
-            flashBlock(activeIdx % TOTAL);
-            updateHash();
-
-            // avança o bloco ativo
-            activeIdx = (activeIdx + 1) % TOTAL;
-            // se deu a volta, reseta os done
-            if (activeIdx === 0) {
-                for (var i = 0; i < TOTAL; i++) {
-                    var b = document.getElementById('blk' + i);
-                    if (b) { b.className = 'blk'; }
+            // Para o pulso do bloco atual
+            var cur = document.getElementById('blk' + activeIdx);
+            if (cur) { cur.classList.remove('active'); cur.classList.add('flash'); }
+            setTimeout(function() {
+                var b = document.getElementById('blk' + activeIdx);
+                if (b) { b.classList.remove('flash'); b.classList.add('done'); }
+                // Avança
+                activeIdx = (activeIdx + 1) % TOTAL;
+                if (activeIdx === 0) {
+                    // Reinicia grade
+                    for (var i = 0; i < TOTAL; i++) {
+                        var bb = document.getElementById('blk' + i);
+                        if (bb) bb.className = 'blk';
+                    }
                 }
+                setActivePulse();
+            }, 180);
+
+            // Atualiza hash
+            var hashEl = document.getElementById('hashDisplay');
+            if (hashEl) {
+                hashEl.textContent = '0x' + rndHex(8) + '...' + rndHex(4) + ' · worker:' + rndHex(6);
             }
-            animateActive();
         }
 
-        // Observa quando tapSection fica visível para inicializar
         window.addEventListener('DOMContentLoaded', function() {
             buildGrid();
-            animateActive();
+            setActivePulse();
 
-            // Intercepta o click do btnTap para animar os blocos
-            // O bee_engine.js também escuta o mesmo botão — ambos funcionam
-            var btn = document.getElementById('btnTap');
-            if (btn) {
-                btn.addEventListener('click', onTap);
+            // Observa style.transform do btnTap — disparado pelo bee_engine.js
+            // quando o tap é aceito (scale(0.95) → "")
+            function attachObserver() {
+                var btn = document.getElementById('btnTap');
+                if (!btn) return;
+                new MutationObserver(function() {
+                    var t = btn.style.transform || '';
+                    // Engine seta scale(0.95) ao enviar → dispara ao voltar para ""
+                    if (t === '' && lastTransform.indexOf('scale') !== -1) {
+                        onTapConfirmed();
+                    }
+                    lastTransform = t;
+                }).observe(btn, { attributes: true, attributeFilter: ['style'] });
             }
 
-            // Observa mudança de visibilidade do tapSection
+            attachObserver();
+
+            // Se tapSection ficar visível depois (engine mostra após setup)
             var section = document.getElementById('tapSection');
             if (section) {
                 new MutationObserver(function() {
                     if (!section.classList.contains('hidden')) {
                         buildGrid();
-                        animateActive();
+                        setActivePulse();
+                        attachObserver();
                     }
                 }).observe(section, { attributes: true, attributeFilter: ['class'] });
             }
