@@ -1511,6 +1511,44 @@ document.addEventListener("DOMContentLoaded", () => {
     // Overlay de foco da busca
     initSearchFocus();
 
+    // ── STICKY SEARCH: barra de busca fica fixa ao rolar ──────────────────
+    (function initStickySearch() {
+        var searchWrap = document.getElementById("homeSearchWrap");
+        var homeScreen = document.getElementById("home");
+        if (!searchWrap || !homeScreen) return;
+
+        // Cria placeholder para evitar salto no layout
+        var placeholder = document.createElement("div");
+        placeholder.className = "home-search-placeholder";
+        searchWrap.parentNode.insertBefore(placeholder, searchWrap.nextSibling);
+
+        var isSticky = false;
+        var triggerOffset = 0;
+
+        function getTriggerOffset() {
+            // Ponto onde a busca sai da tela (posição original)
+            return searchWrap.getBoundingClientRect().top + homeScreen.scrollTop - 8;
+        }
+
+        homeScreen.addEventListener("scroll", function() {
+            var scrollTop = homeScreen.scrollTop;
+
+            if (!isSticky) {
+                triggerOffset = triggerOffset || getTriggerOffset();
+            }
+
+            if (scrollTop > triggerOffset && !isSticky) {
+                isSticky = true;
+                searchWrap.classList.add("home-search-sticky");
+                placeholder.classList.add("active");
+            } else if (scrollTop <= triggerOffset && isSticky) {
+                isSticky = false;
+                searchWrap.classList.remove("home-search-sticky");
+                placeholder.classList.remove("active");
+            }
+        }, { passive: true });
+    })();
+
     // Tema salvo
     const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
     applyTheme(savedTheme);

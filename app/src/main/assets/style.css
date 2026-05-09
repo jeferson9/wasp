@@ -2716,3 +2716,42 @@ body[data-theme="light"] .logo-center-light { display: block; }
   stroke: #f7c600 !important;
   text-shadow: 0 0 8px rgba(247,198,0,0.4) !important;
 }
+
+/* =========================
+   HOME SEARCH — STICKY AO ROLAR
+========================= */
+.home-search-sticky {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  margin: 0 !important;
+  max-width: 100% !important;
+  border-radius: 0 !important;
+  padding: 8px 12px;
+  background: rgba(11,11,13,0.97) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(247,198,0,0.15);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+  animation: slideDown 0.2s ease;
+}
+
+body[data-theme="light"] .home-search-sticky {
+  background: rgba(255,255,255,0.97) !important;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Placeholder para não deixar buraco no layout quando a busca fica fixed */
+.home-search-placeholder {
+  display: none;
+  height: 60px;
+}
+.home-search-placeholder.active {
+  display: block;
+}
