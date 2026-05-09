@@ -89,31 +89,63 @@
 
         /* WP BUTTON */
         .wp-btn {
-            display: flex; align-items: center; gap: 14px;
+            display: flex; flex-direction: column;
             width: calc(100% - 32px);
             margin: 8px 16px 6px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, rgba(245,197,24,0.1), rgba(245,197,24,0.03));
-            border: 1px solid rgba(245,197,24,0.2);
+            padding: 18px 18px 16px;
+            border-radius: 20px;
+            background: linear-gradient(145deg, rgba(245,197,24,0.13) 0%, rgba(245,197,24,0.04) 60%, rgba(11,14,22,0.95) 100%);
+            border: 1px solid rgba(245,197,24,0.28);
             cursor: pointer;
             transition: transform 0.15s, opacity 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+        .wp-btn::before {
+            content: '⚡';
+            position: absolute;
+            right: -10px; top: -14px;
+            font-size: 80px;
+            opacity: 0.04;
+            pointer-events: none;
+            line-height: 1;
         }
         .wp-btn:active { transform: scale(0.98); opacity: 0.9; }
-        .wp-icon {
-            width: 42px; height: 42px;
-            border-radius: 12px;
-            background: rgba(245,197,24,0.14);
+
+        .wp-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .wp-title-group { display: flex; align-items: center; gap: 8px; }
+        .wp-chip {
+            font-size: 10px; font-weight: 800;
+            color: rgba(245,197,24,0.9);
+            background: rgba(245,197,24,0.12);
             border: 1px solid rgba(245,197,24,0.2);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; flex-shrink: 0;
+            padding: 3px 8px; border-radius: 6px;
+            letter-spacing: 0.08em; text-transform: uppercase;
         }
-        .wp-info { flex: 1; min-width: 0; }
-        .wp-label { font-size: 13px; font-weight: 700; color: var(--yellow); }
-        .wp-desc  { font-size: 11px; color: var(--muted2); margin-top: 2px; }
-        .wp-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-        .wp-bal   { font-size: 14px; font-weight: 800; color: var(--yellow); }
-        .wp-arrow { font-size: 16px; color: var(--muted); }
+        .wp-label { font-size: 15px; font-weight: 800; color: var(--yellow); letter-spacing: -0.2px; }
+
+        .wp-bal-group { display: flex; align-items: baseline; gap: 4px; }
+        .wp-bal   { font-size: 26px; font-weight: 900; color: var(--yellow); letter-spacing: -1px; line-height: 1; }
+        .wp-bal-unit { font-size: 13px; font-weight: 700; color: rgba(245,197,24,0.6); }
+        .wp-arrow-badge {
+            width: 24px; height: 24px;
+            background: rgba(245,197,24,0.15);
+            border: 1px solid rgba(245,197,24,0.25);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: var(--yellow); margin-left: 6px;
+        }
+
+        .wp-actions { display: flex; gap: 8px; }
+        .wp-action-pill {
+            display: flex; align-items: center; gap: 5px;
+            padding: 5px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 11px; font-weight: 600; color: var(--muted2);
+        }
+        .wp-action-pill span { font-size: 13px; }
 
         /* SECTION */
         .section { padding: 0 16px; margin-bottom: 10px; }
@@ -331,14 +363,24 @@
 
 <!-- CENTRAL WP -->
 <button class="wp-btn" onclick="openCentralWP()">
-    <div class="wp-icon">⚡</div>
-    <div class="wp-info">
-        <div class="wp-label">Central WP</div>
-        <div class="wp-desc">Tap · Anúncios · Boost · Login Diário</div>
+    <div class="wp-top-row">
+        <div class="wp-title-group">
+            <span class="wp-chip">WP</span>
+            <span class="wp-label">Central WP</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0">
+            <div class="wp-bal-group">
+                <span class="wp-bal" id="wpBalDisplay">--</span>
+                <span class="wp-bal-unit">WP</span>
+            </div>
+            <div class="wp-arrow-badge">›</div>
+        </div>
     </div>
-    <div class="wp-right">
-        <span class="wp-bal" id="wpBalDisplay">-- WP</span>
-        <span class="wp-arrow">›</span>
+    <div class="wp-actions">
+        <div class="wp-action-pill"><span>👆</span> Tap Game</div>
+        <div class="wp-action-pill"><span>📺</span> Anúncios</div>
+        <div class="wp-action-pill"><span>🚀</span> Boost</div>
+        <div class="wp-action-pill"><span>📅</span> Diário</div>
     </div>
 </button>
 
@@ -558,7 +600,7 @@
         try {
             var bal = parseInt(localStorage.getItem("wasp_wp") || "0", 10);
             var el = document.getElementById("wpBalDisplay");
-            if (el) el.textContent = bal + " WP";
+            if (el) el.textContent = bal;
         } catch(_) {}
     }
     refreshWpDisplay();
