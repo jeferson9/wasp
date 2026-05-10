@@ -169,19 +169,8 @@ class BeeBackgroundService : Service() {
                 putExtra("remaining_ms", endTime - now)
                 putExtra("wallet", walletName)
             })
-            BeeActivity.runJs("""
-                (function(){
-                    try {
-                        if (window.onAppResume) window.onAppResume();
-                        var s = localStorage.getItem('wasp_bee_state_v6');
-                        var state = s ? JSON.parse(s) : {};
-                        if (state.autoMine && !window._mining && typeof window._startMining === 'function') {
-                            console.log('[BgService] Epoch terminou - reiniciando miner');
-                            window._startMining();
-                        }
-                    } catch(e) { console.error('[BgService] ' + e); }
-                })()
-            """.trimIndent())
+            // Apenas desengela os timers JS — deixa o engine decidir o que fazer
+            BeeActivity.runJs("window.__bgTick = (window.__bgTick||0)+1;")
 
             // Atualiza notificação com tempo restante
             val remaining = endTime - now

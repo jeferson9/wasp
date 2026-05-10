@@ -65,25 +65,8 @@ class BeeActivity : AppCompatActivity() {
             if (intent?.action != BeeBackgroundService.ACTION_KEEP_ALIVE) return
             val remaining = intent.getLongExtra("remaining_ms", 0L)
             Log.d(TAG, "Keep-alive recebido | restam ${remaining / 1000}s")
-            // Tenta manter a mineração ativa chamando as funções exportadas no window
-            // Acorda o WebView e força checagem do estado do miner
+            // Apenas mantém o WebView acordado — não interfere no estado do miner
             beeWebView.resumeTimers()
-            evaluateJs("""
-                (function(){
-                    // Executa timers pendentes que ficaram congelados em background
-                    if(window.onAppResume) window.onAppResume();
-                    // Se o miner parou (fim de epoch) e autoMine está ligado, reinicia agora
-                    // Isso resolve o caso onde o setTimeout do scheduleRestart ficou congelado
-                    try {
-                        var s = localStorage.getItem('wasp_bee_state_v6');
-                        var state = s ? JSON.parse(s) : {};
-                        if(state.autoMine && !window._mining && typeof window._startMining === 'function') {
-                            console.log('[KeepAlive] Epoch terminou em background - reiniciando miner');
-                            window._startMining();
-                        }
-                    } catch(e) {}
-                })()
-            """.trimIndent())
         }
     }
 
@@ -431,7 +414,9 @@ class BeeActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // NÃO removemos o receiver aqui para permitir Keep-Alive em background
+        // NÃO pausar o WebView — permite que os timers JS continuem rodando
+        // em background para o miner não parar entre epochs
+        // beeWebView.onPause() -- REMOVIDO INTENCIONALMENTE
         evaluateJs("if(window.onAppPause) window.onAppPause()")
     }
 
