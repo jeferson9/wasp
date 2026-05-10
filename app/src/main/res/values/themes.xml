@@ -50,11 +50,12 @@
         <item name="android:activityCloseExitAnimation">@anim/slide_down</item>
     </style>
 
-    <!-- BeeActivity — task separada, fundo escuro imediato sem flash -->
+    <!-- BeeActivity — task separada, transparente durante transicao -->
     <style name="Theme.WaspBrowser.Bee" parent="Theme.WaspBrowser">
         <item name="android:windowBackground">#080a0f</item>
         <item name="android:statusBarColor">#080a0f</item>
         <item name="android:navigationBarColor">#080a0f</item>
+        <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@style/WaspWindowAnimation.Bee</item>
     </style>
 
