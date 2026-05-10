@@ -1113,9 +1113,9 @@ class MainActivity : AppCompatActivity() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         startActivity(intent)
-        // overridePendingTransition funciona entre tasks; makeCustomAnimation nao
+        // 0, 0 = sem animacao — evita slide branco do sistema entre tasks
         @Suppress("DEPRECATION")
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+        overridePendingTransition(0, 0)
     }
 
     // =========================================================

@@ -253,9 +253,9 @@ class BeeActivity : AppCompatActivity() {
             putExtra("navigate_to", screen)
         }
         startActivity(intent)
-        // overridePendingTransition funciona entre tasks; makeCustomAnimation nao
+        // Sem animacao ao sair — evita slide branco entre tasks
         @Suppress("DEPRECATION")
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+        overridePendingTransition(0, 0)
     }
 
     inner class BeeBridge {
@@ -405,9 +405,9 @@ class BeeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Fade ao entrar no painel (vindo de outra task)
+        // Sem animacao ao entrar — evita slide branco entre tasks
         @Suppress("DEPRECATION")
-        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+        overridePendingTransition(0, 0)
         beeWebView.onResume()
         beeWebView.resumeTimers()
         evaluateJs("if(window.onAppResume) window.onAppResume()")
