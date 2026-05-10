@@ -117,12 +117,35 @@ async function runMiner(state) {
         miner.start(MINING_DURATION_MS, function(event) {
             cycles++;
             console.log('[BG] Evento #' + cycles);
-            // Salva ciclos para a UI ler
             try { localStorage.setItem('wasp_bg_cycles', String(cycles)); } catch(_) {}
         });
 
+        // Auto-tap: 100 taps por epoch, igual ao bee_engine.js
+        var autoTapCount = 0;
+        var AUTO_TAP_TOTAL = 100;
+        var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3000ms
+        var autoTapTimer = setInterval(async function() {
+            if (autoTapCount >= AUTO_TAP_TOTAL || !mining) {
+                clearInterval(autoTapTimer);
+                return;
+            }
+            try {
+                await miner.add_tap(
+                    Math.floor(Math.random() * 300 + 50),
+                    Math.floor(Math.random() * 300 + 50)
+                );
+                autoTapCount++;
+                if (autoTapCount % 10 === 0) {
+                    console.log('[BG] Auto-tap: ' + autoTapCount + '/' + AUTO_TAP_TOTAL);
+                }
+            } catch(e) {
+                console.log('[BG] add_tap erro: ' + e);
+            }
+        }, AUTO_TAP_INTERVAL);
+
         // Aguarda epoch terminar
         await new Promise(function(r) { setTimeout(r, MINING_DURATION_MS + 3000); });
+        clearInterval(autoTapTimer);
 
         // Coleta reward
         console.log('[BG] Coletando reward...');
