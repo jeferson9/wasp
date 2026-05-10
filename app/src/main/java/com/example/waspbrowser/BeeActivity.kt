@@ -249,7 +249,8 @@ class BeeActivity : AppCompatActivity() {
 
     private fun returnToMain(screen: String) {
         val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            // Volta para a task da MainActivity sem destruir o BeeActivity
+            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra("navigate_to", screen)
         }
         val opts = android.app.ActivityOptions

@@ -1106,10 +1106,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
-        // REORDER_TO_FRONT traz a instância existente para frente sem recriar
-        // Isso preserva o WebView, o WASM e o estado do miner intactos
+        // NEW_TASK coloca BeeActivity em task separada (singleInstance)
+        // O Android nao destrói ela quando MainActivity vai para frente
         val intent = Intent(this, BeeActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         val opts = android.app.ActivityOptions
             .makeCustomAnimation(this, R.anim.fade_in, R.anim.fade_out)
