@@ -50,6 +50,29 @@
         <item name="android:activityCloseExitAnimation">@anim/slide_down</item>
     </style>
 
+    <!-- BeeActivity — task separada, fundo escuro imediato sem flash -->
+    <style name="Theme.WaspBrowser.Bee" parent="Theme.WaspBrowser">
+        <item name="android:windowBackground">#080a0f</item>
+        <item name="android:statusBarColor">#080a0f</item>
+        <item name="android:navigationBarColor">#080a0f</item>
+        <item name="android:windowAnimationStyle">@style/WaspWindowAnimation.Bee</item>
+    </style>
+
+    <style name="WaspWindowAnimation.Bee" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/fade_out</item>
+        <item name="android:taskOpenEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskOpenExitAnimation">@anim/fade_out</item>
+        <item name="android:taskCloseEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskCloseExitAnimation">@anim/fade_out</item>
+        <item name="android:taskToFrontEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskToFrontExitAnimation">@anim/fade_out</item>
+        <item name="android:taskToBackEnterAnimation">@anim/fade_in</item>
+        <item name="android:taskToBackExitAnimation">@anim/fade_out</item>
+    </style>
+
     <!-- Splash — preto imediato, zero flash -->
     <style name="Theme.WaspBrowser.Splash" parent="Theme.WaspBrowser">
         <item name="android:windowBackground">#08090d</item>

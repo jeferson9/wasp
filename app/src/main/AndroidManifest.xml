@@ -58,6 +58,7 @@
         <activity
             android:name=".BeeActivity"
             android:launchMode="singleInstance"
+            android:theme="@style/Theme.WaspBrowser.Bee"
             android:configChanges="orientation|screenSize|keyboardHidden" />
 
         <activity
