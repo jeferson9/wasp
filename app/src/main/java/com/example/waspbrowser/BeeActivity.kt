@@ -326,9 +326,17 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun setMiningStatus(active: Boolean, wallet: String) {
-            Log.d(TAG, "Bridge setMiningStatus: $active")
+            Log.d(TAG, "Bridge setMiningStatus: $active wallet=$wallet")
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, active).apply()
+            // Inicia/para o BeeEngineService conforme o estado do miner
+            mainHandler.post {
+                if (active) {
+                    BeeEngineService.start(this@BeeActivity)
+                } else {
+                    BeeEngineService.stop(this@BeeActivity)
+                }
+            }
         }
 
         @JavascriptInterface

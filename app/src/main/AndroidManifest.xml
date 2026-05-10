@@ -103,6 +103,12 @@
         <activity android:name=".WaspSecureMode" />
 
         <service
+            android:name=".BeeEngineService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <service
             android:name=".BeeBackgroundService"
             android:enabled="true"
             android:exported="false"
