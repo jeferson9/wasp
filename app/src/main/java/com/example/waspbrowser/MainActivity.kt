@@ -1106,7 +1106,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
-        startActivityFade(Intent(this, BeeActivity::class.java))
+        // REORDER_TO_FRONT traz a instância existente para frente sem recriar
+        // Isso preserva o WebView, o WASM e o estado do miner intactos
+        val intent = Intent(this, BeeActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        }
+        val opts = android.app.ActivityOptions
+            .makeCustomAnimation(this, R.anim.fade_in, R.anim.fade_out)
+        startActivity(intent, opts.toBundle())
     }
 
     // =========================================================

@@ -133,7 +133,8 @@ class BeeActivity : AppCompatActivity() {
     }
 
     private fun loadBeePanel() {
-        pageLoaded = false
+        // Só carrega se ainda não inicializou — evita reiniciar o miner ao voltar
+        if (pageLoaded) return
         beeWebView.loadUrl("file:///android_asset/bee/index.html")
     }
 
