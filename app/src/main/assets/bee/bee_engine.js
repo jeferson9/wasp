@@ -149,6 +149,9 @@
 
   // Notifica MainActivity para atualizar o indicador de mining na toolbar
   function notifyMiningStatus() {
+    // Expoe estado para o BeeBackgroundService acessar via runJs()
+    window._mining = mining;
+    window._startMining = startMining;
     try {
       if (window.AndroidBee && window.AndroidBee.setMiningStatus) {
         window.AndroidBee.setMiningStatus(mining, saved.walletName || "");
@@ -722,6 +725,8 @@
     }
 
     function handleEpochEnd(reason) {
+      // Limpa timestamp — epoch terminou, serviço não precisa mais monitorar
+      try { localStorage.removeItem('wasp_epoch_end_ts'); } catch(_) {}
       if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
       if (window._epochTimer)    { clearTimeout(window._epochTimer);     window._epochTimer    = null; }
 
@@ -793,6 +798,12 @@
     });
 
     mining = true; sessionStart = Date.now(); startUptimeTimer();
+    // Salva timestamp do fim do epoch para o BeeBackgroundService monitorar em Kotlin
+    try {
+      var epochEnd = Date.now() + MINING_DURATION_MS + 5000;
+      localStorage.setItem('wasp_epoch_end_ts', String(epochEnd));
+      localStorage.setItem('wasp_epoch_wallet', saved.walletName || '');
+    } catch(_) {}
     if (tapSection) tapSection.classList.remove("hidden");
     if (switchSub)  switchSub.textContent = "Minerando NACKL ⚡";
     setStatus("on", "Minerando NACKL ⚡", "Wallet: " + saved.walletName);

@@ -161,6 +161,9 @@ class BeeBackgroundService : Service() {
             prefs.edit().putInt(KEY_CYCLES, cycles).apply()
             Log.d(TAG, "Tick #$cycles | restam ${(endTime - now) / 1000}s")
 
+            // Checa se o epoch terminou e o miner precisa reiniciar
+            checkEpochAndRestart()
+
             // ── KEEP-ALIVE broadcast: acorda o BeeActivity/WebView para manter o miner vivo
             sendBroadcast(Intent(ACTION_KEEP_ALIVE).apply {
                 setPackage(packageName)
@@ -178,6 +181,34 @@ class BeeBackgroundService : Service() {
         }
 
         handler.postDelayed(tickRunnable!!, TICK_INTERVAL)
+    }
+
+    private fun checkEpochAndRestart() {
+        // Lê o timestamp do fim do epoch salvo pelo bee_engine.js
+        // Se já passou e o miner não reiniciou sozinho, dispara via JS direto
+        try {
+            // localStorage do WebView não é acessível direto — usamos o BeeActivity.runJs
+            // O JS vai checar o localStorage e reiniciar se necessário
+            val js = """
+                (function(){
+                    try {
+                        var ts = localStorage.getItem('wasp_epoch_end_ts');
+                        var autoMine = false;
+                        try {
+                            var st = localStorage.getItem('wasp_bee_state_v6');
+                            if (st) autoMine = JSON.parse(st).autoMine;
+                        } catch(_) {}
+                        if (!ts && autoMine && !window._mining && typeof window._startMining === 'function') {
+                            console.log('[BgService] Epoch terminou detectado pelo Kotlin - reiniciando');
+                            window._startMining();
+                        }
+                    } catch(e) { console.error('[BgService] ' + e); }
+                })()
+            """.trimIndent()
+            BeeActivity.runJs(js)
+        } catch (e: Exception) {
+            Log.w(TAG, "checkEpochAndRestart erro: ${e.message}")
+        }
     }
 
     private fun stopBgMining() {
