@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+    <title>Bee Engine</title>
+    <style>
+        :root {
+            --text: #f0f0f0;
+            --muted: #888;
+            --yellow: #ffc107;
+            --green: #31c46d;
+            --red: #ff5f57;
+            --blue: #64a8ff;
+            --border: rgba(255,255,255,0.08);
+            --card: rgba(255,255,255,0.05);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body {
+            min-height: 100%;
+            background: #0b0b0d;
+            color: var(--text);
+            font-family: Arial, sans-serif;
+            padding: 20px 16px 60px;
+        }
+        h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+        .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+        /* ── BOTÃO CENTRAL WP ── */
+        .central-wp-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,193,7,0.30);
+            background: linear-gradient(135deg, rgba(255,193,7,0.12), rgba(16,18,26,0.95));
+            cursor: pointer;
+            margin-bottom: 14px;
+            transition: transform .15s ease, opacity .15s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .central-wp-btn:active { transform: scale(.97); opacity: .9; }
+        .cwb-left { display: flex; align-items: center; gap: 12px; }
+        .cwb-icon {
+            font-size: 24px;
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: rgba(255,193,7,0.15);
+            border: 1px solid rgba(255,193,7,0.25);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .cwb-info { display: flex; flex-direction: column; gap: 2px; text-align: left; }
+        .cwb-title { font-size: 14px; font-weight: 900; color: var(--yellow); }
+        .cwb-sub   { font-size: 11px; color: var(--muted); font-weight: 600; }
+        .cwb-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .cwb-bal   { font-size: 15px; font-weight: 900; color: var(--yellow); }
+        .cwb-arrow { font-size: 20px; color: var(--muted); }
+
+        .status-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: var(--muted);
+            transition: background .3s, box-shadow .3s;
+        }
+        .dot.on   { background: var(--green); box-shadow: 0 0 10px rgba(49,196,109,0.8); }
+        .dot.warn { background: var(--yellow); box-shadow: 0 0 10px rgba(255,193,7,0.8); }
+        .dot.err  { background: var(--red); }
+        .status-text { flex: 1; min-width: 0; }
+        .status-title { font-weight: 700; font-size: 15px; }
+        .status-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; word-break: break-word; }
+
+        .switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .switch { position: relative; width: 52px; height: 30px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.15);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: .25s;
+        }
+        .slider:before {
+            content: "";
+            position: absolute;
+            width: 22px; height: 22px;
+            left: 4px; top: 4px;
+            background: #ddd;
+            border-radius: 50%;
+            transition: .25s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        input:checked + .slider { background: var(--yellow); }
+        input:checked + .slider:before { transform: translateX(22px); background: #111; }
+        input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .metric-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+        }
+        .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing:.06em; margin-bottom: 6px; }
+        .metric-value { font-size: 20px; font-weight: 800; }
+        .mv-green  { color: var(--green); }
+        .mv-yellow { color: var(--yellow); }
+        .mv-small  { font-size: 13px; word-break: break-all; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--yellow); }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .step:last-of-type { border-bottom: none; padding-bottom: 0; }
+        .step-num {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--muted);
+            font-size: 11px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: all .3s;
+        }
+        .step-num.active { background: rgba(255,193,7,0.2); border-color: var(--yellow); color: var(--yellow); }
+        .step-num.done   { background: rgba(49,196,109,0.2); border-color: var(--green); color: var(--green); }
+        .step-body { flex: 1; }
+        .step-title { font-size: 13px; font-weight: 700; }
+        .step-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            margin-top: 10px;
+        }
+        input[type="text"]:focus { border-color: rgba(255,193,7,0.5); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 10px;
+            background: linear-gradient(135deg,#ffc107,#ffcf40);
+            color: #111;
+            transition: transform .15s, opacity .15s;
+        }
+        .btn:active  { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn.ghost  { background: transparent; color: var(--yellow); border: 1px solid rgba(255,193,7,0.35); }
+        .btn.danger { background: var(--red); color: #fff; }
+        .btn.small  { padding: 10px; font-size: 13px; margin-top: 8px; }
+        .btn.tap-btn {
+            font-size: 20px; padding: 22px;
+            background: linear-gradient(135deg,#ffc107,#ffdd55);
+            box-shadow: 0 0 30px rgba(255,193,7,0.35);
+        }
+
+        .log-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
+        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .log-header span { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+        .log-clear { font-size: 11px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
+        #logBox { font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; color: #ccc; line-height: 1.6; }
+        .lok  { color: var(--green); }
+        .lwrn { color: var(--yellow); }
+        .lerr { color: var(--red); }
+        .linf { color: var(--blue); }
+
+        .hidden { display: none !important; }
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,193,7,0.3);
+            border-top-color: var(--yellow);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<h1>🐝 Bee Engine</h1>
+<p class="sub">Mineração NACKL — Wasp Browser</p>
+
+<!-- ── BOTÃO CENTRAL WP ── -->
+<button class="central-wp-btn" onclick="openCentralWP()">
+    <div class="cwb-left">
+        <div class="cwb-icon">⚡</div>
+        <div class="cwb-info">
+            <span class="cwb-title">Central WP</span>
+            <span class="cwb-sub">Tap Game · Anúncios · Boost · Login Diário</span>
+        </div>
+    </div>
+    <div class="cwb-right">
+        <span class="cwb-bal" id="wpBalDisplay">-- WP</span>
+        <span class="cwb-arrow">›</span>
+    </div>
+</button>
+
+<div class="status-card">
+    <div class="dot" id="dotStatus"></div>
+    <div class="status-text">
+        <div class="status-title" id="txtStatusTitle">Carregando SDK...</div>
+        <div class="status-desc"  id="txtStatusDesc">Aguarde</div>
+    </div>
+</div>
+
+<!-- Status da wallet (usado pelo app.js) -->
+<div class="status-card hidden" id="walletStatusCard">
+    <div class="dot" id="walletStatusDot"></div>
+    <div class="status-text">
+        <div class="status-title" id="walletStatusTitle">—</div>
+        <div class="status-desc"  id="walletStatusDesc">—</div>
+    </div>
+</div>
+
+<div class="switch-row">
+    <div>
+        <div style="font-weight:700;font-size:15px;">Mineração</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="switchSub">Configure primeiro</div>
+    </div>
+    <label class="switch">
+        <input type="checkbox" id="miningSwitch" disabled>
+        <span class="slider"></span>
+    </label>
+</div>
+
+<div class="metrics">
+    <div class="metric-card">
+        <div class="metric-label">Engine</div>
+        <div class="metric-value" id="mEngine">Parada</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Ciclos</div>
+        <div class="metric-value mv-yellow" id="mCycles">0</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Uptime</div>
+        <div class="metric-value mv-green" id="mUptime">00:00:00</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Wallet</div>
+        <div class="metric-value mv-small" id="mWallet">—</div>
+    </div>
+    <div class="metric-card" style="grid-column: span 2;">
+        <div class="metric-label">Reward acumulado</div>
+        <div class="metric-value mv-yellow" id="mReward">—</div>
+    </div>
+</div>
+
+<div class="card" id="setupCard">
+    <h3>Configurar Bee Engine</h3>
+    <div class="step">
+        <div class="step-num" id="n1">1</div>
+        <div class="step-body">
+            <div class="step-title">Wallet name da AN Wallet</div>
+            <div class="step-desc">Nome que você escolheu ao criar sua carteira</div>
+            <input type="text" id="walletInput" placeholder="ex: jeferson" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num" id="n2">2</div>
+        <div class="step-body">
+            <div class="step-title">Gerar chaves de mineração</div>
+            <div class="step-desc">Par de chaves criptográficas único para este app</div>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num" id="n3">3</div>
+        <div class="step-body">
+            <div class="step-title">Autorizar na AN Wallet</div>
+            <div class="step-desc">Abre a carteira para confirmar o registro das chaves</div>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num" id="n4">4</div>
+        <div class="step-body">
+            <div class="step-title">Aguardar confirmação blockchain</div>
+            <div class="step-desc">Verificação na rede Acki Nacki (pode levar ~1 min)</div>
+        </div>
+    </div>
+    <button class="btn" id="btnSetup">Iniciar configuração</button>
+    <button class="btn ghost small hidden" id="btnConnectWallet">Conectar AN Wallet</button>
+    <button class="btn ghost small hidden" id="btnManageWallet">Gerenciar Wallet</button>
+    <button class="btn ghost small hidden" id="btnOpenWalletAgain">Abrir AN Wallet novamente</button>
+    <button class="btn danger small hidden" id="btnReset">Resetar configuração</button>
+</div>
+
+<!-- Aviso Mambaboard — requisito para rewards -->
+<div id="mambaCard" class="card hidden" style="margin-bottom:14px;border:1px solid rgba(255,193,7,0.35);background:linear-gradient(135deg,rgba(255,193,7,0.08),rgba(11,11,13,0.95));">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:22px;">⚠️</span>
+        <div>
+            <div style="font-weight:800;font-size:14px;color:var(--yellow);">Ativação de Rewards Necessária</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Requisito obrigatório da rede Acki Nacki</div>
+        </div>
+    </div>
+    <p style="font-size:13px;color:#ccc;line-height:1.6;margin-bottom:12px;">
+        Para receber NACKL, você precisa ativar sua participação no ecossistema:<br><br>
+        <strong style="color:var(--yellow);">1.</strong> Acesse um dos apps oficiais abaixo<br>
+        <strong style="color:var(--yellow);">2.</strong> Complete a tarefa inicial<br>
+        <strong style="color:var(--yellow);">3.</strong> Coloque sua primeira parte no <strong>Mambaboard</strong>
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn" style="background:rgba(255,193,7,0.18);border:1px solid rgba(255,193,7,0.4);font-size:13px;padding:10px;" onclick="openMambaApp('batteries')">🔋 Batteries (Telegram)</button>
+        <button class="btn ghost small" onclick="openMambaApp('ludo')">🎮 Ludo (alternativo)</button>
+        <button class="btn ghost small" style="opacity:0.6;" onclick="hideMambaCard()">Já ativei — fechar aviso</button>
+    </div>
+</div>
+
+<!-- Primeiro tap obrigatório -->
+<div id="firstTapCard" class="card hidden" style="margin-bottom:14px;text-align:center;">
+    <h3>Ativar Bee Engine</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.5;">
+        Um tap é necessário para verificar sua identidade<br>e registrar o binding com o contrato Miner.
+    </p>
+    <button class="btn tap-btn" id="btnFirstTap" style="margin-top:12px;">
+        TAP para ativar
+    </button>
+</div>
+
+<div id="tapSection" class="hidden" style="margin-bottom:14px;">
+    <div class="card" style="text-align:center;">
+        <h3>Aumentar recompensa</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:4px;">Cada tap adiciona uma ação ao Merkle Tree com dificuldade aumentada</p>
+        <button class="btn tap-btn" id="btnTap">⚡ TAP</button>
+    </div>
+</div>
+
+<div class="log-card">
+    <div class="log-header">
+        <span>Log</span>
+        <button class="log-clear" onclick="clearLog()">Limpar</button>
+    </div>
+    <div id="logBox"></div>
+</div>
+
+<button class="btn ghost small" id="btnDiag" onclick="toggleDiag()">Mostrar diagnóstico</button>
+<div id="diagPanel" class="hidden">
+    <div class="card" style="margin-top:10px;">
+        <h3>Diagnóstico</h3>
+        <div class="step"><div class="step-body"><div class="step-title">Bridge Android</div><div class="step-desc" id="dBridge">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">SDK (BeeSDK)</div><div class="step-desc" id="dSdk">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">WASM inicializado</div><div class="step-desc" id="dWasm">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Miner address</div><div class="step-desc" id="dAddr" style="word-break:break-all;">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Mining ativo</div><div class="step-desc" id="dMining">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">can_start() — disponibilidade</div><div class="step-desc" id="dCanStart">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Reward atual</div><div class="step-desc" id="dReward">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Ciclos (eventos recebidos)</div><div class="step-desc" id="dCycles">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Último evento</div><div class="step-desc" id="dLastEvent">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Propagação confirmada</div><div class="step-desc" id="dPropagated">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Mambaboard ativado</div><div class="step-desc" id="dMamba">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Auto-tap</div><div class="step-desc" id="dAutoTap">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">tapSum (taps contabilizados)</div><div class="step-desc" id="dTapSum">—</div></div></div>
+        <button class="btn ghost small" onclick="runDiag()">Atualizar diagnóstico</button>
+    </div>
+</div>
+
+<script>
+    // ── Abre Central WP via bridge Android ou fallback ──
+    function openCentralWP() {
+        if (window.AndroidBee && typeof window.AndroidBee.openCentral === "function") {
+            window.AndroidBee.openCentral();
+            return;
+        }
+        window.location.href = "central.html";
+    }
+
+    // ── Abre app de ativação Mambaboard ──
+    function openMambaApp(which) {
+        var urls = {
+            batteries: "https://t.me/ackinacki_miner_bot/ackinacki_miner_app?startapp=",
+            ludo: "https://t.me/ackinackibot/ackinacki_app?startapp=",
+            popits: "https://t.me/LudoBidBot/LudoBid?startapp="
+        };
+        var url = urls[which] || urls.batteries;
+        if (window.AndroidBee && typeof window.AndroidBee.openUrl === "function") {
+            window.AndroidBee.openUrl(url);
+        } else {
+            window.open(url, "_blank");
+        }
+    }
+
+    function hideMambaCard() {
+        var el = document.getElementById("mambaCard");
+        if (el) el.classList.add("hidden");
+        try { localStorage.setItem("wasp_mamba_dismissed", "1"); } catch(_) {}
+    }
+
+    // ── Atualiza saldo WP no botão ──
+    function refreshWpDisplay() {
+        try {
+            const bal = parseInt(localStorage.getItem("wasp_wp") || "0", 10);
+            const el = document.getElementById("wpBalDisplay");
+            if (el) el.textContent = bal + " WP";
+        } catch(_) {}
+    }
+
+    // Atualiza ao carregar e a cada 5s
+    refreshWpDisplay();
+    setInterval(refreshWpDisplay, 5000);
+</script>
+
+<script src="js/sha256.min.js"></script>
+<script type="module">
+import init, * as BeeSDKModule from './bee_sdk.js';
+
+function loadWasmXHR(path) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function() {
+            if (xhr.status === 0 || xhr.status === 200) resolve(xhr.response);
+            else reject(new Error('XHR status ' + xhr.status));
+        };
+        xhr.onerror = function() { reject(new Error('XHR network error: ' + path)); };
+        xhr.send();
+    });
+}
+
+async function initSDK() {
+    function loadEngine() {
+        const s = document.createElement('script');
+        s.src = 'bee_engine.js';
+        document.head.appendChild(s);
+    }
+    try {
+        // Android WebView: fetch() nao funciona com file://, usar XHR
+        const wasmBuf = await loadWasmXHR('file:///android_asset/bee/bee_sdk_bg.wasm');
+        await init(wasmBuf);
+        window.BeeSDK = BeeSDKModule;
+        window._sdkReady = true;
+        console.log('BeeSDK ES module: WASM inicializado com sucesso');
+        loadEngine();
+    } catch(e) {
+        console.error('BeeSDK init error: ' + e);
+        window._sdkReady = false;
+        loadEngine();
+    }
+}
+initSDK();
+</script>
+
+</body>
+</html>

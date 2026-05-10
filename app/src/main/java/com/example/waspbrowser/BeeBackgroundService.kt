@@ -38,7 +38,7 @@ class BeeBackgroundService : Service() {
         private const val NOTIF_ID = 42
 
         // Intervalo entre "ticks" de mineração (30 segundos)
-        private const val TICK_INTERVAL = 15_000L
+        private const val TICK_INTERVAL = 30_000L
 
         // Chaves SharedPreferences (mesmas lidas pelo bee_engine.js via bridge)
         const val PREFS_BG = "bee_bg_mining"
@@ -161,16 +161,13 @@ class BeeBackgroundService : Service() {
             prefs.edit().putInt(KEY_CYCLES, cycles).apply()
             Log.d(TAG, "Tick #$cycles | restam ${(endTime - now) / 1000}s")
 
-            // ── KEEP-ALIVE: executa JS diretamente no WebView via BeeActivity.runJs()
-            // Mais confiável que broadcast — funciona mesmo com WebView em background
+            // ── KEEP-ALIVE broadcast: acorda o BeeActivity/WebView para manter o miner vivo
             sendBroadcast(Intent(ACTION_KEEP_ALIVE).apply {
                 setPackage(packageName)
                 putExtra("cycles", cycles)
                 putExtra("remaining_ms", endTime - now)
                 putExtra("wallet", walletName)
             })
-            // Apenas desengela os timers JS — deixa o engine decidir o que fazer
-            BeeActivity.runJs("window.__bgTick = (window.__bgTick||0)+1;")
 
             // Atualiza notificação com tempo restante
             val remaining = endTime - now

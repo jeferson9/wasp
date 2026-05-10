@@ -37,14 +37,6 @@ class BeeActivity : AppCompatActivity() {
         private const val PREFS_MINING      = "bee_mining"
         private const val KEY_MINING_ACTIVE  = "mining_active"
         private const val KEY_ENERGY_READY = "energy_ready"
-
-        // WeakReference estático — permite que o BeeBackgroundService execute JS
-        // mesmo quando o painel não está visível. WeakReference evita memory leak.
-        var instance: java.lang.ref.WeakReference<BeeActivity>? = null
-
-        fun runJs(js: String) {
-            instance?.get()?.evaluateJs(js)
-        }
     }
 
     private lateinit var beeWebView: WebView
@@ -65,8 +57,18 @@ class BeeActivity : AppCompatActivity() {
             if (intent?.action != BeeBackgroundService.ACTION_KEEP_ALIVE) return
             val remaining = intent.getLongExtra("remaining_ms", 0L)
             Log.d(TAG, "Keep-alive recebido | restam ${remaining / 1000}s")
-            // Apenas mantém o WebView acordado — não interfere no estado do miner
-            beeWebView.resumeTimers()
+            // Tenta manter a mineração ativa chamando as funções exportadas no window
+            evaluateJs("""
+                (function(){
+                    if(window.BeeEngine && typeof window.BeeEngine.isRunning === 'function'){
+                        if(!window.BeeEngine.isRunning()){
+                           console.log('[KeepAlive] Retomando mineracao...');
+                           if(typeof window.BeeEngine.startMining === 'function') window.BeeEngine.startMining();
+                        }
+                    }
+                    if(window.onAppResume) window.onAppResume();
+                })()
+            """.trimIndent())
         }
     }
 
@@ -76,7 +78,6 @@ class BeeActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_bee)
 
-        instance = java.lang.ref.WeakReference(this)
         beeWebView = findViewById(R.id.beeWebView)
         window.decorView.setBackgroundColor(0xFF0B0B0D.toInt())
         beeWebView.setBackgroundColor(0xFF0B0B0D.toInt())
@@ -414,16 +415,12 @@ class BeeActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // NÃO pausar o WebView — permite que os timers JS continuem rodando
-        // em background para o miner não parar entre epochs
-        // beeWebView.onPause() -- REMOVIDO INTENCIONALMENTE
+        // NÃO removemos o receiver aqui para permitir Keep-Alive em background
         evaluateJs("if(window.onAppPause) window.onAppPause()")
     }
 
-    internal fun evaluateJs(js: String) {
-        Handler(Looper.getMainLooper()).post {
-            runCatching { beeWebView.evaluateJavascript(js, null) }
-        }
+    private fun evaluateJs(js: String) {
+        beeWebView.post { runCatching { beeWebView.evaluateJavascript(js, null) } }
     }
 
     override fun onDestroy() {
@@ -436,7 +433,6 @@ class BeeActivity : AppCompatActivity() {
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
         }
-        instance = null
         beeWebView.destroy()
         super.onDestroy()
     }
