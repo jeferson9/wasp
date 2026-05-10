@@ -249,13 +249,13 @@ class BeeActivity : AppCompatActivity() {
 
     private fun returnToMain(screen: String) {
         val intent = Intent(this, MainActivity::class.java).apply {
-            // Volta para a task da MainActivity sem destruir o BeeActivity
             addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra("navigate_to", screen)
         }
-        val opts = android.app.ActivityOptions
-            .makeCustomAnimation(this, R.anim.fade_in, R.anim.fade_out)
-        startActivity(intent, opts.toBundle())
+        startActivity(intent)
+        // overridePendingTransition funciona entre tasks; makeCustomAnimation nao
+        @Suppress("DEPRECATION")
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
     }
 
     inner class BeeBridge {
@@ -405,9 +405,11 @@ class BeeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Fade ao entrar no painel (vindo de outra task)
+        @Suppress("DEPRECATION")
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         beeWebView.onResume()
         beeWebView.resumeTimers()
-        // O receiver agora é mantido mesmo em onPause, para garantir o Keep-Alive
         evaluateJs("if(window.onAppResume) window.onAppResume()")
     }
 
