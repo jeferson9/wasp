@@ -1281,8 +1281,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @JvmName("openBeePanel")
     fun openBeePanel() {
-        // Agora abre o painel embutido em vez do BeeActivity separado
+        // Abre o painel embutido na MainActivity
         toggleBeePanel()
     }
 
