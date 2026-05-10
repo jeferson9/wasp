@@ -604,6 +604,47 @@ class MainActivity : AppCompatActivity() {
         beeMiningIndicator = topBar.findViewById(R.id.beeMiningIndicator)
     }
 
+    private fun startDownload(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
+        if (url.isBlank()) return
+        val scheme = url.substringBefore("://").lowercase()
+        if (scheme == "blob" || scheme == "data" || scheme == "javascript") return
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return
+        try {
+            var fileName = try { URLUtil.guessFileName(url, contentDisposition, mimeType) } catch (_: Exception) { "file_${System.currentTimeMillis()}" }
+            val lowerUrl  = url.lowercase()
+            val lowerMime = mimeType?.lowercase() ?: ""
+            if (fileName.endsWith(".bin") || !fileName.contains(".")) {
+                val ext = when {
+                    lowerMime.contains("png")  || lowerUrl.contains(".png")  -> "png"
+                    lowerMime.contains("jpeg") || lowerUrl.contains(".jpg")  -> "jpg"
+                    lowerMime.contains("webp") || lowerUrl.contains(".webp") -> "webp"
+                    lowerMime.contains("gif")  || lowerUrl.contains(".gif")  -> "gif"
+                    lowerMime.contains("pdf")  || lowerUrl.contains(".pdf")  -> "pdf"
+                    lowerMime.contains("zip")  || lowerUrl.contains(".zip")  -> "zip"
+                    lowerMime.contains("apk")  || lowerUrl.contains(".apk")  -> "apk"
+                    else -> "bin"
+                }
+                fileName = "file_${System.currentTimeMillis()}.$ext"
+            }
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                setMimeType(mimeType ?: "*/*")
+                if (!userAgent.isNullOrBlank()) addRequestHeader("User-Agent", userAgent)
+                addRequestHeader("Accept", "*/*")
+                try { CookieManager.getInstance().getCookie(url)?.takeIf { it.isNotEmpty() }?.let { addRequestHeader("Cookie", it) } } catch (_: Exception) {}
+                setTitle(fileName); setDescription("Baixando arquivo...")
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setAllowedOverMetered(true); setAllowedOverRoaming(true)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            }
+            (getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request)
+            salvarDownloadNoWasp(fileName, url)
+            Toast.makeText(this, "Download iniciado", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Nao foi possivel iniciar o download", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
     private fun setupWebAppView() {
         webAppView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
             this@MainActivity.startDownload(url, userAgent, contentDisposition, mimeType)
@@ -1324,46 +1365,6 @@ class MainActivity : AppCompatActivity() {
             salvarDownloadNoWasp(fileName, url)
             showWaspToast("Download iniciado")
         } catch (e: Exception) { showWaspToast("Erro ao baixar imagem") }
-    }
-
-    private fun startDownload(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
-        if (url.isBlank()) return
-        val scheme = url.substringBefore("://").lowercase()
-        if (scheme == "blob" || scheme == "data" || scheme == "javascript") return
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return
-        try {
-            var fileName = try { URLUtil.guessFileName(url, contentDisposition, mimeType) } catch (_: Exception) { "file_${System.currentTimeMillis()}" }
-            val lowerUrl  = url.lowercase()
-            val lowerMime = mimeType?.lowercase() ?: ""
-            if (fileName.endsWith(".bin") || !fileName.contains(".")) {
-                val ext = when {
-                    lowerMime.contains("png")  || lowerUrl.contains(".png")  -> "png"
-                    lowerMime.contains("jpeg") || lowerUrl.contains(".jpg")  -> "jpg"
-                    lowerMime.contains("webp") || lowerUrl.contains(".webp") -> "webp"
-                    lowerMime.contains("gif")  || lowerUrl.contains(".gif")  -> "gif"
-                    lowerMime.contains("pdf")  || lowerUrl.contains(".pdf")  -> "pdf"
-                    lowerMime.contains("zip")  || lowerUrl.contains(".zip")  -> "zip"
-                    lowerMime.contains("apk")  || lowerUrl.contains(".apk")  -> "apk"
-                    else -> "bin"
-                }
-                fileName = "file_${System.currentTimeMillis()}.$ext"
-            }
-            val request = DownloadManager.Request(Uri.parse(url)).apply {
-                setMimeType(mimeType ?: "*/*")
-                if (!userAgent.isNullOrBlank()) addRequestHeader("User-Agent", userAgent)
-                addRequestHeader("Accept", "*/*")
-                try { CookieManager.getInstance().getCookie(url)?.takeIf { it.isNotEmpty() }?.let { addRequestHeader("Cookie", it) } } catch (_: Exception) {}
-                setTitle(fileName); setDescription("Baixando arquivo...")
-                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                setAllowedOverMetered(true); setAllowedOverRoaming(true)
-                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-            }
-            (getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request)
-            salvarDownloadNoWasp(fileName, url)
-            Toast.makeText(this, "Download iniciado", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "Nao foi possivel iniciar o download", Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun salvarDownloadNoWasp(nome: String, url: String) {
