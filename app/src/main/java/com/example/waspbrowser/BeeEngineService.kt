@@ -145,7 +145,7 @@ class BeeEngineService : Service() {
                     }
                 }
 
-                loadUrl("file:///android_asset/bee/index.html")
+                loadUrl("file:///android_asset/bee/engine_bg.html")
             }
 
             Log.d(TAG, "Engine WebView inicializada")

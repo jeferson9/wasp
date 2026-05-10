@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>Bee Engine BG</title>
+</head>
+<body>
+<script>
+// Página mínima de background — sem UI, só o engine
+// Lê o estado salvo pelo BeeActivity e inicia mineração automaticamente
+console.log('[BG] engine_bg.html carregado');
+</script>
+<script src="js/sha256.min.js"></script>
+<script type="module">
+import init, * as BeeSDKModule from './bee_sdk.js';
+
+function loadWasmXHR(path) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function() {
+            if (xhr.status === 0 || xhr.status === 200) resolve(xhr.response);
+            else reject(new Error('XHR ' + xhr.status));
+        };
+        xhr.onerror = function() { reject(new Error('XHR network error')); };
+        xhr.send();
+    });
+}
+
+async function startBgEngine() {
+    console.log('[BG] Iniciando WASM...');
+    try {
+        var wasmBuf = await loadWasmXHR('file:///android_asset/bee/bee_sdk_bg.wasm');
+        await init(wasmBuf);
+        window.BeeSDK = BeeSDKModule;
+        window._sdkReady = true;
+        console.log('[BG] WASM OK');
+    } catch(e) {
+        console.error('[BG] WASM erro: ' + e);
+        window._sdkReady = false;
+    }
+
+    // Lê estado salvo pelo BeeActivity
+    var state = {};
+    try {
+        var raw = localStorage.getItem('wasp_bee_state_v6');
+        if (raw) state = JSON.parse(raw);
+    } catch(e) {}
+
+    console.log('[BG] autoMine=' + state.autoMine + ' wallet=' + state.walletName);
+
+    if (!state.autoMine || !state.minerAddress || !state.publicKey || !state.secretKey) {
+        console.log('[BG] Mineracao nao configurada ou desligada — aguardando');
+        // Fica monitorando caso o estado mude
+        setInterval(checkAndMine, 15000);
+        return;
+    }
+
+    runMiner(state);
+}
+
+var mining = false;
+var ENDPOINTS = ["https://mainnet-cf.ackinacki.org"];
+var APP_ID = "0x0000000000000000000000000000000000000000000000000000000000000001";
+var MINING_DURATION_MS = 5 * 60 * 1000;
+
+function checkAndMine() {
+    if (mining) return;
+    var state = {};
+    try {
+        var raw = localStorage.getItem('wasp_bee_state_v6');
+        if (raw) state = JSON.parse(raw);
+    } catch(e) {}
+    if (state.autoMine && state.minerAddress && state.publicKey && state.secretKey) {
+        runMiner(state);
+    }
+}
+
+async function runMiner(state) {
+    if (mining || !window._sdkReady) return;
+    mining = true;
+
+    // Notifica Kotlin
+    if (window.AndroidBee && window.AndroidBee.setMiningStatus) {
+        window.AndroidBee.setMiningStatus(true, state.walletName || '');
+    }
+
+    console.log('[BG] Iniciando miner wallet=' + state.walletName);
+
+    try {
+        var miner = await window.BeeSDK.Miner.new(
+            ENDPOINTS, APP_ID,
+            state.minerAddress, state.publicKey, state.secretKey
+        );
+
+        // Aguarda epoch disponível
+        var canStart = miner.can_start();
+        if (!canStart) {
+            console.log('[BG] Aguardando epoch...');
+            var waited = 0;
+            await new Promise(function(resolve) {
+                var check = setInterval(async function() {
+                    waited += 15;
+                    try {
+                        var cs = miner.can_start();
+                        if (cs) { clearInterval(check); resolve(); return; }
+                        if (waited >= 360) { clearInterval(check); resolve(); }
+                    } catch(e) { clearInterval(check); resolve(); }
+                }, 15000);
+            });
+        }
+
+        // Inicia mineração
+        console.log('[BG] Minerando...');
+        var cycles = 0;
+        miner.start(MINING_DURATION_MS, function(event) {
+            cycles++;
+            console.log('[BG] Evento #' + cycles);
+            // Salva ciclos para a UI ler
+            try { localStorage.setItem('wasp_bg_cycles', String(cycles)); } catch(_) {}
+        });
+
+        // Aguarda epoch terminar
+        await new Promise(function(r) { setTimeout(r, MINING_DURATION_MS + 3000); });
+
+        // Coleta reward
+        console.log('[BG] Coletando reward...');
+        await new Promise(function(r) { setTimeout(r, 16000); }); // slashing period
+        try {
+            await miner.get_reward();
+            console.log('[BG] Reward coletado!');
+            if (window.AndroidBee) window.AndroidBee.log('[BG] Reward coletado ✅', 'lok');
+        } catch(e) {
+            console.log('[BG] get_reward: ' + e);
+        }
+        try { miner.stop(); } catch(_) {}
+        miner = null;
+
+    } catch(e) {
+        console.error('[BG] Erro no miner: ' + e);
+    }
+
+    mining = false;
+
+    // Notifica Kotlin
+    if (window.AndroidBee && window.AndroidBee.setMiningStatus) {
+        window.AndroidBee.setMiningStatus(false, state.walletName || '');
+    }
+
+    // Reinicia automaticamente
+    console.log('[BG] Reiniciando em 30s...');
+    setTimeout(function() { checkAndMine(); }, 30000);
+}
+
+window._mining = false;
+Object.defineProperty(window, '_mining', {
+    get: function() { return mining; },
+    set: function(v) { mining = v; }
+});
+
+startBgEngine();
+</script>
+</body>
+</html>
