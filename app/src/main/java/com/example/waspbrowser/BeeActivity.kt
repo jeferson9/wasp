@@ -37,6 +37,14 @@ class BeeActivity : AppCompatActivity() {
         private const val PREFS_MINING      = "bee_mining"
         private const val KEY_MINING_ACTIVE  = "mining_active"
         private const val KEY_ENERGY_READY = "energy_ready"
+
+        // WeakReference estático — permite que o BeeBackgroundService execute JS
+        // mesmo quando o painel não está visível. WeakReference evita memory leak.
+        var instance: java.lang.ref.WeakReference<BeeActivity>? = null
+
+        fun runJs(js: String) {
+            instance?.get()?.evaluateJs(js)
+        }
     }
 
     private lateinit var beeWebView: WebView
@@ -85,6 +93,7 @@ class BeeActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_bee)
 
+        instance = java.lang.ref.WeakReference(this)
         beeWebView = findViewById(R.id.beeWebView)
         window.decorView.setBackgroundColor(0xFF0B0B0D.toInt())
         beeWebView.setBackgroundColor(0xFF0B0B0D.toInt())
@@ -426,8 +435,10 @@ class BeeActivity : AppCompatActivity() {
         evaluateJs("if(window.onAppPause) window.onAppPause()")
     }
 
-    private fun evaluateJs(js: String) {
-        beeWebView.post { runCatching { beeWebView.evaluateJavascript(js, null) } }
+    internal fun evaluateJs(js: String) {
+        Handler(Looper.getMainLooper()).post {
+            runCatching { beeWebView.evaluateJavascript(js, null) }
+        }
     }
 
     override fun onDestroy() {
@@ -440,6 +451,7 @@ class BeeActivity : AppCompatActivity() {
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
         }
+        instance = null
         beeWebView.destroy()
         super.onDestroy()
     }

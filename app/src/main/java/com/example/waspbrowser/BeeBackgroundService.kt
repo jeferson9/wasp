@@ -161,13 +161,27 @@ class BeeBackgroundService : Service() {
             prefs.edit().putInt(KEY_CYCLES, cycles).apply()
             Log.d(TAG, "Tick #$cycles | restam ${(endTime - now) / 1000}s")
 
-            // ── KEEP-ALIVE broadcast: acorda o BeeActivity/WebView para manter o miner vivo
+            // ── KEEP-ALIVE: executa JS diretamente no WebView via BeeActivity.runJs()
+            // Mais confiável que broadcast — funciona mesmo com WebView em background
             sendBroadcast(Intent(ACTION_KEEP_ALIVE).apply {
                 setPackage(packageName)
                 putExtra("cycles", cycles)
                 putExtra("remaining_ms", endTime - now)
                 putExtra("wallet", walletName)
             })
+            BeeActivity.runJs("""
+                (function(){
+                    try {
+                        if (window.onAppResume) window.onAppResume();
+                        var s = localStorage.getItem('wasp_bee_state_v6');
+                        var state = s ? JSON.parse(s) : {};
+                        if (state.autoMine && !window._mining && typeof window._startMining === 'function') {
+                            console.log('[BgService] Epoch terminou - reiniciando miner');
+                            window._startMining();
+                        }
+                    } catch(e) { console.error('[BgService] ' + e); }
+                })()
+            """.trimIndent())
 
             // Atualiza notificação com tempo restante
             val remaining = endTime - now
