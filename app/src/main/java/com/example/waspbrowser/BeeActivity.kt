@@ -27,11 +27,6 @@ import com.google.android.gms.ads.rewarded.RewardItem
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import androidx.core.view.WindowCompat
-import android.app.PictureInPictureParams
-import android.app.RemoteAction
-import android.content.pm.PackageManager
-import android.graphics.drawable.Icon
-import android.util.Rational
 
 class BeeActivity : AppCompatActivity() {
 
@@ -59,7 +54,6 @@ class BeeActivity : AppCompatActivity() {
     private var pageLoaded = false
     private var isAdShowing = false
     private var isReceiverRegistered = false
-    private var isInPip = false
 
     // ─── Keep-Alive Receiver ────────────────────────────────────────────────
     // Recebe o broadcast do BeeBackgroundService a cada tick e garante que
@@ -418,57 +412,16 @@ class BeeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (!isInPip) {
-            @Suppress("DEPRECATION")
-            overridePendingTransition(0, 0)
-        }
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
         beeWebView.onResume()
         beeWebView.resumeTimers()
-        if (!isInPip) {
-            evaluateJs("if(window.onAppResume) window.onAppResume()")
-        }
+        evaluateJs("if(window.onAppResume) window.onAppResume()")
     }
 
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        // Entra em PiP quando usuário pressiona home ou muda de app
-        enterPipMode()
-    }
-
-    private fun enterPipMode() {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) return
-        val pm = packageManager
-        if (!pm.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return
-        try {
-            val params = PictureInPictureParams.Builder()
-                .setAspectRatio(Rational(16, 9))
-                .build()
-            enterPictureInPictureMode(params)
-        } catch (e: Exception) {
-            android.util.Log.w(TAG, "PiP nao disponivel: ${e.message}")
-        }
-    }
-
-    override fun onPictureInPictureModeChanged(
-        isInPictureInPictureMode: Boolean,
-        newConfig: android.content.res.Configuration
-    ) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-        isInPip = isInPictureInPictureMode
-        if (isInPictureInPictureMode) {
-            // Em PiP — esconde tudo exceto as métricas essenciais
-            evaluateJs("if(window.onPipEnter) window.onPipEnter()")
-        } else {
-            // Saiu do PiP — restaura UI normal
-            evaluateJs("if(window.onPipExit) window.onPipExit()")
-        }
-    }
-
-    override fun onPause() {
+override fun onPause() {
         super.onPause()
-        if (!isInPip) {
-            evaluateJs("if(window.onAppPause) window.onAppPause()")
-        }
+        evaluateJs("if(window.onAppPause) window.onAppPause()")
     }
 
     internal fun evaluateJs(js: String) {

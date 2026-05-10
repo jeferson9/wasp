@@ -59,8 +59,7 @@
             android:name=".BeeActivity"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.WaspBrowser.Bee"
-            android:supportsPictureInPicture="true"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden" />
+            android:configChanges="orientation|screenSize|keyboardHidden" />
 
         <activity
             android:name=".SplashActivity"

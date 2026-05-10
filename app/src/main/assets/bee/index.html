@@ -428,38 +428,13 @@
         .first-tap-card h3 { font-size: 14px; font-weight: 700; color: var(--yellow); margin-bottom: 8px; }
         .first-tap-card p  { font-size: 12px; color: var(--muted2); line-height: 1.6; margin-bottom: 6px; }
 
-        /* PiP MODE */
-        .pip-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: #080a0f;
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .pip-overlay.active { display: flex; }
-        .pip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px rgba(0,230,118,.7); animation: pulse 2s ease-in-out infinite; margin-bottom: 4px; }
-        .pip-status { font-size: 13px; font-weight: 700; color: var(--green); }
-        .pip-cycles { font-size: 10px; color: var(--muted2); font-family: 'Menlo', monospace; }
-        .pip-wallet { font-size: 10px; color: var(--muted); }
-
-        /* UTILS */
+                /* UTILS */
         .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
     </style>
 </head>
 <body>
-
-<!-- PiP OVERLAY -->
-<div class="pip-overlay" id="pipOverlay">
-    <div class="pip-dot"></div>
-    <div class="pip-status" id="pipStatus">Minerando NACKL</div>
-    <div class="pip-cycles" id="pipCycles">0 ciclos</div>
-    <div class="pip-wallet" id="pipWallet"></div>
-</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -704,29 +679,7 @@
 
 <!-- SCRIPTS UI (não altera lógica) -->
 <script>
-    /* ── PiP Mode ── */
-    window.onPipEnter = function() {
-        var overlay = document.getElementById('pipOverlay');
-        if (overlay) overlay.classList.add('active');
-        try {
-            var s = localStorage.getItem('wasp_bee_state_v6');
-            var state = s ? JSON.parse(s) : {};
-            var wallet = document.getElementById('pipWallet');
-            if (wallet && state.walletName) wallet.textContent = state.walletName;
-        } catch(_) {}
-        var cycles = document.getElementById('mCycles');
-        var pipCycles = document.getElementById('pipCycles');
-        if (cycles && pipCycles) pipCycles.textContent = cycles.textContent + ' ciclos';
-        var status = document.getElementById('txtStatusTitle');
-        var pipStatus = document.getElementById('pipStatus');
-        if (status && pipStatus) pipStatus.textContent = status.textContent;
-    };
-    window.onPipExit = function() {
-        var overlay = document.getElementById('pipOverlay');
-        if (overlay) overlay.classList.remove('active');
-    };
-
-    function openCentralWP() {
+        function openCentralWP() {
         if (window.AndroidBee && typeof window.AndroidBee.openCentral === "function") {
             window.AndroidBee.openCentral(); return;
         }
