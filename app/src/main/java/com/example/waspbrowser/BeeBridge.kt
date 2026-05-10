@@ -34,7 +34,8 @@ class BeeBridge(
 
     @JavascriptInterface
     fun openBeePanel() {
-        (context as? MainActivity)?.runOnUiThread { context.openBeePanel() }
+        val main = context as? MainActivity ?: return
+        main.runOnUiThread { main.openBeePanel() }
     }
 
     @JavascriptInterface
