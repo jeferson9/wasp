@@ -606,7 +606,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupWebAppView() {
         webAppView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
-            startDownload(url, userAgent, contentDisposition, mimeType)
+            this@MainActivity.startDownload(url, userAgent, contentDisposition, mimeType)
         }
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
