@@ -149,6 +149,9 @@
 
   // Notifica MainActivity para atualizar o indicador de mining na toolbar
   function notifyMiningStatus() {
+    // Expoe estado para o keepAliveReceiver do BeeActivity acessar
+    window._mining = mining;
+    window._startMining = startMining;
     try {
       if (window.AndroidBee && window.AndroidBee.setMiningStatus) {
         window.AndroidBee.setMiningStatus(mining, saved.walletName || "");

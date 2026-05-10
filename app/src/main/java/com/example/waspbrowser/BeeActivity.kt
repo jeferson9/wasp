@@ -58,15 +58,22 @@ class BeeActivity : AppCompatActivity() {
             val remaining = intent.getLongExtra("remaining_ms", 0L)
             Log.d(TAG, "Keep-alive recebido | restam ${remaining / 1000}s")
             // Tenta manter a mineração ativa chamando as funções exportadas no window
+            // Acorda o WebView e força checagem do estado do miner
+            beeWebView.resumeTimers()
             evaluateJs("""
                 (function(){
-                    if(window.BeeEngine && typeof window.BeeEngine.isRunning === 'function'){
-                        if(!window.BeeEngine.isRunning()){
-                           console.log('[KeepAlive] Retomando mineracao...');
-                           if(typeof window.BeeEngine.startMining === 'function') window.BeeEngine.startMining();
-                        }
-                    }
+                    // Executa timers pendentes que ficaram congelados em background
                     if(window.onAppResume) window.onAppResume();
+                    // Se o miner parou (fim de epoch) e autoMine está ligado, reinicia agora
+                    // Isso resolve o caso onde o setTimeout do scheduleRestart ficou congelado
+                    try {
+                        var s = localStorage.getItem('wasp_bee_state_v6');
+                        var state = s ? JSON.parse(s) : {};
+                        if(state.autoMine && !window._mining && typeof window._startMining === 'function') {
+                            console.log('[KeepAlive] Epoch terminou em background - reiniciando miner');
+                            window._startMining();
+                        }
+                    } catch(e) {}
                 })()
             """.trimIndent())
         }

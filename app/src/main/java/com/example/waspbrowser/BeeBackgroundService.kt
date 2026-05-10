@@ -38,7 +38,7 @@ class BeeBackgroundService : Service() {
         private const val NOTIF_ID = 42
 
         // Intervalo entre "ticks" de mineração (30 segundos)
-        private const val TICK_INTERVAL = 30_000L
+        private const val TICK_INTERVAL = 15_000L
 
         // Chaves SharedPreferences (mesmas lidas pelo bee_engine.js via bridge)
         const val PREFS_BG = "bee_bg_mining"
