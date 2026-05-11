@@ -326,6 +326,13 @@ class BeeActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        @JavascriptInterface
+        fun onEpochEnd(wallet: String) {
+            if (!isVisible) {
+                EpochAlertActivity.notify(this@BeeActivity, wallet)
+            }
+        }
+
         fun setMiningStatus(active: Boolean, wallet: String) {
             Log.d(TAG, "Bridge setMiningStatus: $active wallet=$wallet")
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
