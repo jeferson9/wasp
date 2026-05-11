@@ -147,7 +147,7 @@ class BeeActivity : AppCompatActivity() {
     }
 
     private fun attachBridge() {
-        beeWebView.addJavascriptInterface(BeeBridge(), "AndroidBee")
+        beeWebView.addJavascriptInterface(BeeBridge(this), "AndroidBee")
     }
 
     private fun attachClients() {
