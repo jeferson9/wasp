@@ -725,12 +725,6 @@
     }
 
     function handleEpochEnd(reason) {
-      // Notifica Android — dispara notificação e PiP flutuante
-      try {
-        if (window.AndroidBee && typeof window.AndroidBee.onEpochEnd === 'function') {
-          window.AndroidBee.onEpochEnd(saved.walletName || '');
-        }
-      } catch(_) {}
       // Limpa timestamp — epoch terminou, serviço não precisa mais monitorar
       try { localStorage.removeItem('wasp_epoch_end_ts'); } catch(_) {}
       if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }

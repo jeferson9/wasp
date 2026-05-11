@@ -39,7 +39,6 @@ class BeeActivity : AppCompatActivity() {
         private const val KEY_ENERGY_READY = "energy_ready"
 
         var instance: java.lang.ref.WeakReference<BeeActivity>? = null
-        var isVisible = false  // true quando painel está em foreground
 
         fun runJs(js: String) {
             instance?.get()?.evaluateJs(js)
@@ -147,7 +146,7 @@ class BeeActivity : AppCompatActivity() {
     }
 
     private fun attachBridge() {
-        beeWebView.addJavascriptInterface(BeeBridge(this), "AndroidBee")
+        beeWebView.addJavascriptInterface(BeeBridge(), "AndroidBee")
     }
 
     private fun attachClients() {
@@ -326,25 +325,10 @@ class BeeActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        @JavascriptInterface
-        fun onEpochEnd(wallet: String) {
-            if (!isVisible) {
-                EpochAlertActivity.notify(this@BeeActivity, wallet)
-            }
-        }
-
         fun setMiningStatus(active: Boolean, wallet: String) {
-            Log.d(TAG, "Bridge setMiningStatus: $active wallet=$wallet")
+            Log.d(TAG, "Bridge setMiningStatus: $active")
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, active).apply()
-            // Inicia/para o BeeEngineService conforme o estado do miner
-            mainHandler.post {
-                if (active) {
-                    BeeEngineService.start(this@BeeActivity)
-                } else {
-                    BeeEngineService.stop(this@BeeActivity)
-                }
-            }
         }
 
         @JavascriptInterface
@@ -428,7 +412,6 @@ class BeeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        isVisible = true
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)
         beeWebView.onResume()
