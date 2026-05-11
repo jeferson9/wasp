@@ -38,6 +38,11 @@ class BeeBridge(
     }
 
     @JavascriptInterface
+    fun onEpochEnd(wallet: String) {
+        EpochAlertActivity.notify(context, wallet)
+    }
+
+    @JavascriptInterface
     fun getMiningStatus(): String {
         val bgActive = BeeBackgroundService.isActive(context)
         val beeActive = context

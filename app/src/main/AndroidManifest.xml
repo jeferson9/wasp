@@ -56,6 +56,13 @@
         </provider>
 
         <activity
+            android:name=".EpochAlertActivity"
+            android:theme="@style/Theme.WaspBrowser.Bee"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:launchMode="singleInstance" />
+
+        <activity
             android:name=".BeeActivity"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.WaspBrowser.Bee"
