@@ -9,8 +9,7 @@ import android.widget.Toast
 
 class BeeBridge(
     private val context: Context,
-    private val openUrlCallback: (String) -> Unit = {},
-    private val openBeePanelCallback: () -> Unit = {}
+    private val openUrlCallback: (String) -> Unit = {}
 ) {
 
     @JavascriptInterface
@@ -35,9 +34,7 @@ class BeeBridge(
 
     @JavascriptInterface
     fun openBeePanel() {
-        (context as? android.app.Activity)?.runOnUiThread {
-            openBeePanelCallback()
-        }
+        (context as? MainActivity)?.runOnUiThread { context.openBeePanel() }
     }
 
     @JavascriptInterface

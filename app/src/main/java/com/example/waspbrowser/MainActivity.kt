@@ -265,16 +265,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webAppView: WebView
     private lateinit var beeMiningIndicator: MiningIndicator
     private lateinit var geckoView: GeckoView
-    // Bee Engine embutida
-    private lateinit var beeEngineWebView: WebView
-    private lateinit var beePanelWebView: WebView
-    private lateinit var beeMinerBar: View
-    private lateinit var beeMinerDot: View
-    private lateinit var beeMinerStatus: android.widget.TextView
-    private lateinit var beeMinerCycles: android.widget.TextView
-    private lateinit var beePanelContainer: android.widget.FrameLayout
-    private var beePanelOpen = false
-    private var beeEngineReady = false
     private lateinit var btnBack: ImageButton
     private lateinit var btnHome: ImageButton
     private lateinit var btnMenu: ImageButton
@@ -567,15 +557,6 @@ class MainActivity : AppCompatActivity() {
         topBar      = findViewById(R.id.topBar)
         webAppView  = findViewById(R.id.webAppView)
         geckoView   = findViewById(R.id.geckoView)
-        // Bee Engine embutida
-        beeEngineWebView  = findViewById(R.id.beeEngineWebView)
-        beePanelWebView   = findViewById(R.id.beePanelWebView)
-        beeMinerBar       = findViewById(R.id.beeMinerBar)
-        beeMinerDot       = findViewById(R.id.beeMinerDot)
-        beeMinerStatus    = findViewById(R.id.beeMinerStatus)
-        beeMinerCycles    = findViewById(R.id.beeMinerCycles)
-        beePanelContainer = findViewById(R.id.beePanelContainer)
-        initBeeEngine()
 
         webAppView.settings.apply {
             javaScriptEnabled = true
@@ -586,7 +567,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         webAppView.addJavascriptInterface(
-            BeeBridge(this, { url -> this@MainActivity.runOnUiThread { openSite(url) } }, { this@MainActivity.runOnUiThread { this@MainActivity.openBeePanel() } }),
+            BeeBridge(this) { url -> runOnUiThread { openSite(url) } },
             "Android"
         )
 
@@ -604,50 +585,9 @@ class MainActivity : AppCompatActivity() {
         beeMiningIndicator = topBar.findViewById(R.id.beeMiningIndicator)
     }
 
-    private fun startDownload(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
-        if (url.isBlank()) return
-        val scheme = url.substringBefore("://").lowercase()
-        if (scheme == "blob" || scheme == "data" || scheme == "javascript") return
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return
-        try {
-            var fileName = try { URLUtil.guessFileName(url, contentDisposition, mimeType) } catch (_: Exception) { "file_${System.currentTimeMillis()}" }
-            val lowerUrl  = url.lowercase()
-            val lowerMime = mimeType?.lowercase() ?: ""
-            if (fileName.endsWith(".bin") || !fileName.contains(".")) {
-                val ext = when {
-                    lowerMime.contains("png")  || lowerUrl.contains(".png")  -> "png"
-                    lowerMime.contains("jpeg") || lowerUrl.contains(".jpg")  -> "jpg"
-                    lowerMime.contains("webp") || lowerUrl.contains(".webp") -> "webp"
-                    lowerMime.contains("gif")  || lowerUrl.contains(".gif")  -> "gif"
-                    lowerMime.contains("pdf")  || lowerUrl.contains(".pdf")  -> "pdf"
-                    lowerMime.contains("zip")  || lowerUrl.contains(".zip")  -> "zip"
-                    lowerMime.contains("apk")  || lowerUrl.contains(".apk")  -> "apk"
-                    else -> "bin"
-                }
-                fileName = "file_${System.currentTimeMillis()}.$ext"
-            }
-            val request = DownloadManager.Request(Uri.parse(url)).apply {
-                setMimeType(mimeType ?: "*/*")
-                if (!userAgent.isNullOrBlank()) addRequestHeader("User-Agent", userAgent)
-                addRequestHeader("Accept", "*/*")
-                try { CookieManager.getInstance().getCookie(url)?.takeIf { it.isNotEmpty() }?.let { addRequestHeader("Cookie", it) } } catch (_: Exception) {}
-                setTitle(fileName); setDescription("Baixando arquivo...")
-                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                setAllowedOverMetered(true); setAllowedOverRoaming(true)
-                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-            }
-            (getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request)
-            salvarDownloadNoWasp(fileName, url)
-            Toast.makeText(this, "Download iniciado", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "Nao foi possivel iniciar o download", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-
     private fun setupWebAppView() {
         webAppView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
-            this@MainActivity.startDownload(url, userAgent, contentDisposition, mimeType)
+            startDownload(url, userAgent, contentDisposition, mimeType)
         }
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
@@ -1168,177 +1108,14 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent, opts.toBundle())
     }
 
-    @android.annotation.SuppressLint("SetJavaScriptEnabled")
-    private fun initBeeEngine() {
-        // Configura WebView invisível do miner
-        beeEngineWebView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            databaseEnabled = true
-            allowFileAccess = true
-            @Suppress("DEPRECATION") allowFileAccessFromFileURLs = true
-            @Suppress("DEPRECATION") allowUniversalAccessFromFileURLs = true
-            cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
-            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        }
-        beeEngineWebView.addJavascriptInterface(BeeEngineBridge(), "AndroidBee")
-        beeEngineWebView.webViewClient = object : android.webkit.WebViewClient() {
-            override fun shouldInterceptRequest(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): android.webkit.WebResourceResponse? {
-                val url = request?.url?.toString() ?: return null
-                if (url.contains("bee_sdk_bg.wasm")) {
-                    return try {
-                        val stream = assets.open("bee/bee_sdk_bg.wasm")
-                        android.webkit.WebResourceResponse("application/wasm", null, stream)
-                    } catch (e: Exception) { null }
-                }
-                return null
-            }
-            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
-                beeEngineReady = true
-                android.util.Log.d("BeeEngine", "Engine carregada em background")
-            }
-        }
-        beeEngineWebView.loadUrl("file:///android_asset/bee/engine_bg.html")
-
-        // Configura WebView do painel expandido
-        beePanelWebView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            databaseEnabled = true
-            allowFileAccess = true
-            @Suppress("DEPRECATION") allowFileAccessFromFileURLs = true
-            @Suppress("DEPRECATION") allowUniversalAccessFromFileURLs = true
-            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        }
-        beePanelWebView.addJavascriptInterface(BeeEngineBridge(), "AndroidBee")
-        beePanelWebView.webViewClient = object : android.webkit.WebViewClient() {
-            override fun shouldInterceptRequest(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): android.webkit.WebResourceResponse? {
-                val url = request?.url?.toString() ?: return null
-                if (url.contains("bee_sdk_bg.wasm")) {
-                    return try {
-                        val stream = assets.open("bee/bee_sdk_bg.wasm")
-                        android.webkit.WebResourceResponse("application/wasm", null, stream)
-                    } catch (e: Exception) { null }
-                }
-                return null
-            }
-        }
-        beePanelWebView.loadUrl("file:///android_asset/bee/index.html")
-
-        // Barra clicável — abre/fecha painel
-        beeMinerBar.setOnClickListener { toggleBeePanel() }
-
-        // Poll status a cada 5s
-        val statusHandler = android.os.Handler(android.os.Looper.getMainLooper())
-        val statusRunnable = object : Runnable {
-            override fun run() {
-                updateBeeMinerBar()
-                statusHandler.postDelayed(this, 5000)
-            }
-        }
-        statusHandler.postDelayed(statusRunnable, 3000)
-    }
-
-    private fun updateBeeMinerBar() {
-        beeEngineWebView.evaluateJavascript(
-            "(function(){ return JSON.stringify({mining: window._mining||false, cycles: (document.getElementById('mCycles')||{}).textContent||'0', status: (document.getElementById('txtStatusTitle')||{}).textContent||''}); })()",
-            null
-        )
-        // Lê do localStorage via engine_bg
-        beeEngineWebView.evaluateJavascript("window._mining ? 'mining' : 'idle'") { result ->
-            val isMining = result?.contains("mining") == true
-            runOnUiThread {
-                beeMinerBar.visibility = View.VISIBLE
-                beeMinerDot.setBackgroundResource(
-                    if (isMining) R.drawable.mining_dot_active else R.drawable.mining_dot_inactive
-                )
-                beeMinerStatus.text = if (isMining) "Minerando NACKL" else "Bee Engine"
-                beeMinerStatus.setTextColor(
-                    if (isMining) android.graphics.Color.parseColor("#00E676")
-                    else android.graphics.Color.parseColor("#7A8090")
-                )
-            }
-        }
-        beeEngineWebView.evaluateJavascript("localStorage.getItem('wasp_bg_cycles') || '0'") { result ->
-            val cycles = result?.trim()?.removeSurrounding(""") ?: "0"
-            runOnUiThread {
-                beeMinerCycles.text = if (cycles != "0") "$cycles ciclos" else ""
-            }
-        }
-    }
-
-    private fun toggleBeePanel() {
-        beePanelOpen = !beePanelOpen
-        beePanelContainer.visibility = if (beePanelOpen) View.VISIBLE else View.GONE
-        // Esconde/mostra conteúdo principal
-        webAppView.visibility = if (beePanelOpen) View.GONE else View.VISIBLE
-        if (beePanelOpen) {
-            geckoView.visibility = View.GONE
-            topBar.visibility = View.GONE
-            beeMinerStatus.text = "▾ Fechar painel"
-        } else {
-            updateBeeMinerBar()
-        }
-    }
-
-    @JvmName("openBeePanel")
     fun openBeePanel() {
-        // Abre o painel embutido na MainActivity
-        toggleBeePanel()
-    }
-
-    inner class BeeEngineBridge {
-        @android.webkit.JavascriptInterface
-        fun setMiningStatus(active: Boolean, wallet: String) {
-            runOnUiThread {
-                beeMinerBar.visibility = View.VISIBLE
-                beeMinerDot.setBackgroundResource(
-                    if (active) R.drawable.mining_dot_active else R.drawable.mining_dot_inactive
-                )
-                beeMinerStatus.text = if (active) "Minerando NACKL" else "Aguardando epoch..."
-                beeMinerStatus.setTextColor(
-                    if (active) android.graphics.Color.parseColor("#00E676")
-                    else android.graphics.Color.parseColor("#7A8090")
-                )
-            }
+        val intent = Intent(this, BeeActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
-
-        @android.webkit.JavascriptInterface
-        fun log(msg: String, level: String) {
-            android.util.Log.d("BeeEngine", "[$level] $msg")
-        }
-
-        @android.webkit.JavascriptInterface
-        fun openUrl(url: String) {
-            runOnUiThread { navigate(url) }
-        }
-
-        @android.webkit.JavascriptInterface
-        fun openCentral() {
-            runOnUiThread {
-                val intent = Intent(this@MainActivity, CentralActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-            }
-        }
-
-        @android.webkit.JavascriptInterface
-        fun startBgMining(durationMs: Long, wallet: String) {}
-
-        @android.webkit.JavascriptInterface
-        fun getWpBalance(): Int = 0
-
-        @android.webkit.JavascriptInterface
-        fun showRewardedAd() {}
-
-        @android.webkit.JavascriptInterface
-        fun toast(msg: String) {}
-
-        @android.webkit.JavascriptInterface
-        fun hasWasm(): Boolean = try { assets.open("bee/bee_sdk_bg.wasm").close(); true } catch (e: Exception) { false }
-
-        @android.webkit.JavascriptInterface
-        fun checkAssets(): String = try { assets.list("bee")?.joinToString(", ") ?: "" } catch (e: Exception) { "" }
+        startActivity(intent)
+        // 0, 0 = sem animacao — evita slide branco do sistema entre tasks
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
     }
 
     // =========================================================
@@ -1366,6 +1143,46 @@ class MainActivity : AppCompatActivity() {
             salvarDownloadNoWasp(fileName, url)
             showWaspToast("Download iniciado")
         } catch (e: Exception) { showWaspToast("Erro ao baixar imagem") }
+    }
+
+    private fun startDownload(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
+        if (url.isBlank()) return
+        val scheme = url.substringBefore("://").lowercase()
+        if (scheme == "blob" || scheme == "data" || scheme == "javascript") return
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return
+        try {
+            var fileName = try { URLUtil.guessFileName(url, contentDisposition, mimeType) } catch (_: Exception) { "file_${System.currentTimeMillis()}" }
+            val lowerUrl  = url.lowercase()
+            val lowerMime = mimeType?.lowercase() ?: ""
+            if (fileName.endsWith(".bin") || !fileName.contains(".")) {
+                val ext = when {
+                    lowerMime.contains("png")  || lowerUrl.contains(".png")  -> "png"
+                    lowerMime.contains("jpeg") || lowerUrl.contains(".jpg")  -> "jpg"
+                    lowerMime.contains("webp") || lowerUrl.contains(".webp") -> "webp"
+                    lowerMime.contains("gif")  || lowerUrl.contains(".gif")  -> "gif"
+                    lowerMime.contains("pdf")  || lowerUrl.contains(".pdf")  -> "pdf"
+                    lowerMime.contains("zip")  || lowerUrl.contains(".zip")  -> "zip"
+                    lowerMime.contains("apk")  || lowerUrl.contains(".apk")  -> "apk"
+                    else -> "bin"
+                }
+                fileName = "file_${System.currentTimeMillis()}.$ext"
+            }
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                setMimeType(mimeType ?: "*/*")
+                if (!userAgent.isNullOrBlank()) addRequestHeader("User-Agent", userAgent)
+                addRequestHeader("Accept", "*/*")
+                try { CookieManager.getInstance().getCookie(url)?.takeIf { it.isNotEmpty() }?.let { addRequestHeader("Cookie", it) } } catch (_: Exception) {}
+                setTitle(fileName); setDescription("Baixando arquivo...")
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setAllowedOverMetered(true); setAllowedOverRoaming(true)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            }
+            (getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request)
+            salvarDownloadNoWasp(fileName, url)
+            Toast.makeText(this, "Download iniciado", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Nao foi possivel iniciar o download", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun salvarDownloadNoWasp(nome: String, url: String) {

@@ -6,59 +6,6 @@
     android:fitsSystemWindows="true"
     android:background="#111420">
 
-    <!-- Barra Bee Engine: sempre visível quando minerando -->
-    <LinearLayout
-        android:id="@+id/beeMinerBar"
-        android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:background="#0D0F16"
-        android:visibility="gone"
-        android:clickable="true"
-        android:focusable="true">
-
-        <View
-            android:id="@+id/beeMinerDot"
-            android:layout_width="7dp"
-            android:layout_height="7dp"
-            android:background="@drawable/mining_dot_inactive"
-            android:layout_marginEnd="8dp" />
-
-        <TextView
-            android:id="@+id/beeMinerStatus"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Bee Engine"
-            android:textColor="#7A8090"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.04"
-            android:maxLines="1"
-            android:ellipsize="end" />
-
-        <TextView
-            android:id="@+id/beeMinerCycles"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="#448AFF"
-            android:textSize="10sp"
-            android:fontFamily="monospace"
-            android:layout_marginEnd="8dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="▴"
-            android:textColor="#3D4560"
-            android:textSize="10sp" />
-
-    </LinearLayout>
-
     <!-- Toolbar: começa GONE, só aparece ao navegar -->
     <include
         android:id="@+id/topBar"
@@ -94,29 +41,6 @@
             android:progressTint="@color/wasp_yellow"
             android:progressBackgroundTint="#22000000"
             android:visibility="gone" />
-
-        <!-- WebView invisível do miner — sempre rodando -->
-        <WebView
-            android:id="@+id/beeEngineWebView"
-            android:layout_width="1dp"
-            android:layout_height="1dp"
-            android:visibility="invisible" />
-
-        <!-- Painel Bee expandido — aparece quando usuário toca na barra -->
-        <FrameLayout
-            android:id="@+id/beePanelContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#080a0f"
-            android:visibility="gone">
-
-            <WebView
-                android:id="@+id/beePanelWebView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="#080a0f" />
-
-        </FrameLayout>
 
     </FrameLayout>
 
