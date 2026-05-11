@@ -39,7 +39,10 @@ class BeeBridge(
 
     @JavascriptInterface
     fun onEpochEnd(wallet: String) {
-        EpochAlertActivity.notify(context, wallet)
+        // Só alerta se o painel não está visível — se estiver aberto o usuário já vê tudo
+        if (!BeeActivity.isVisible) {
+            EpochAlertActivity.notify(context, wallet)
+        }
     }
 
     @JavascriptInterface

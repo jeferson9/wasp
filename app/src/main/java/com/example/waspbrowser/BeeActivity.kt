@@ -39,6 +39,7 @@ class BeeActivity : AppCompatActivity() {
         private const val KEY_ENERGY_READY = "energy_ready"
 
         var instance: java.lang.ref.WeakReference<BeeActivity>? = null
+        var isVisible = false  // true quando painel está em foreground
 
         fun runJs(js: String) {
             instance?.get()?.evaluateJs(js)
@@ -420,6 +421,7 @@ class BeeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        isVisible = true
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)
         beeWebView.onResume()
