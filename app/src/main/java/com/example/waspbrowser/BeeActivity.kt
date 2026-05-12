@@ -450,22 +450,30 @@ class BeeActivity : AppCompatActivity() {
         }
         try {
             val wm = getSystemService(WINDOW_SERVICE) as WindowManager
-            val view = android.view.View(this)
+            // TESTE VISUAL: botão 120x120dp laranja com emoji de abelha
+            val view = android.widget.TextView(this).apply {
+                text = "🐝"
+                textSize = 32f
+                gravity = android.view.Gravity.CENTER
+                setBackgroundColor(0xFFFF6600.toInt())
+                setPadding(16, 16, 16, 16)
+            }
             val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             } else {
                 @Suppress("DEPRECATION")
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
             }
+            val size = (120 * resources.displayMetrics.density).toInt()
             val params = WindowManager.LayoutParams(
-                1, 1, type,
+                size, size, type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 PixelFormat.TRANSLUCENT
             )
-            params.gravity = Gravity.TOP or Gravity.START
-            params.x = 0; params.y = 0
+            params.gravity = Gravity.TOP or Gravity.END
+            params.x = 16; params.y = 200
             wm.addView(view, params)
             overlayView = view
             Log.d(TAG, "Mining overlay criado — Activity protegida de destruição")
