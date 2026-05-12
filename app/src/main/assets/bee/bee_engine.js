@@ -762,7 +762,13 @@
         setStatus("warn", "Aguardando próximo epoch...", "Reiniciando em ~30s");
         if (switchSub) switchSub.textContent = "Aguardando próximo epoch...";
         setTimeout(function() {
-          if (miningSwitch && miningSwitch.checked) startMining();
+          // Reinicia se autoMine está ativo — funciona mesmo com o painel em background
+          if (saved.autoMine && !mining) {
+            log("🔄 Auto-reiniciando epoch (background OK)", "linf");
+            startMining();
+          } else if (miningSwitch && miningSwitch.checked && !mining) {
+            startMining();
+          }
         }, 30000);
       }
     }

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -29,6 +30,8 @@ import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import androidx.core.view.WindowCompat
 
 class BeeActivity : AppCompatActivity() {
+
+    private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
         private const val TAG = "BeeActivity"
@@ -417,11 +420,26 @@ class BeeActivity : AppCompatActivity() {
         beeWebView.onResume()
         beeWebView.resumeTimers()
         evaluateJs("if(window.onAppResume) window.onAppResume()")
+        // WakeLock: mantém CPU ativo para o JS do epoch continuar em background
+        if (wakeLock == null || wakeLock?.isHeld == false) {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            @Suppress("DEPRECATION")
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WaspBrowser:MinerWakeLock")
+            wakeLock?.acquire(6 * 60 * 1000L) // 6 min (epoch 5min + margem)
+        }
     }
 
 override fun onPause() {
         super.onPause()
         evaluateJs("if(window.onAppPause) window.onAppPause()")
+        // NÃO pausar timers aqui — o JS do epoch precisa continuar rodando
+        // mesmo quando o usuário navega para outro app
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Mantém o WebView ativo em background: não chamar beeWebView.onPause()
+        // pois isso suspenderia o JS e interromperia o epoch
     }
 
     internal fun evaluateJs(js: String) {
@@ -438,6 +456,9 @@ override fun onPause() {
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
         }
+        // Libera o WakeLock ao destruir a Activity
+        runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
+        wakeLock = null
         instance = null
         beeWebView.destroy()
         super.onDestroy()
