@@ -68,7 +68,7 @@ class BeeBridge(
                 Log.w("BeeBridge", "startBgMining: duração inválida $durationMs")
                 return
             }
-            val intent = BeeBackgroundService.buildStartIntent(context, durationMs, walletName)
+            val intent = BeeBackgroundService.buildStartIntent(context, walletName)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {
