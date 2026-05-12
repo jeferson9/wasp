@@ -69,7 +69,6 @@ class BeeActivity : AppCompatActivity() {
             // Mantém o WebView responsivo — o Service já cuida do restart via runJs
             beeWebView.resumeTimers()
         }
-        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -436,7 +435,7 @@ class BeeActivity : AppCompatActivity() {
         }
     }
 
-override fun onPause() {
+    override fun onPause() {
         super.onPause()
         evaluateJs("if(window.onAppPause) window.onAppPause()")
         // NÃO pausar timers aqui — o JS do epoch precisa continuar rodando
