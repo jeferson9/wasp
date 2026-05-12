@@ -64,20 +64,11 @@ class BeeActivity : AppCompatActivity() {
     private val keepAliveReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != BeeBackgroundService.ACTION_KEEP_ALIVE) return
-            val remaining = intent.getLongExtra("remaining_ms", 0L)
-            Log.d(TAG, "Keep-alive recebido | restam ${remaining / 1000}s")
-            // Tenta manter a mineração ativa chamando as funções exportadas no window
-            evaluateJs("""
-                (function(){
-                    if(window.BeeEngine && typeof window.BeeEngine.isRunning === 'function'){
-                        if(!window.BeeEngine.isRunning()){
-                           console.log('[KeepAlive] Retomando mineracao...');
-                           if(typeof window.BeeEngine.startMining === 'function') window.BeeEngine.startMining();
-                        }
-                    }
-                    if(window.onAppResume) window.onAppResume();
-                })()
-            """.trimIndent())
+            val tick = intent.getIntExtra("tick", 0)
+            Log.d(TAG, "Keep-alive recebido | tick=$tick")
+            // Mantém o WebView responsivo — o Service já cuida do restart via runJs
+            beeWebView.resumeTimers()
+        }
         }
     }
 
@@ -329,9 +320,25 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun setMiningStatus(active: Boolean, wallet: String) {
-            Log.d(TAG, "Bridge setMiningStatus: $active")
+            Log.d(TAG, "Bridge setMiningStatus: $active wallet=$wallet")
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, active).apply()
+            // O Service é o cérebro: inicia/para junto com a mineração
+            try {
+                if (active) {
+                    val intent = BeeBackgroundService.buildStartIntent(this@BeeActivity, wallet)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        startForegroundService(intent)
+                    } else {
+                        startService(intent)
+                    }
+                } else {
+                    if (!BeeBackgroundService.isActive(this@BeeActivity)) return
+                    startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "setMiningStatus service error: ${e.message}")
+            }
         }
 
         @JavascriptInterface
@@ -378,10 +385,10 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun startBgMining(durationMs: Long, walletName: String) {
-            Log.d(TAG, "startBgMining: ${durationMs/60000}min wallet=$walletName")
+            Log.d(TAG, "startBgMining: wallet=$walletName (service roda indefinidamente)")
             try {
                 val intent = BeeBackgroundService.buildStartIntent(
-                    this@BeeActivity, durationMs, walletName
+                    this@BeeActivity, walletName
                 )
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     startForegroundService(intent)

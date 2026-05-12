@@ -15,20 +15,13 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 
 /**
- * BeeBackgroundService
+ * BeeBackgroundService — cérebro da mineração
  *
- * Foreground Service que mantém a mineração NACKL ativa enquanto
- * o usuário navega no Wasp Browser.
+ * Roda enquanto o usuário tiver a mineração ligada.
+ * A cada TICK (30s) verifica se o miner ainda está rodando e,
+ * se não estiver, dispara o restart via BeeActivity.runJs().
  *
- * Ciclo de vida:
- *  - Iniciado via BeeBridge.startBgMining(durationMs)
- *  - Roda por [durationMs] milissegundos (ou até ser parado manualmente)
- *  - A cada TICK_INTERVAL registra um ciclo de mineração em SharedPreferences
- *  - MainActivity / BeeActivity lêem esse estado para sincronizar a UI
- *
- * Integração com WP:
- *  - O tap.js chama AndroidBee.startBgMining(durationMs) ao gastar WP
- *  - O service atualiza o contador de ciclos que o bee_engine.js pode ler
+ * A BeeActivity é apenas interface — quem controla o loop é este Service.
  */
 class BeeBackgroundService : Service() {
 
@@ -36,55 +29,40 @@ class BeeBackgroundService : Service() {
         private const val TAG = "BeeBackgroundService"
         private const val CHANNEL_ID = "bee_mining_channel"
         private const val NOTIF_ID = 42
+        private const val TICK_INTERVAL = 30_000L   // verifica a cada 30s
 
-        // Intervalo entre "ticks" de mineração (30 segundos)
-        private const val TICK_INTERVAL = 30_000L
-
-        // Chaves SharedPreferences (mesmas lidas pelo bee_engine.js via bridge)
-        const val PREFS_BG = "bee_bg_mining"
+        const val PREFS_BG   = "bee_bg_mining"
         const val KEY_ACTIVE = "bg_active"
-        const val KEY_END_TIME = "bg_end_time"
-        const val KEY_CYCLES = "bg_cycles"
-        const val KEY_WALLET = "bg_wallet"
+        const val KEY_WALLET   = "bg_wallet"
+        const val KEY_CYCLES   = "bg_cycles"    // compatibilidade
+        const val KEY_END_TIME = "bg_end_time"  // compatibilidade
 
-        // Extras do Intent
-        const val EXTRA_DURATION = "duration_ms"
-        const val EXTRA_WALLET = "wallet_name"
-        const val ACTION_STOP = "com.example.waspbrowser.BEE_STOP"
+        const val EXTRA_WALLET   = "wallet_name"
+        const val ACTION_STOP    = "com.example.waspbrowser.BEE_STOP"
         const val ACTION_KEEP_ALIVE = "com.example.waspbrowser.BEE_KEEP_ALIVE"
 
-        fun buildStartIntent(context: Context, durationMs: Long, walletName: String): Intent {
-            return Intent(context, BeeBackgroundService::class.java).apply {
-                putExtra(EXTRA_DURATION, durationMs)
+        fun buildStartIntent(context: Context, walletName: String): Intent =
+            Intent(context, BeeBackgroundService::class.java).apply {
                 putExtra(EXTRA_WALLET, walletName)
             }
-        }
 
-        fun buildStopIntent(context: Context): Intent {
-            return Intent(context, BeeBackgroundService::class.java).apply {
+        fun buildStopIntent(context: Context): Intent =
+            Intent(context, BeeBackgroundService::class.java).apply {
                 action = ACTION_STOP
             }
-        }
 
-        /** Lê se o serviço está ativo (pode ser chamado de qualquer lugar) */
-        fun isActive(context: Context): Boolean {
-            val prefs = context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
-            val endTime = prefs.getLong(KEY_END_TIME, 0L)
-            return prefs.getBoolean(KEY_ACTIVE, false) && System.currentTimeMillis() < endTime
-        }
+        fun isActive(context: Context): Boolean =
+            context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
+                .getBoolean(KEY_ACTIVE, false)
 
-        /** Retorna quantos ms restam de bg mining */
-        fun remainingMs(context: Context): Long {
-            val prefs = context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
-            return maxOf(0L, prefs.getLong(KEY_END_TIME, 0L) - System.currentTimeMillis())
-        }
+        // Mantido por compatibilidade com código antigo
+        fun remainingMs(context: Context): Long = Long.MAX_VALUE
     }
 
     private val handler = Handler(Looper.getMainLooper())
     private var tickRunnable: Runnable? = null
-    private var endTime = 0L
-
-    // ─── Lifecycle ───────────────────────────────────────────────────────────
+    private var walletName = ""
+    private var tickCount = 0
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -95,128 +73,97 @@ class BeeBackgroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        // Parar manualmente
         if (intent?.action == ACTION_STOP) {
-            stopBgMining()
+            stopMining()
             stopSelf()
             return START_NOT_STICKY
         }
 
-        val durationMs = intent?.getLongExtra(EXTRA_DURATION, 0L) ?: 0L
-        val walletName = intent?.getStringExtra(EXTRA_WALLET) ?: ""
+        walletName = intent?.getStringExtra(EXTRA_WALLET) ?: ""
 
-        if (durationMs <= 0L) {
-            Log.w(TAG, "Duração inválida — parando service")
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
-        endTime = System.currentTimeMillis() + durationMs
-
-        // Persiste estado
         getSharedPreferences(PREFS_BG, MODE_PRIVATE).edit()
             .putBoolean(KEY_ACTIVE, true)
-            .putLong(KEY_END_TIME, endTime)
             .putString(KEY_WALLET, walletName)
             .apply()
 
-        // Também sincroniza com o prefs que a MainActivity usa
-        getSharedPreferences("bee_mining", MODE_PRIVATE).edit()
-            .putBoolean("mining_active", true)
-            .apply()
+        startForeground(NOTIF_ID, buildNotification(walletName, tickCount))
+        Log.d(TAG, "Mineração em background iniciada | wallet=$walletName")
 
-        startForeground(NOTIF_ID, buildNotification(walletName, durationMs))
-        Log.d(TAG, "Bg mining iniciado por ${durationMs / 60000} min | wallet=$walletName")
-
-        scheduleNextTick(walletName)
-
+        scheduleTick()
         return START_STICKY
     }
 
     override fun onDestroy() {
         tickRunnable?.let { handler.removeCallbacks(it) }
-        stopBgMining()
+        stopMining()
         Log.d(TAG, "Service destruído")
         super.onDestroy()
     }
 
     // ─── Tick loop ───────────────────────────────────────────────────────────
 
-    private fun scheduleNextTick(walletName: String) {
+    private fun scheduleTick() {
         tickRunnable?.let { handler.removeCallbacks(it) }
-
         tickRunnable = Runnable {
-            val now = System.currentTimeMillis()
-            if (now >= endTime) {
-                Log.d(TAG, "Bg mining expirou — parando")
-                stopBgMining()
-                stopSelf()
-                return@Runnable
-            }
+            tickCount++
+            Log.d(TAG, "Tick #$tickCount | wallet=$walletName")
 
-            // Registra ciclo
-            val prefs = getSharedPreferences(PREFS_BG, MODE_PRIVATE)
-            val cycles = prefs.getInt(KEY_CYCLES, 0) + 1
-            prefs.edit().putInt(KEY_CYCLES, cycles).apply()
-            Log.d(TAG, "Tick #$cycles | restam ${(endTime - now) / 1000}s")
+            // Cérebro: verifica se miner está rodando e reinicia se necessário
+            checkAndRestartMiner()
 
-            // Checa se o epoch terminou e o miner precisa reiniciar
-            checkEpochAndRestart()
-
-            // ── KEEP-ALIVE broadcast: acorda o BeeActivity/WebView para manter o miner vivo
-            sendBroadcast(Intent(ACTION_KEEP_ALIVE).apply {
-                setPackage(packageName)
-                putExtra("cycles", cycles)
-                putExtra("remaining_ms", endTime - now)
-                putExtra("wallet", walletName)
-            })
-
-            // Atualiza notificação com tempo restante
-            val remaining = endTime - now
+            // Atualiza notificação
             val notifManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            notifManager.notify(NOTIF_ID, buildNotification(walletName, remaining))
+            notifManager.notify(NOTIF_ID, buildNotification(walletName, tickCount))
 
-            scheduleNextTick(walletName)
+            scheduleTick()
         }
-
         handler.postDelayed(tickRunnable!!, TICK_INTERVAL)
     }
 
-    private fun checkEpochAndRestart() {
-        // Lê o timestamp do fim do epoch salvo pelo bee_engine.js
-        // Se já passou e o miner não reiniciou sozinho, dispara via JS direto
-        try {
-            // localStorage do WebView não é acessível direto — usamos o BeeActivity.runJs
-            // O JS vai checar o localStorage e reiniciar se necessário
-            val js = """
-                (function(){
+    /**
+     * Núcleo da solução: o Service verifica via JS se o miner está ativo.
+     * Se não estiver (epoch terminou, WebView pausou, qualquer motivo),
+     * dispara o restart direto — sem esperar o usuário abrir o painel.
+     */
+    private fun checkAndRestartMiner() {
+        val js = """
+            (function(){
+                try {
+                    // Verifica se miner está rodando
+                    var isMining = window._mining === true;
+                    var autoMine = false;
                     try {
-                        var ts = localStorage.getItem('wasp_epoch_end_ts');
-                        var autoMine = false;
-                        try {
-                            var st = localStorage.getItem('wasp_bee_state_v6');
-                            if (st) autoMine = JSON.parse(st).autoMine;
-                        } catch(_) {}
-                        if (!ts && autoMine && !window._mining && typeof window._startMining === 'function') {
-                            console.log('[BgService] Epoch terminou detectado pelo Kotlin - reiniciando');
-                            window._startMining();
+                        var st = localStorage.getItem('wasp_bee_state_v6');
+                        if (st) autoMine = JSON.parse(st).autoMine;
+                    } catch(_) {}
+
+                    console.log('[BgService] Tick — isMining=' + isMining + ' autoMine=' + autoMine);
+
+                    if (autoMine && !isMining) {
+                        console.log('[BgService] Miner parado detectado — reiniciando...');
+                        if (typeof window.onAppResume === 'function') {
+                            window.onAppResume();
                         }
-                    } catch(e) { console.error('[BgService] ' + e); }
-                })()
-            """.trimIndent()
-            BeeActivity.runJs(js)
-        } catch (e: Exception) {
-            Log.w(TAG, "checkEpochAndRestart erro: ${e.message}")
-        }
+                    }
+                } catch(e) {
+                    console.error('[BgService] checkAndRestart erro: ' + e);
+                }
+            })()
+        """.trimIndent()
+
+        BeeActivity.runJs(js)
+
+        // Também envia broadcast para manter a BeeActivity acordada
+        sendBroadcast(Intent(ACTION_KEEP_ALIVE).apply {
+            setPackage(packageName)
+            putExtra("tick", tickCount)
+            putExtra("wallet", walletName)
+        })
     }
 
-    private fun stopBgMining() {
+    private fun stopMining() {
         getSharedPreferences(PREFS_BG, MODE_PRIVATE).edit()
             .putBoolean(KEY_ACTIVE, false)
-            .apply()
-        getSharedPreferences("bee_mining", MODE_PRIVATE).edit()
-            .putBoolean("mining_active", false)
             .apply()
     }
 
@@ -225,9 +172,7 @@ class BeeBackgroundService : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Bee Mining",
-                NotificationManager.IMPORTANCE_LOW
+                CHANNEL_ID, "Bee Mining", NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Mineração NACKL em segundo plano"
                 setShowBadge(false)
@@ -237,16 +182,7 @@ class BeeBackgroundService : Service() {
         }
     }
 
-    private fun buildNotification(walletName: String, remainingMs: Long): Notification {
-        val mins = remainingMs / 60000
-        val secs = (remainingMs % 60000) / 1000
-        val timeStr = if (mins > 0) "${mins}m ${secs}s" else "${secs}s"
-
-        val stopIntent = PendingIntent.getService(
-            this, 0, buildStopIntent(this),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
+    private fun buildNotification(wallet: String, ticks: Int): Notification {
         val openIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, BeeActivity::class.java).apply {
@@ -254,23 +190,25 @@ class BeeBackgroundService : Service() {
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val stopIntent = PendingIntent.getService(
+            this, 0, buildStopIntent(this),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val epochsStr = if (ticks > 0) " • ${ticks} checks" else ""
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_bee_tech)
             .setContentTitle("🐝 Minerando NACKL")
             .setContentText(
-                if (walletName.isNotBlank()) "Wallet: $walletName • Restam $timeStr"
-                else "Mineração ativa • Restam $timeStr"
+                if (wallet.isNotBlank()) "Wallet: $wallet$epochsStr"
+                else "Mineração ativa$epochsStr"
             )
             .setOngoing(true)
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(openIntent)
-            .addAction(
-                R.drawable.ic_bee_tech,
-                "Parar",
-                stopIntent
-            )
+            .addAction(R.drawable.ic_bee_tech, "Parar", stopIntent)
             .build()
     }
 }
