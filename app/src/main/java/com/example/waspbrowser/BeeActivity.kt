@@ -6,11 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.view.WindowManager
+import android.view.Gravity
+import android.graphics.PixelFormat
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.provider.Settings
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -32,6 +37,7 @@ import androidx.core.view.WindowCompat
 class BeeActivity : AppCompatActivity() {
 
     private var wakeLock: PowerManager.WakeLock? = null
+    private var overlayView: android.view.View? = null
 
     companion object {
         private const val TAG = "BeeActivity"
@@ -331,7 +337,10 @@ class BeeActivity : AppCompatActivity() {
                     } else {
                         startService(intent)
                     }
+                    // Overlay mantém a Activity viva enquanto minera
+                    mainHandler.post { showMiningOverlay() }
                 } else {
+                    hideMiningOverlay()
                     if (!BeeBackgroundService.isActive(this@BeeActivity)) return
                     startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
                 }
@@ -419,6 +428,61 @@ class BeeActivity : AppCompatActivity() {
         }
     }
 
+
+    /**
+     * Cria uma janela 1x1 pixel completamente transparente e invisível.
+     * Isso mantém o BeeActivity no estado "visível" para o Android,
+     * impedindo que o sistema o destrua quando o usuário navega para outro app.
+     * Sem isso, o Android pode matar a Activity e o WebView para liberar memória.
+     */
+    private fun showMiningOverlay() {
+        if (overlayView != null) return
+        // Android 6+: precisa de permissao para janela overlay
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Log.w(TAG, "Sem permissao SYSTEM_ALERT_WINDOW — solicitando...")
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    android.net.Uri.parse("package:$packageName"))
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            } catch (_: Exception) {}
+            return
+        }
+        try {
+            val wm = getSystemService(WINDOW_SERVICE) as WindowManager
+            val view = android.view.View(this)
+            val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            } else {
+                @Suppress("DEPRECATION")
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
+            }
+            val params = WindowManager.LayoutParams(
+                1, 1, type,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                PixelFormat.TRANSLUCENT
+            )
+            params.gravity = Gravity.TOP or Gravity.START
+            params.x = 0; params.y = 0
+            wm.addView(view, params)
+            overlayView = view
+            Log.d(TAG, "Mining overlay criado — Activity protegida de destruição")
+        } catch (e: Exception) {
+            Log.w(TAG, "Overlay não disponível: ${e.message} — usando apenas WakeLock")
+        }
+    }
+
+    private fun hideMiningOverlay() {
+        overlayView?.let {
+            try {
+                (getSystemService(WINDOW_SERVICE) as WindowManager).removeView(it)
+            } catch (_: Exception) {}
+            overlayView = null
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         @Suppress("DEPRECATION")
@@ -463,6 +527,7 @@ class BeeActivity : AppCompatActivity() {
                 .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
         }
         // Libera o WakeLock ao destruir a Activity
+        hideMiningOverlay()
         runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
         wakeLock = null
         instance = null
