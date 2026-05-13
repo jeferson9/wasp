@@ -533,6 +533,8 @@ class BeeActivity : AppCompatActivity() {
             wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WaspBrowser:MinerWakeLock")
             wakeLock?.acquire(6 * 60 * 1000L) // 6 min (epoch 5min + margem)
         }
+        // Eleva prioridade do thread principal para reduzir throttling em background
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_FOREGROUND)
     }
 
     override fun onPause() {
@@ -549,7 +551,13 @@ class BeeActivity : AppCompatActivity() {
     }
 
     internal fun evaluateJs(js: String) {
-        beeWebView.post { runCatching { beeWebView.evaluateJavascript(js, null) } }
+        // Usa mainHandler para garantir execução na main thread mesmo em background
+        mainHandler.post {
+            runCatching {
+                beeWebView.resumeTimers()
+                beeWebView.evaluateJavascript(js, null)
+            }
+        }
     }
 
     override fun onDestroy() {
