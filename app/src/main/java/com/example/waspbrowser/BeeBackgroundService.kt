@@ -136,30 +136,35 @@ class BeeBackgroundService : Service() {
 
 
     private fun scheduleEpochRestart() {
-        // Cancela restart anterior se houver
         epochRestartRunnable?.let { handler.removeCallbacks(it) }
+        // Após 16s de slashing period, chama _doEpochClaim() que faz reward + restart
         epochRestartRunnable = Runnable {
-            Log.d(TAG, "Executando restart pós-epoch via Kotlin Handler")
+            Log.d(TAG, "Slashing period passou — chamando _doEpochClaim()")
             val js = """
                 (function(){
                     try {
-                        if (!window._mining && typeof window._startMining === 'function') {
+                        if (typeof window._doEpochClaim === 'function') {
+                            console.log('[Svc] Chamando _doEpochClaim() via Kotlin Handler');
+                            window._doEpochClaim();
+                        } else {
+                            // _doEpochClaim já foi executado pelo fallback ou não existe
+                            // Garante que o miner está rodando
                             var autoMine = false;
                             try {
                                 var st = localStorage.getItem('wasp_bee_state_v6');
                                 if (st) autoMine = JSON.parse(st).autoMine;
                             } catch(_) {}
-                            if (autoMine) {
-                                console.log('[Svc] Restart pós-epoch via Kotlin Handler');
+                            if (autoMine && !window._mining && typeof window._startMining === 'function') {
+                                console.log('[Svc] Fallback: chamando _startMining()');
                                 window._startMining();
                             }
                         }
-                    } catch(e) { console.error('[Svc] restart erro: ' + e); }
+                    } catch(e) { console.error('[Svc] scheduleEpochRestart erro: ' + e); }
                 })()
             """.trimIndent()
             BeeActivity.runJs(js)
         }
-        handler.postDelayed(epochRestartRunnable!!, EPOCH_RESTART_DELAY)
+        handler.postDelayed(epochRestartRunnable!!, 17_000L) // 17s = 16s slashing + 1s margem
     }
 
     private fun scheduleTick() {

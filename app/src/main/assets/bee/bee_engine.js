@@ -753,44 +753,47 @@
       if (tapSection) tapSection.classList.add("hidden");
       notifyMiningStatus();
 
-      // Slashing period: aguardar ~16s antes do claim
-      setTimeout(function() {
+      // Expõe função de claim para o Service Kotlin chamar via Handler (não throttled)
+      // O Service vai chamar _doEpochClaim() após 16s de slashing period
+      window._doEpochClaim = async function() {
+        log("💰 Service chamou _doEpochClaim()", "linf");
         if (!claimMiner) {
           log("⚠️ Instância do miner perdida — reward não pôde ser coletado", "lerr");
           window._epochEndRunning = false;
-          scheduleRestart();
+          window._doEpochClaim = null;
+          startMining();
           return;
         }
         if (!saved.minerAddress || !saved.publicKey || !saved.secretKey) {
           log("⚠️ Credenciais ausentes para get_reward()", "lerr");
           try { claimMiner.stop(); } catch(_) {}
           window._epochEndRunning = false;
-          scheduleRestart();
+          window._doEpochClaim = null;
+          startMining();
           return;
         }
-        log("💰 Chamando get_reward() na instância que minerou...", "linf");
-        claimRewardSafe(claimMiner).finally(function() {
-          window._epochEndRunning = false;
-          scheduleRestart();
-        });
+        log("💰 Chamando get_reward()...", "linf");
+        await claimRewardSafe(claimMiner);
+        window._epochEndRunning = false;
+        window._doEpochClaim = null;
+        // Reinicia imediatamente após claim — Service também tem fallback
+        if (saved.autoMine && !mining) startMining();
+      };
+
+      // Fallback: setTimeout caso o Service não consiga chamar (Activity destruída)
+      setTimeout(function() {
+        if (window._doEpochClaim) {
+          log("⏱️ Fallback setTimeout: chamando _doEpochClaim()", "linf");
+          window._doEpochClaim();
+        }
       }, 16000);
 
       function scheduleRestart() {
-        if (window._restartScheduled) return; // evita dupla chamada
-        window._restartScheduled = true;
-        setStatus("warn", "Aguardando próximo epoch...", "Reiniciando em ~10s");
+        // O Service Kotlin faz o restart real via Handler (nao throttled).
+        // Esta funcao apenas atualiza o status visual na tela.
+        setStatus("warn", "Aguardando próximo epoch...", "Service reiniciando...");
         if (switchSub) switchSub.textContent = "Aguardando próximo epoch...";
-        // Timeout curto (10s) — o Service Kotlin também verifica a cada 30s
-        // como fallback caso este setTimeout seja throttled em background
-        setTimeout(function() {
-          window._restartScheduled = false;
-          if (saved.autoMine && !mining) {
-            log("🔄 Auto-reiniciando epoch...", "linf");
-            startMining();
-          } else if (miningSwitch && miningSwitch.checked && !mining) {
-            startMining();
-          }
-        }, 10000);
+        log("🔄 Aguardando restart do Service...", "linf");
       }
     }
 
