@@ -39,6 +39,7 @@ class BeeBackgroundService : Service() {
         const val EXTRA_WALLET      = "wallet_name"
         const val ACTION_STOP       = "com.example.waspbrowser.BEE_STOP"
         const val ACTION_KEEP_ALIVE  = "com.example.waspbrowser.BEE_KEEP_ALIVE"
+        const val EPOCH_TIMEOUT_MS   = 7 * 60 * 1000L // 7 min sem completion = epoch travado
         const val ACTION_EPOCH_ENDED = "com.example.waspbrowser.BEE_EPOCH_ENDED"
         private const val EPOCH_RESTART_DELAY = 28_000L // 16s slashing + 10s espera + 2s margem
 
@@ -65,6 +66,7 @@ class BeeBackgroundService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var tickRunnable: Runnable? = null
+    private var epochStartTime = 0L  // quando o epoch atual começou
     private var walletName = ""
     private var tickCount = 0
 
@@ -85,8 +87,15 @@ class BeeBackgroundService : Service() {
 
         if (intent?.action == ACTION_EPOCH_ENDED) {
             Log.d(TAG, "Epoch terminou — agendando claim+restart")
+            epochStartTime = 0L // reseta watchdog
             ensureBeeActivityAlive()
             scheduleEpochRestart()
+            return START_STICKY
+        }
+
+        if (intent?.action == "com.example.waspbrowser.BEE_EPOCH_STARTED") {
+            Log.d(TAG, "Novo epoch iniciado — resetando watchdog")
+            epochStartTime = System.currentTimeMillis()
             return START_STICKY
         }
 
@@ -98,6 +107,7 @@ class BeeBackgroundService : Service() {
 
         startForeground(NOTIF_ID, buildNotification(walletName))
         Log.d(TAG, "Service iniciado | wallet=$walletName")
+        epochStartTime = System.currentTimeMillis()
         scheduleTick()
         scheduleTaps()
         return START_STICKY
@@ -202,6 +212,26 @@ class BeeBackgroundService : Service() {
 
             // Garante que o BeeActivity está vivo
             ensureBeeActivityAlive()
+
+            // Watchdog: se epoch rodando há mais de 7 min sem terminar, força restart
+            if (epochStartTime > 0L) {
+                val epochAge = System.currentTimeMillis() - epochStartTime
+                if (epochAge > EPOCH_TIMEOUT_MS) {
+                    Log.w(TAG, "WATCHDOG: epoch travado há ${epochAge/60000}min — forçando restart")
+                    epochStartTime = System.currentTimeMillis()
+                    val jsRestart = """
+                        (function(){
+                            try {
+                                console.log('[Svc-Watchdog] Epoch travado — forçando restart');
+                                window._mining = false;
+                                if (typeof window._startMining === 'function') window._startMining();
+                                else if (typeof window.onAppResume === 'function') window.onAppResume();
+                            } catch(e) { console.error('[Svc-Watchdog] ' + e); }
+                        })()
+                    """.trimIndent()
+                    BeeActivity.runJs(jsRestart)
+                }
+            }
 
             // Verifica se o JS ainda está respondendo (pode estar vivo mas sem contexto JS)
             val activity = BeeActivity.instance?.get()

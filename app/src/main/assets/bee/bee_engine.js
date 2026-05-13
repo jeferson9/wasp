@@ -852,6 +852,12 @@
     setStatus("on", "Minerando NACKL ⚡", "Wallet: " + saved.walletName);
     updateMetrics();
     log("✅ Mineração iniciada! Epoch de 5 min — reward coletado automaticamente no fim.", "lok");
+    // Notifica Service que novo epoch começou (watchdog reset)
+    try {
+      if (window.AndroidBee && typeof window.AndroidBee.onEpochStarted === 'function') {
+        window.AndroidBee.onEpochStarted();
+      }
+    } catch(_) {}
     toast("Mineração NACKL iniciada! ⚡");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────

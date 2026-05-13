@@ -428,6 +428,19 @@ class BeeActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun onEpochStarted() {
+            Log.d(TAG, "onEpochStarted: novo epoch iniciado")
+            try {
+                val intent = Intent(this@BeeActivity, BeeBackgroundService::class.java).apply {
+                    action = "com.example.waspbrowser.BEE_EPOCH_STARTED"
+                }
+                startService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "onEpochStarted error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
         fun onEpochEnded() {
             // JS avisou que epoch terminou — Service agenda restart via Kotlin Handler
             // (não depende do setTimeout do JS que é throttled em background)
