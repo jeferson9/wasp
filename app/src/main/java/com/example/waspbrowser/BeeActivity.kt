@@ -187,9 +187,16 @@ class BeeActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                if (pageLoaded) return
-                pageLoaded = true
-                beeWebView.animate().alpha(1f).setDuration(200).start()
+                if (!pageLoaded) {
+                    pageLoaded = true
+                    beeWebView.animate().alpha(1f).setDuration(200).start()
+                } else {
+                    // Recarga do WebView (JS morreu) — reinicia mineração após carregar
+                    Log.d(TAG, "onPageFinished: recarga detectada — reiniciando mineração")
+                    mainHandler.postDelayed({
+                        evaluateJs("if(window.onAppResume) window.onAppResume()")
+                    }, 3000) // aguarda 3s para o WASM carregar
+                }
             }
         }
     }
@@ -551,11 +558,37 @@ class BeeActivity : AppCompatActivity() {
     }
 
     internal fun evaluateJs(js: String) {
-        // Usa mainHandler para garantir execução na main thread mesmo em background
         mainHandler.post {
             runCatching {
                 beeWebView.resumeTimers()
                 beeWebView.evaluateJavascript(js, null)
+            }
+        }
+    }
+
+    // Verifica se o JS ainda está vivo e reinicia o WebView se necessário
+    fun checkJsAlive(callback: (Boolean) -> Unit) {
+        mainHandler.post {
+            try {
+                beeWebView.resumeTimers()
+                beeWebView.evaluateJavascript("(function(){ return window._mining !== undefined ? 'alive' : 'dead'; })()") { result ->
+                    val alive = result?.contains("alive") == true
+                    callback(alive)
+                }
+            } catch (e: Exception) {
+                callback(false)
+            }
+        }
+    }
+
+    fun reloadWebView() {
+        mainHandler.post {
+            Log.w(TAG, "Recarregando WebView — contexto JS morto")
+            try {
+                beeWebView.resumeTimers()
+                beeWebView.reload()
+            } catch (e: Exception) {
+                Log.e(TAG, "reloadWebView erro: ${e.message}")
             }
         }
     }

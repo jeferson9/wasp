@@ -197,10 +197,23 @@ class BeeBackgroundService : Service() {
         epochRestartRunnable?.let { handler.removeCallbacks(it) }
         tickRunnable = Runnable {
             tickCount++
-            Log.d(TAG, "Tick #$tickCount | BeeActivity viva: ${BeeActivity.instance?.get() != null}")
+            val activityAlive = BeeActivity.instance?.get() != null
+            Log.d(TAG, "Tick #$tickCount | BeeActivity viva: $activityAlive")
 
-            // Garante que o BeeActivity está vivo a cada tick
+            // Garante que o BeeActivity está vivo
             ensureBeeActivityAlive()
+
+            // Verifica se o JS ainda está respondendo (pode estar vivo mas sem contexto JS)
+            val activity = BeeActivity.instance?.get()
+            if (activity != null) {
+                activity.checkJsAlive { jsAlive ->
+                    Log.d(TAG, "Tick #$tickCount | JS vivo: $jsAlive")
+                    if (!jsAlive) {
+                        Log.w(TAG, "JS morto — recarregando WebView")
+                        activity.reloadWebView()
+                    }
+                }
+            }
 
             // O Service é o timer real — não depende do setTimeout do JS
             // que é throttled pelo Android quando em background.
