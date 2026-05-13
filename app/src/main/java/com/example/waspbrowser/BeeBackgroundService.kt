@@ -98,16 +98,42 @@ class BeeBackgroundService : Service() {
         startForeground(NOTIF_ID, buildNotification(walletName))
         Log.d(TAG, "Service iniciado | wallet=$walletName")
         scheduleTick()
+        scheduleTaps()
         return START_STICKY
     }
 
     override fun onDestroy() {
         tickRunnable?.let { handler.removeCallbacks(it) }
+        tapRunnable?.let { handler.removeCallbacks(it) }
+        epochRestartRunnable?.let { handler.removeCallbacks(it) }
         stopMining()
         super.onDestroy()
     }
 
     private var epochRestartRunnable: Runnable? = null
+    private var tapRunnable: Runnable? = null
+    private var tapCount = 0
+    private val TAP_INTERVAL = 3_000L  // 1 tap a cada 3s = 100 taps em 5min
+
+    private fun scheduleTaps() {
+        tapRunnable?.let { handler.removeCallbacks(it) }
+        tapRunnable = Runnable {
+            // Só tapa se BeeActivity está viva e mining está ativo
+            val js = """
+                (function(){
+                    try {
+                        if (window._mining && window._doTap) {
+                            window._doTap();
+                        }
+                    } catch(e) {}
+                })()
+            """.trimIndent()
+            BeeActivity.runJs(js)
+            scheduleTaps()
+        }
+        handler.postDelayed(tapRunnable!!, TAP_INTERVAL)
+    }
+
 
     private fun scheduleEpochRestart() {
         // Cancela restart anterior se houver
@@ -138,6 +164,8 @@ class BeeBackgroundService : Service() {
 
     private fun scheduleTick() {
         tickRunnable?.let { handler.removeCallbacks(it) }
+        tapRunnable?.let { handler.removeCallbacks(it) }
+        epochRestartRunnable?.let { handler.removeCallbacks(it) }
         tickRunnable = Runnable {
             tickCount++
             Log.d(TAG, "Tick #$tickCount — verificando miner")

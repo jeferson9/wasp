@@ -846,6 +846,32 @@
     var autoTapCount = 0;
     var AUTO_TAP_TOTAL = 100;
     var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3000ms
+    // Expõe função de tap para o Service Kotlin chamar via Handler (não throttled)
+    window._doTap = async function() {
+      if (!mining || !miner) return false;
+      if (autoTapCount >= AUTO_TAP_TOTAL) return false;
+      try {
+        await miner.add_tap(
+          Math.floor(Math.random() * 300 + 50),
+          Math.floor(Math.random() * 300 + 50)
+        );
+        autoTapCount++;
+        window._tapCount = (window._tapCount || 0) + 1;
+        window._tapCountEpoch = autoTapCount;
+        if (autoTapCount % 10 === 0) {
+          log("🤖 Auto-tap: " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
+        }
+        if (btnTap) {
+          btnTap.style.transform = "scale(0.95)";
+          setTimeout(function(){ btnTap.style.transform = ""; }, 100);
+        }
+        return true;
+      } catch(e) {
+        log("Auto-tap erro: " + e.message, "lwrn");
+        return false;
+      }
+    };
+
     window._autoTapTimer = setInterval(async function() {
       if (!mining || !miner) {
         clearInterval(window._autoTapTimer);
