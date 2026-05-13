@@ -1007,11 +1007,20 @@
     log("App voltou ao foco", "linf");
     if (!wasmReady || !saved.authorized || !saved.minerAddress) return;
 
-    if (!mining && saved.autoMine) {
+    // Se ja esta minerando, apenas atualiza a UI — nao reinicia
+    if (mining) {
+      log("Resume: mineracao ja ativa — apenas atualizando UI", "linf");
+      if (miningSwitch) miningSwitch.checked = true;
+      updateMetrics();
+      return;
+    }
+
+    if (saved.autoMine) {
       log("Auto-start no resume — religando...", "linf");
       if (miningSwitch) miningSwitch.checked = true;
       tryClaimPendingReward(function() {
-        setTimeout(startMining, 800);
+        // Verifica novamente antes de iniciar — pode ter iniciado durante o claim
+        if (!mining) setTimeout(startMining, 800);
       });
     }
   };
