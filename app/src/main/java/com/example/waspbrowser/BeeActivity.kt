@@ -410,6 +410,20 @@ class BeeActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun onEpochEnded() {
+            // JS avisou que epoch terminou — Service agenda restart via Kotlin Handler
+            // (não depende do setTimeout do JS que é throttled em background)
+            Log.d(TAG, "onEpochEnded: epoch terminou, notificando Service")
+            try {
+                val intent = BeeBackgroundService.buildStartIntent(this@BeeActivity, "")
+                    .apply { action = BeeBackgroundService.ACTION_EPOCH_ENDED }
+                startService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "onEpochEnded error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
         fun stopBgMining() {
             // Usuário desligou manualmente — remove overlay e para Service
             mainHandler.post { hideMiningOverlay() }

@@ -38,7 +38,9 @@ class BeeBackgroundService : Service() {
 
         const val EXTRA_WALLET      = "wallet_name"
         const val ACTION_STOP       = "com.example.waspbrowser.BEE_STOP"
-        const val ACTION_KEEP_ALIVE = "com.example.waspbrowser.BEE_KEEP_ALIVE"
+        const val ACTION_KEEP_ALIVE  = "com.example.waspbrowser.BEE_KEEP_ALIVE"
+        const val ACTION_EPOCH_ENDED = "com.example.waspbrowser.BEE_EPOCH_ENDED"
+        private const val EPOCH_RESTART_DELAY = 28_000L // 16s slashing + 10s espera + 2s margem
 
         fun buildStartIntent(context: Context, walletName: String): Intent =
             Intent(context, BeeBackgroundService::class.java).apply {
@@ -81,6 +83,12 @@ class BeeBackgroundService : Service() {
             return START_NOT_STICKY
         }
 
+        if (intent?.action == ACTION_EPOCH_ENDED) {
+            Log.d(TAG, "Epoch terminou — agendando restart em ${EPOCH_RESTART_DELAY/1000}s via Kotlin Handler")
+            scheduleEpochRestart()
+            return START_STICKY
+        }
+
         walletName = intent?.getStringExtra(EXTRA_WALLET) ?: ""
         getSharedPreferences(PREFS_BG, MODE_PRIVATE).edit()
             .putBoolean(KEY_ACTIVE, true)
@@ -97,6 +105,35 @@ class BeeBackgroundService : Service() {
         tickRunnable?.let { handler.removeCallbacks(it) }
         stopMining()
         super.onDestroy()
+    }
+
+    private var epochRestartRunnable: Runnable? = null
+
+    private fun scheduleEpochRestart() {
+        // Cancela restart anterior se houver
+        epochRestartRunnable?.let { handler.removeCallbacks(it) }
+        epochRestartRunnable = Runnable {
+            Log.d(TAG, "Executando restart pós-epoch via Kotlin Handler")
+            val js = """
+                (function(){
+                    try {
+                        if (!window._mining && typeof window._startMining === 'function') {
+                            var autoMine = false;
+                            try {
+                                var st = localStorage.getItem('wasp_bee_state_v6');
+                                if (st) autoMine = JSON.parse(st).autoMine;
+                            } catch(_) {}
+                            if (autoMine) {
+                                console.log('[Svc] Restart pós-epoch via Kotlin Handler');
+                                window._startMining();
+                            }
+                        }
+                    } catch(e) { console.error('[Svc] restart erro: ' + e); }
+                })()
+            """.trimIndent()
+            BeeActivity.runJs(js)
+        }
+        handler.postDelayed(epochRestartRunnable!!, EPOCH_RESTART_DELAY)
     }
 
     private fun scheduleTick() {

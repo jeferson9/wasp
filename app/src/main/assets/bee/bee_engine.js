@@ -731,6 +731,12 @@
         return;
       }
       window._epochEndRunning = true;
+      // Avisa o Service imediatamente — ele vai acionar o restart em 16s+10s
+      try {
+        if (window.AndroidBee && typeof window.AndroidBee.onEpochEnded === 'function') {
+          window.AndroidBee.onEpochEnded();
+        }
+      } catch(_) {}
       // Limpa timestamp — epoch terminou, serviço não precisa mais monitorar
       try { localStorage.removeItem('wasp_epoch_end_ts'); } catch(_) {}
       if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
