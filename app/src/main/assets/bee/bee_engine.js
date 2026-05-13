@@ -725,6 +725,12 @@
     }
 
     function handleEpochEnd(reason) {
+      // Evita dupla execução — dois workers podem terminar ao mesmo tempo
+      if (window._epochEndRunning) {
+        log("⚠️ handleEpochEnd já em execução — ignorando chamada dupla", "lwrn");
+        return;
+      }
+      window._epochEndRunning = true;
       // Limpa timestamp — epoch terminou, serviço não precisa mais monitorar
       try { localStorage.removeItem('wasp_epoch_end_ts'); } catch(_) {}
       if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
@@ -745,31 +751,40 @@
       setTimeout(function() {
         if (!claimMiner) {
           log("⚠️ Instância do miner perdida — reward não pôde ser coletado", "lerr");
+          window._epochEndRunning = false;
           scheduleRestart();
           return;
         }
         if (!saved.minerAddress || !saved.publicKey || !saved.secretKey) {
           log("⚠️ Credenciais ausentes para get_reward()", "lerr");
           try { claimMiner.stop(); } catch(_) {}
+          window._epochEndRunning = false;
           scheduleRestart();
           return;
         }
         log("💰 Chamando get_reward() na instância que minerou...", "linf");
-        claimRewardSafe(claimMiner).finally(scheduleRestart);
+        claimRewardSafe(claimMiner).finally(function() {
+          window._epochEndRunning = false;
+          scheduleRestart();
+        });
       }, 16000);
 
       function scheduleRestart() {
-        setStatus("warn", "Aguardando próximo epoch...", "Reiniciando em ~30s");
+        if (window._restartScheduled) return; // evita dupla chamada
+        window._restartScheduled = true;
+        setStatus("warn", "Aguardando próximo epoch...", "Reiniciando em ~10s");
         if (switchSub) switchSub.textContent = "Aguardando próximo epoch...";
+        // Timeout curto (10s) — o Service Kotlin também verifica a cada 30s
+        // como fallback caso este setTimeout seja throttled em background
         setTimeout(function() {
-          // Reinicia se autoMine está ativo — funciona mesmo com o painel em background
+          window._restartScheduled = false;
           if (saved.autoMine && !mining) {
-            log("🔄 Auto-reiniciando epoch (background OK)", "linf");
+            log("🔄 Auto-reiniciando epoch...", "linf");
             startMining();
           } else if (miningSwitch && miningSwitch.checked && !mining) {
             startMining();
           }
-        }, 30000);
+        }, 10000);
       }
     }
 
