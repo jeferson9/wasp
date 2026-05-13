@@ -551,6 +551,7 @@
 
   // ─── MINERAÇÃO ───────────────────────────────────────────────────────────
   async function startMining() {
+    if (mining) { log("startMining: já minerando — ignorado", "lwrn"); return; }
     if (!wasmReady || !saved.authorized || mining) return;
     try {
       setStatus("warn", "Conectando ao Miner...", "Inicializando sessão");
@@ -783,8 +784,12 @@
         window._epochEndRunning = false;
         window._doEpochClaim = null;
         window._claimMiner = null;
-        // Reinicia imediatamente após claim — Service também tem fallback
-        if (saved.autoMine && !mining) startMining();
+        // Reinicia só se não estiver minerando ainda
+        if (saved.autoMine && !mining && !window._startingMiner) {
+          window._startingMiner = true;
+          startMining();
+          setTimeout(function(){ window._startingMiner = false; }, 5000);
+        }
       };
 
       // Fallback: setTimeout caso o Service não consiga chamar (Activity destruída)
