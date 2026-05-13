@@ -804,6 +804,7 @@
     });
 
     mining = true; sessionStart = Date.now(); startUptimeTimer();
+    window._startMining = startMining; // expõe para o Service chamar diretamente
     // Salva timestamp do fim do epoch para o BeeBackgroundService monitorar em Kotlin
     try {
       var epochEnd = Date.now() + MINING_DURATION_MS + 5000;

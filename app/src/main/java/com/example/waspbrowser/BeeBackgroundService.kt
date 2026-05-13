@@ -103,9 +103,11 @@ class BeeBackgroundService : Service() {
         tickRunnable?.let { handler.removeCallbacks(it) }
         tickRunnable = Runnable {
             tickCount++
-            Log.d(TAG, "Tick #$tickCount — tentando runJs no BeeActivity")
+            Log.d(TAG, "Tick #$tickCount — verificando miner")
 
-            // Verifica se o miner está rodando e reinicia se necessário
+            // O Service é o timer real — não depende do setTimeout do JS
+            // que é throttled pelo Android quando em background.
+            // Chama startMining() diretamente se autoMine=true e não está minerando.
             val js = """
                 (function(){
                     try {
@@ -115,10 +117,15 @@ class BeeBackgroundService : Service() {
                             if (st) autoMine = JSON.parse(st).autoMine;
                         } catch(_) {}
                         var isMining = window._mining === true;
-                        console.log('[Svc] tick autoMine=' + autoMine + ' isMining=' + isMining);
-                        if (autoMine && !isMining && typeof window.onAppResume === 'function') {
-                            console.log('[Svc] Reiniciando miner via Service tick...');
-                            window.onAppResume();
+                        console.log('[Svc] tick #${"\$"}{$tickCount} autoMine=' + autoMine + ' isMining=' + isMining);
+                        if (autoMine && !isMining) {
+                            if (typeof window._startMining === 'function') {
+                                console.log('[Svc] Chamando _startMining() direto...');
+                                window._startMining();
+                            } else if (typeof window.onAppResume === 'function') {
+                                console.log('[Svc] Chamando onAppResume()...');
+                                window.onAppResume();
+                            }
                         }
                     } catch(e) { console.error('[Svc] ' + e); }
                 })()
