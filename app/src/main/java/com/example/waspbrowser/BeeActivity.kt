@@ -328,21 +328,22 @@ class BeeActivity : AppCompatActivity() {
             Log.d(TAG, "Bridge setMiningStatus: $active wallet=$wallet")
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, active).apply()
-            // O Service é o cérebro: inicia/para junto com a mineração
             try {
                 if (active) {
+                    // Mineração ligou — inicia Service e mostra overlay
                     val intent = BeeBackgroundService.buildStartIntent(this@BeeActivity, wallet)
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         startForegroundService(intent)
                     } else {
                         startService(intent)
                     }
-                    // Overlay mantém a Activity viva enquanto minera
                     mainHandler.post { showMiningOverlay() }
                 } else {
-                    hideMiningOverlay()
-                    if (!BeeBackgroundService.isActive(this@BeeActivity)) return
-                    startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
+                    // JS chama setMiningStatus(false) durante transição entre epochs
+                    // (coletando reward, aguardando restart). NÃO remove o overlay
+                    // nem para o Service — o overlay só some quando o usuário
+                    // desligar manualmente via stopBgMining().
+                    Log.d(TAG, "setMiningStatus(false) — mantendo overlay e Service ativos")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "setMiningStatus service error: ${e.message}")
@@ -410,6 +411,8 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun stopBgMining() {
+            // Usuário desligou manualmente — remove overlay e para Service
+            mainHandler.post { hideMiningOverlay() }
             try {
                 startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
             } catch (e: Exception) {
