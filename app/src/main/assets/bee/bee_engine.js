@@ -690,34 +690,34 @@
     // Propagacao pendente NAO deve bloquear o claim -- a rede aceita mesmo assim.
     function claimRewardSafe(claimMiner) {
       return new Promise(function(resolve) {
-        var waitStart = Date.now();
-        var MAX_WAIT = 90000; // 90s maximo esperando propagacao
+        // Nao esperar propagacao via setTimeout (throttled em background).
+        // Tenta get_reward() direto com até 3 tentativas.
+        var attempts = 0;
+        var MAX_ATTEMPTS = 3;
 
         function doClaim() {
-          if (!saved.propagated && (Date.now() - waitStart) < MAX_WAIT) {
-            var waited = Math.round((Date.now() - waitStart) / 1000);
-            log("⏳ Propagacao pendente (" + waited + "s) — aguardando mais 10s...", "linf");
-            setTimeout(doClaim, 10000);
-            return;
-          }
-          if (saved.propagated) {
-            log("✅ Propagacao confirmada — chamando get_reward()...", "lok");
-          } else {
-            log("⚠️ Propagacao nao confirmada apos " + Math.round(MAX_WAIT/1000) + "s — tentando claim mesmo assim...", "lwrn");
-          }
-          log("💰 Chamando get_reward()...", "linf");
+          attempts++;
+          log("💰 Chamando get_reward() (tentativa " + attempts + "/" + MAX_ATTEMPTS + ")...", "linf");
           claimMiner.get_reward().then(function() {
             log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
             log("💎 Verifique sua AN Wallet — saldo NACKL atualizado em breve.", "lok");
             var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
             toast("Reward NACKL enviado! ✅");
-          }).catch(function(e) {
-            var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
-            log("❌ get_reward() falhou: " + errMsg, "lerr");
-            log("ℹ️ Causas: Mambaboard inativo, rede instavel, ou epoch sem taps.", "lwrn");
-          }).finally(function() {
             try { claimMiner.stop(); } catch(_) {}
             resolve();
+          }).catch(function(e) {
+            var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
+            log("❌ get_reward() tentativa " + attempts + " falhou: " + errMsg, "lerr");
+            if (attempts < MAX_ATTEMPTS) {
+              // Tenta novamente em 5s — tempo curto para nao ficar throttled
+              log("🔄 Tentando novamente em 5s...", "lwrn");
+              setTimeout(doClaim, 5000);
+            } else {
+              log("⚠️ get_reward() falhou apos " + MAX_ATTEMPTS + " tentativas.", "lerr");
+              log("ℹ️ Causas: Mambaboard inativo, rede instavel, ou epoch sem taps.", "lwrn");
+              try { claimMiner.stop(); } catch(_) {}
+              resolve(); // resolve mesmo falhando para nao bloquear o restart
+            }
           });
         }
         doClaim();
@@ -745,6 +745,7 @@
       // FIX: guardar a instância que minerou — get_reward() precisa do contexto da sessão
       // NÃO chamar .stop() antes do get_reward() pois invalida o objeto WASM
       var claimMiner = miner;
+      window._claimMiner = miner; // referencia global — evita GC durante throttling
       miner = null; mining = false;
       sessionStart = null; stopUptimeTimer();
       if (miningSwitch) miningSwitch.checked = true;
@@ -757,6 +758,11 @@
       // O Service vai chamar _doEpochClaim() após 16s de slashing period
       window._doEpochClaim = async function() {
         log("💰 Service chamou _doEpochClaim()", "linf");
+        // Usa referencia global como fallback se closure foi GC'd
+        if (!claimMiner && window._claimMiner) {
+          log("🔄 Usando referencia global do claimMiner", "lwrn");
+          claimMiner = window._claimMiner;
+        }
         if (!claimMiner) {
           log("⚠️ Instância do miner perdida — reward não pôde ser coletado", "lerr");
           window._epochEndRunning = false;
@@ -776,6 +782,7 @@
         await claimRewardSafe(claimMiner);
         window._epochEndRunning = false;
         window._doEpochClaim = null;
+        window._claimMiner = null;
         // Reinicia imediatamente após claim — Service também tem fallback
         if (saved.autoMine && !mining) startMining();
       };
