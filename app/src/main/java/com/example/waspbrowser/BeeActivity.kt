@@ -50,7 +50,12 @@ class BeeActivity : AppCompatActivity() {
         var instance: java.lang.ref.WeakReference<BeeActivity>? = null
 
         fun runJs(js: String) {
-            instance?.get()?.evaluateJs(js)
+            val activity = instance?.get()
+            if (activity == null) {
+                Log.w(TAG, "runJs: BeeActivity instance é NULL — JS não executado")
+            } else {
+                activity.evaluateJs(js)
+            }
         }
     }
 
@@ -84,6 +89,12 @@ class BeeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_bee)
 
         instance = java.lang.ref.WeakReference(this)
+
+        // Se relançado pelo Service em background, volta imediatamente para o app anterior
+        if (intent?.getBooleanExtra("background_restart", false) == true) {
+            Log.d(TAG, "Relançado pelo Service em background — voltando ao app anterior")
+            moveTaskToBack(true)
+        }
         beeWebView = findViewById(R.id.beeWebView)
         window.decorView.setBackgroundColor(0xFF0B0B0D.toInt())
         beeWebView.setBackgroundColor(0xFF0B0B0D.toInt())

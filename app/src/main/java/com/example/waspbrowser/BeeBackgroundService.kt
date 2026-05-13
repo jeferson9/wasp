@@ -84,7 +84,8 @@ class BeeBackgroundService : Service() {
         }
 
         if (intent?.action == ACTION_EPOCH_ENDED) {
-            Log.d(TAG, "Epoch terminou — agendando restart em ${EPOCH_RESTART_DELAY/1000}s via Kotlin Handler")
+            Log.d(TAG, "Epoch terminou — agendando claim+restart")
+            ensureBeeActivityAlive()
             scheduleEpochRestart()
             return START_STICKY
         }
@@ -114,6 +115,29 @@ class BeeBackgroundService : Service() {
     private var tapRunnable: Runnable? = null
     private var tapCount = 0
     private val TAP_INTERVAL = 3_000L  // 1 tap a cada 3s = 100 taps em 5min
+
+    /**
+     * Garante que o BeeActivity está vivo.
+     * Se instance for null (Android destruiu a Activity), relança silenciosamente.
+     * O BeeActivity tem singleInstance — não cria nova instância se já existir.
+     */
+    private fun ensureBeeActivityAlive() {
+        if (BeeActivity.instance?.get() != null) return
+        Log.w(TAG, "BeeActivity destruída — relançando para restaurar WebView")
+        try {
+            val intent = Intent(this, BeeActivity::class.java).apply {
+                addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                )
+                putExtra("background_restart", true)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "ensureBeeActivityAlive erro: ${e.message}")
+        }
+    }
 
     private fun scheduleTaps() {
         tapRunnable?.let { handler.removeCallbacks(it) }
@@ -173,7 +197,10 @@ class BeeBackgroundService : Service() {
         epochRestartRunnable?.let { handler.removeCallbacks(it) }
         tickRunnable = Runnable {
             tickCount++
-            Log.d(TAG, "Tick #$tickCount — verificando miner")
+            Log.d(TAG, "Tick #$tickCount | BeeActivity viva: ${BeeActivity.instance?.get() != null}")
+
+            // Garante que o BeeActivity está vivo a cada tick
+            ensureBeeActivityAlive()
 
             // O Service é o timer real — não depende do setTimeout do JS
             // que é throttled pelo Android quando em background.
