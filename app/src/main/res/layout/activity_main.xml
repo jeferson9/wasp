@@ -51,7 +51,7 @@
     <FrameLayout
         android:id="@+id/bee_panel_container"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="120dp"
         android:background="#0B0B0D"
         android:visibility="gone" />
 

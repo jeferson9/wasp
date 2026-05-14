@@ -1126,15 +1126,15 @@ class MainActivity : AppCompatActivity() {
         beePanelExpanded = true
         findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.GONE
         topBar.visibility = android.view.View.GONE
-        // Remove o mini bar para mostrar o painel real
+        // Expande: remove overlay e restaura scroll
         persistentBeeView?.evaluateJavascript("""
             (function(){
                 if (window._miniBarInterval) { clearInterval(window._miniBarInterval); window._miniBarInterval = null; }
-                var bar = document.getElementById('wasp-mini-bar');
-                if (bar) bar.style.display = 'none';
-                // Restaura o scroll e visibilidade do conteúdo original
+                var overlay = document.getElementById('wasp-tap-overlay');
+                if (overlay) overlay.style.display = 'none';
                 document.body.style.overflow = '';
                 document.documentElement.style.overflow = '';
+                window.scrollTo(0, 0);
             })()
         """.trimIndent(), null)
     }
@@ -1142,7 +1142,7 @@ class MainActivity : AppCompatActivity() {
     fun collapseBeePanel() {
         // Minimiza para rodapé fixo — Bee continua viva e visível
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
-        val dp56 = (56 * resources.displayMetrics.density).toInt()
+        val dp56 = (120 * resources.displayMetrics.density).toInt()
         val params = container.layoutParams
         params.height = dp56
         container.layoutParams = params
@@ -1151,38 +1151,33 @@ class MainActivity : AppCompatActivity() {
         // Restaura conteúdo principal
         findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.VISIBLE
         topBar.visibility = if (geckoView.visibility == android.view.View.VISIBLE) android.view.View.VISIBLE else android.view.View.GONE
-        // Injeta barra de status compacta com auto-update
+        // Minimizado: trava o scroll no topo para mostrar o topo do painel real
+        // O usuario ve o painel real (header com status) — nao um mini bar separado
         persistentBeeView?.evaluateJavascript("""
             (function(){
-                // Para qualquer update loop anterior
-                if (window._miniBarInterval) clearInterval(window._miniBarInterval);
+                if (window._miniBarInterval) { clearInterval(window._miniBarInterval); window._miniBarInterval = null; }
 
-                var bar = document.getElementById('wasp-mini-bar');
-                if (!bar) {
-                    bar = document.createElement('div');
-                    bar.id = 'wasp-mini-bar';
-                    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:56px;background:#0B0B0D;display:flex;align-items:center;justify-content:space-between;padding:0 16px;cursor:pointer;z-index:9999;font-family:sans-serif;border-top:1px solid #222;';
-                    bar.innerHTML = '<span style="font-size:20px;">🐝</span><span id="wasp-mini-status" style="color:#fff;font-size:13px;flex:1;margin-left:10px;">Minerando NACKL...</span><span style="color:#FFD700;font-size:12px;border:1px solid #FFD700;padding:2px 8px;border-radius:4px;">Abrir</span>';
-                    document.body.appendChild(bar);
+                // Remove mini bar anterior se existir
+                var old = document.getElementById('wasp-mini-bar');
+                if (old) old.remove();
+
+                // Cria overlay clicavel transparente que cobre o painel e abre ao tocar
+                var overlay = document.getElementById('wasp-tap-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'wasp-tap-overlay';
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;cursor:pointer;background:transparent;';
+                    overlay.onclick = function() {
+                        try { AndroidBee.openPanel(); } catch(e) {}
+                    };
+                    document.body.appendChild(overlay);
                 }
-                bar.style.display = 'flex';
+                overlay.style.display = 'block';
 
-                // Clique abre o painel via ponte Kotlin
-                bar.onclick = function() {
-                    try { AndroidBee.openPanel(); } catch(e) { console.log('openPanel erro: ' + e); }
-                };
-
-                // Atualiza status a cada 2s
-                function updateStatus() {
-                    var statusEl = document.getElementById('wasp-mini-status');
-                    if (!statusEl) return;
-                    var taps = window._tapCountEpoch || 0;
-                    statusEl.textContent = window._mining
-                        ? ('⛏ ' + taps + '/100 taps')
-                        : '⏸ Aguardando...';
-                }
-                updateStatus();
-                window._miniBarInterval = setInterval(updateStatus, 2000);
+                // Trava scroll no topo para mostrar header do painel
+                window.scrollTo(0, 0);
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
             })()
         """.trimIndent(), null)
     }
@@ -1191,7 +1186,7 @@ class MainActivity : AppCompatActivity() {
         // Mostra o rodapé da Bee sem expandir (chamado quando mineração inicia)
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
         if (container.visibility == android.view.View.GONE) {
-            val dp56 = (56 * resources.displayMetrics.density).toInt()
+            val dp56 = (120 * resources.displayMetrics.density).toInt()
             container.layoutParams.height = dp56
             container.visibility = android.view.View.VISIBLE
         }
