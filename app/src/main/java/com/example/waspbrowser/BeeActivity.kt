@@ -176,9 +176,34 @@ class BeeActivity : AppCompatActivity() {
                 fun getMiningStatus(): String = """{"running":${BeeBackgroundService.isActive(context)}}"""
 
                 @android.webkit.JavascriptInterface
-                fun openDeepLink(url: String) {}
+                fun openDeepLink(url: String) {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(url)).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "openDeepLink erro: ${e.message}")
+                        }
+                    }
+                }
+
                 @android.webkit.JavascriptInterface
-                fun openExternalUrl(url: String) {}
+                fun openExternalUrl(url: String) {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(url)).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "openExternalUrl erro: ${e.message}")
+                        }
+                    }
+                }
                 @android.webkit.JavascriptInterface
                 fun openEnergyPage() {}
                 @android.webkit.JavascriptInterface

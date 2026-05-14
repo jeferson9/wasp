@@ -366,7 +366,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Fade ao voltar do BeeActivity (troca de task)
         @Suppress("DEPRECATION")
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         webAppView.onResume()
@@ -375,6 +374,12 @@ class MainActivity : AppCompatActivity() {
         if (::webAppView.isInitialized && webAppView.visibility == View.VISIBLE &&
             ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
             webAppView.evaluateJavascript("setBottomTab('main')", null)
+        }
+        // Notifica a Bee persistente que o app voltou ao foco (ex: voltou da AN Wallet)
+        persistentBeeView?.post {
+            persistentBeeView?.resumeTimers()
+            persistentBeeView?.evaluateJavascript(
+                "if(window.onWalletReturn) window.onWalletReturn();", null)
         }
     }
 
