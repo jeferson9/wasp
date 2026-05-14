@@ -49,12 +49,133 @@ class BeeActivity : AppCompatActivity() {
 
         var instance: java.lang.ref.WeakReference<BeeActivity>? = null
 
+        // WebView persistente na MainActivity — nunca é destruída
+        private var persistentWebView: java.lang.ref.WeakReference<android.webkit.WebView>? = null
+
+        fun setPersistentWebView(wv: android.webkit.WebView) {
+            persistentWebView = java.lang.ref.WeakReference(wv)
+            Log.d(TAG, "persistentWebView registrada")
+        }
+
         fun runJs(js: String) {
+            // Tenta primeiro na WebView persistente da MainActivity
+            val persistent = persistentWebView?.get()
+            if (persistent != null) {
+                persistent.post {
+                    runCatching {
+                        persistent.resumeTimers()
+                        persistent.evaluateJavascript(js, null)
+                    }
+                }
+                return
+            }
+            // Fallback: BeeActivity se ainda existir
             val activity = instance?.get()
             if (activity == null) {
-                Log.w(TAG, "runJs: BeeActivity instance é NULL — JS não executado")
+                Log.w(TAG, "runJs: sem WebView disponível — JS não executado")
             } else {
                 activity.evaluateJs(js)
+            }
+        }
+
+        // Cria a bridge para ser usada pela WebView persistente na MainActivity
+        fun createBridge(context: android.content.Context, wv: android.webkit.WebView): Any {
+            // Retorna uma instância da bridge interna
+            // A MainActivity vai usar essa bridge com addJavascriptInterface
+            return object {
+                @android.webkit.JavascriptInterface
+                fun ping(): String = "pong-persistent"
+
+                @android.webkit.JavascriptInterface
+                fun setMiningStatus(active: Boolean, wallet: String) {
+                    Log.d(TAG, "[PersistentBee] setMiningStatus: $active wallet=$wallet")
+                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .edit().putBoolean("mining_active", active).apply()
+                    try {
+                        if (active) {
+                            val intent = BeeBackgroundService.buildStartIntent(context, wallet)
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                context.startForegroundService(intent)
+                            } else { context.startService(intent) }
+                        }
+                    } catch (e: Exception) { Log.e(TAG, "setMiningStatus error: ${e.message}") }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun onEpochStarted() {
+                    try {
+                        context.startService(Intent(context, BeeBackgroundService::class.java).apply {
+                            action = "com.example.waspbrowser.BEE_EPOCH_STARTED"
+                        })
+                    } catch (_: Exception) {}
+                }
+
+                @android.webkit.JavascriptInterface
+                fun onEpochEnded() {
+                    try {
+                        context.startService(Intent(context, BeeBackgroundService::class.java).apply {
+                            action = BeeBackgroundService.ACTION_EPOCH_ENDED
+                        })
+                    } catch (_: Exception) {}
+                }
+
+                @android.webkit.JavascriptInterface
+                fun stopBgMining() {
+                    try { context.startService(BeeBackgroundService.buildStopIntent(context)) }
+                    catch (_: Exception) {}
+                }
+
+                @android.webkit.JavascriptInterface
+                fun toast(msg: String) {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun navigateTo(screen: String) {}
+
+                @android.webkit.JavascriptInterface
+                fun goBack() {}
+
+                @android.webkit.JavascriptInterface
+                fun hasWasm(): Boolean = try {
+                    context.assets.open("bee/bee_sdk_bg.wasm").close(); true
+                } catch (_: Exception) { false }
+
+                @android.webkit.JavascriptInterface
+                fun checkAssets(): String = try {
+                    context.assets.list("bee")?.joinToString(", ") ?: "vazio"
+                } catch (e: Exception) { "erro: ${e.message}" }
+
+                @android.webkit.JavascriptInterface
+                fun startBgMining(durationMs: Long, walletName: String) {
+                    setMiningStatus(true, walletName)
+                }
+
+                @android.webkit.JavascriptInterface
+                fun getBgMiningStatus(): String {
+                    val active = BeeBackgroundService.isActive(context)
+                    return """{"active":$active,"remainingMs":999999999,"cycles":0,"wallet":""}"""
+                }
+
+                @android.webkit.JavascriptInterface
+                fun getMiningStatus(): String = """{"running":${BeeBackgroundService.isActive(context)}}"""
+
+                @android.webkit.JavascriptInterface
+                fun openDeepLink(url: String) {}
+                @android.webkit.JavascriptInterface
+                fun openExternalUrl(url: String) {}
+                @android.webkit.JavascriptInterface
+                fun openEnergyPage() {}
+                @android.webkit.JavascriptInterface
+                fun openWpAd() {}
+                @android.webkit.JavascriptInterface
+                fun openCentral() {}
+                @android.webkit.JavascriptInterface
+                fun isEnergyReady(): Boolean = false
+                @android.webkit.JavascriptInterface
+                fun clearEnergyReady() {}
             }
         }
     }

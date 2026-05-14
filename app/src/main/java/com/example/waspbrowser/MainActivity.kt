@@ -264,6 +264,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var topBar: View
     private lateinit var webAppView: WebView
     private lateinit var beeMiningIndicator: MiningIndicator
+    private var persistentBeeView: android.webkit.WebView? = null
+    private var beePanelExpanded = false
     private lateinit var geckoView: GeckoView
     private lateinit var btnBack: ImageButton
     private lateinit var btnHome: ImageButton
@@ -319,6 +321,7 @@ class MainActivity : AppCompatActivity() {
         setupGecko()
         setupTopBar()
         setupUrlInput()
+        setupPersistentBee()
 
         webAppView.loadUrl("file:///android_asset/index.html")
         webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
@@ -1109,13 +1112,81 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
-        val intent = Intent(this, BeeActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        expandBeePanel()
+    }
+
+    private fun expandBeePanel() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        container.visibility = android.view.View.VISIBLE
+        val params = container.layoutParams
+        params.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+        container.layoutParams = params
+        beePanelExpanded = true
+        // Esconde o conteúdo principal mas mantém tudo vivo
+        findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.GONE
+        topBar.visibility = android.view.View.GONE
+    }
+
+    fun collapseBeePanel() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        val dp120 = (120 * resources.displayMetrics.density).toInt()
+        val params = container.layoutParams
+        params.height = dp120
+        container.layoutParams = params
+        container.visibility = android.view.View.VISIBLE
+        beePanelExpanded = false
+    }
+
+    @android.annotation.SuppressLint("SetJavaScriptEnabled")
+    private fun setupPersistentBee() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+
+        val wv = android.webkit.WebView(this)
+        wv.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            allowFileAccess = true
+            @Suppress("DEPRECATION") allowFileAccessFromFileURLs = true
+            @Suppress("DEPRECATION") allowUniversalAccessFromFileURLs = true
+            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
         }
-        startActivity(intent)
-        // 0, 0 = sem animacao — evita slide branco do sistema entre tasks
-        @Suppress("DEPRECATION")
-        overridePendingTransition(0, 0)
+        wv.setBackgroundColor(0xFF0B0B0D.toInt())
+
+        // Usa a mesma bridge do BeeActivity
+        val bridge = BeeActivity.createBridge(this, wv)
+        wv.addJavascriptInterface(bridge, "AndroidBee")
+
+        wv.webViewClient = object : android.webkit.WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: android.webkit.WebView?,
+                request: android.webkit.WebResourceRequest?
+            ): android.webkit.WebResourceResponse? {
+                val url = request?.url?.toString() ?: return null
+                if (url.endsWith(".wasm")) {
+                    return try {
+                        android.webkit.WebResourceResponse(
+                            "application/wasm", "binary", 200, "OK",
+                            mapOf("Access-Control-Allow-Origin" to "*"),
+                            assets.open("bee/bee_sdk_bg.wasm")
+                        )
+                    } catch (e: Exception) { null }
+                }
+                return null
+            }
+
+            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                android.util.Log.d("PersistentBee", "Página carregada — Bee persistente pronta")
+                // Registra esta WebView no BeeActivity para que o Service possa usar runJs
+                BeeActivity.setPersistentWebView(wv)
+            }
+        }
+
+        wv.loadUrl("file:///android_asset/bee/index.html")
+        container.addView(wv)
+        persistentBeeView = wv
+        android.util.Log.d("PersistentBee", "Bee WebView persistente criada na MainActivity")
     }
 
     // =========================================================

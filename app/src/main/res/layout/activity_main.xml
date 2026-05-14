@@ -14,7 +14,9 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
+    <!-- Conteúdo principal (home + browser) -->
     <FrameLayout
+        android:id="@+id/main_content_frame"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
@@ -43,5 +45,13 @@
             android:visibility="gone" />
 
     </FrameLayout>
+
+    <!-- Bee WebView persistente — NUNCA é destruída enquanto o app estiver aberto -->
+    <FrameLayout
+        android:id="@+id/bee_panel_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#0B0B0D"
+        android:visibility="gone" />
 
 </LinearLayout>
