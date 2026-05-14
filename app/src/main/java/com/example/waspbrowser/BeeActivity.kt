@@ -133,10 +133,23 @@ class BeeActivity : AppCompatActivity() {
                 }
 
                 @android.webkit.JavascriptInterface
+                fun openPanel() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        (context as? MainActivity)?.openBeePanel()
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
                 fun navigateTo(screen: String) {}
 
                 @android.webkit.JavascriptInterface
-                fun goBack() {}
+                fun goBack() {
+                    // Usuário clicou voltar no painel Bee → minimiza para rodapé
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        (context as? MainActivity)?.collapseBeePanel()
+                        (context as? MainActivity)?.goHome()
+                    }
+                }
 
                 @android.webkit.JavascriptInterface
                 fun hasWasm(): Boolean = try {

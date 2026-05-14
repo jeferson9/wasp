@@ -394,21 +394,20 @@ class MainActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        // Se o painel Bee está expandido, volta para home em vez de fechar o app
-        if (beePanelExpanded) {
-            collapseBeePanel()
-            goHome()
-            return
-        }
-        if (geckoView.visibility == View.VISIBLE) {
-            when {
+        when {
+            // Painel expandido → minimiza para rodapé
+            beePanelExpanded -> {
+                collapseBeePanel()
+                goHome()
+            }
+            // Browser aberto → navega back ou vai home
+            geckoView.visibility == View.VISIBLE -> when {
                 popupSession != null -> resetToMainSession()
                 canGoBackGecko -> getActiveSession().goBack()
                 else -> goHome()
             }
-        } else {
-            // Na home, volta para background em vez de fechar
-            moveTaskToBack(true)
+            // Home → minimiza app (não fecha)
+            else -> moveTaskToBack(true)
         }
     }
 
@@ -1119,28 +1118,65 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
-        expandBeePanel()
-    }
-
-    private fun expandBeePanel() {
+        // Expande painel para fullscreen quando usuario clica no botão Bee
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
         container.visibility = android.view.View.VISIBLE
         val params = container.layoutParams
         params.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
         container.layoutParams = params
         beePanelExpanded = true
-        // Esconde o conteúdo principal mas mantém tudo vivo
         findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.GONE
         topBar.visibility = android.view.View.GONE
     }
 
     fun collapseBeePanel() {
+        // Minimiza para rodapé fixo — Bee continua viva e visível
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
-        val dp120 = (120 * resources.displayMetrics.density).toInt()
+        val dp56 = (56 * resources.displayMetrics.density).toInt()
         val params = container.layoutParams
-        params.height = dp120
+        params.height = dp56
         container.layoutParams = params
         container.visibility = android.view.View.VISIBLE
+        beePanelExpanded = false
+        // Restaura conteúdo principal
+        findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.VISIBLE
+        topBar.visibility = if (geckoView.visibility == android.view.View.VISIBLE) android.view.View.VISIBLE else android.view.View.GONE
+        // Injeta barra de status compacta no WebView minimizado
+        persistentBeeView?.evaluateJavascript("""
+            (function(){
+                var bar = document.getElementById('wasp-mini-bar');
+                if (!bar) {
+                    bar = document.createElement('div');
+                    bar.id = 'wasp-mini-bar';
+                    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:0;background:#0B0B0D;display:flex;align-items:center;justify-content:space-between;padding:0 16px;cursor:pointer;z-index:9999;';
+                    bar.innerHTML = '<span style="color:#FFD700;font-size:18px;">🐝</span><span id="wasp-mini-status" style="color:#fff;font-size:13px;flex:1;margin-left:10px;">Minerando NACKL...</span><span style="color:#FFD700;font-size:12px;">▲ abrir</span>';
+                    bar.onclick = function(){ if(window.AndroidBee) AndroidBee.openPanel(); };
+                    document.body.appendChild(bar);
+                }
+                bar.style.display = 'flex';
+                // Atualiza status
+                var statusEl = document.getElementById('wasp-mini-status');
+                if (statusEl) {
+                    var taps = window._tapCountEpoch || 0;
+                    statusEl.textContent = window._mining ? ('⛏ Minerando — ' + taps + '/100 taps') : '⏸ Aguardando epoch...';
+                }
+            })()
+        """.trimIndent(), null)
+    }
+
+    fun showBeeFooter() {
+        // Mostra o rodapé da Bee sem expandir (chamado quando mineração inicia)
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        if (container.visibility == android.view.View.GONE) {
+            val dp56 = (56 * resources.displayMetrics.density).toInt()
+            container.layoutParams.height = dp56
+            container.visibility = android.view.View.VISIBLE
+        }
+    }
+
+    fun hideBeeFooter() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        container.visibility = android.view.View.GONE
         beePanelExpanded = false
     }
 

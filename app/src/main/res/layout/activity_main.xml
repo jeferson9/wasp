@@ -6,7 +6,7 @@
     android:fitsSystemWindows="true"
     android:background="#111420">
 
-    <!-- Toolbar: começa GONE, só aparece ao navegar -->
+    <!-- Toolbar -->
     <include
         android:id="@+id/topBar"
         layout="@layout/toolbar_wasp"
@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <!-- Conteúdo principal (home + browser) -->
+    <!-- Conteúdo principal (home + browser) — ocupa o espaço restante -->
     <FrameLayout
         android:id="@+id/main_content_frame"
         android:layout_width="match_parent"
@@ -46,11 +46,12 @@
 
     </FrameLayout>
 
-    <!-- Bee WebView persistente — NUNCA é destruída enquanto o app estiver aberto -->
+    <!-- Bee Panel: rodapé fixo, sempre visível quando mineração ativa -->
+    <!-- Altura 56dp = minimizado (só status bar) -->
     <FrameLayout
         android:id="@+id/bee_panel_container"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="56dp"
         android:background="#0B0B0D"
         android:visibility="gone" />
 
