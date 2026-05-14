@@ -394,6 +394,12 @@ class MainActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
+        // Se o painel Bee está expandido, volta para home em vez de fechar o app
+        if (beePanelExpanded) {
+            collapseBeePanel()
+            goHome()
+            return
+        }
         if (geckoView.visibility == View.VISIBLE) {
             when {
                 popupSession != null -> resetToMainSession()
@@ -401,7 +407,8 @@ class MainActivity : AppCompatActivity() {
                 else -> goHome()
             }
         } else {
-            super.onBackPressed()
+            // Na home, volta para background em vez de fechar
+            moveTaskToBack(true)
         }
     }
 
