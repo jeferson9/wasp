@@ -1118,7 +1118,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
-        // Expande painel para fullscreen quando usuario clica no botão Bee
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
         container.visibility = android.view.View.VISIBLE
         val params = container.layoutParams
@@ -1127,6 +1126,17 @@ class MainActivity : AppCompatActivity() {
         beePanelExpanded = true
         findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.GONE
         topBar.visibility = android.view.View.GONE
+        // Remove o mini bar para mostrar o painel real
+        persistentBeeView?.evaluateJavascript("""
+            (function(){
+                if (window._miniBarInterval) { clearInterval(window._miniBarInterval); window._miniBarInterval = null; }
+                var bar = document.getElementById('wasp-mini-bar');
+                if (bar) bar.style.display = 'none';
+                // Restaura o scroll e visibilidade do conteúdo original
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            })()
+        """.trimIndent(), null)
     }
 
     fun collapseBeePanel() {
@@ -1151,7 +1161,7 @@ class MainActivity : AppCompatActivity() {
                 if (!bar) {
                     bar = document.createElement('div');
                     bar.id = 'wasp-mini-bar';
-                    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:0;background:#0B0B0D;display:flex;align-items:center;justify-content:space-between;padding:0 16px;cursor:pointer;z-index:9999;font-family:sans-serif;';
+                    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:56px;background:#0B0B0D;display:flex;align-items:center;justify-content:space-between;padding:0 16px;cursor:pointer;z-index:9999;font-family:sans-serif;border-top:1px solid #222;';
                     bar.innerHTML = '<span style="font-size:20px;">🐝</span><span id="wasp-mini-status" style="color:#fff;font-size:13px;flex:1;margin-left:10px;">Minerando NACKL...</span><span style="color:#FFD700;font-size:12px;border:1px solid #FFD700;padding:2px 8px;border-radius:4px;">Abrir</span>';
                     document.body.appendChild(bar);
                 }
