@@ -615,8 +615,7 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun stopBgMining() {
-            // Usuário desligou manualmente — remove overlay e para Service
-            mainHandler.post { hideMiningOverlay() }
+
             try {
                 startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
             } catch (e: Exception) {
@@ -776,7 +775,6 @@ class BeeActivity : AppCompatActivity() {
                 .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
         }
         // Libera o WakeLock ao destruir a Activity
-        hideMiningOverlay()
         runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
         wakeLock = null
         instance = null
