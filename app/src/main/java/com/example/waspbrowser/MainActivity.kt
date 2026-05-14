@@ -1141,25 +1141,38 @@ class MainActivity : AppCompatActivity() {
         // Restaura conteúdo principal
         findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.VISIBLE
         topBar.visibility = if (geckoView.visibility == android.view.View.VISIBLE) android.view.View.VISIBLE else android.view.View.GONE
-        // Injeta barra de status compacta no WebView minimizado
+        // Injeta barra de status compacta com auto-update
         persistentBeeView?.evaluateJavascript("""
             (function(){
+                // Para qualquer update loop anterior
+                if (window._miniBarInterval) clearInterval(window._miniBarInterval);
+
                 var bar = document.getElementById('wasp-mini-bar');
                 if (!bar) {
                     bar = document.createElement('div');
                     bar.id = 'wasp-mini-bar';
-                    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:0;background:#0B0B0D;display:flex;align-items:center;justify-content:space-between;padding:0 16px;cursor:pointer;z-index:9999;';
-                    bar.innerHTML = '<span style="color:#FFD700;font-size:18px;">🐝</span><span id="wasp-mini-status" style="color:#fff;font-size:13px;flex:1;margin-left:10px;">Minerando NACKL...</span><span style="color:#FFD700;font-size:12px;">▲ abrir</span>';
-                    bar.onclick = function(){ if(window.AndroidBee) AndroidBee.openPanel(); };
+                    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;top:0;background:#0B0B0D;display:flex;align-items:center;justify-content:space-between;padding:0 16px;cursor:pointer;z-index:9999;font-family:sans-serif;';
+                    bar.innerHTML = '<span style="font-size:20px;">🐝</span><span id="wasp-mini-status" style="color:#fff;font-size:13px;flex:1;margin-left:10px;">Minerando NACKL...</span><span style="color:#FFD700;font-size:12px;border:1px solid #FFD700;padding:2px 8px;border-radius:4px;">Abrir</span>';
                     document.body.appendChild(bar);
                 }
                 bar.style.display = 'flex';
-                // Atualiza status
-                var statusEl = document.getElementById('wasp-mini-status');
-                if (statusEl) {
+
+                // Clique abre o painel via ponte Kotlin
+                bar.onclick = function() {
+                    try { AndroidBee.openPanel(); } catch(e) { console.log('openPanel erro: ' + e); }
+                };
+
+                // Atualiza status a cada 2s
+                function updateStatus() {
+                    var statusEl = document.getElementById('wasp-mini-status');
+                    if (!statusEl) return;
                     var taps = window._tapCountEpoch || 0;
-                    statusEl.textContent = window._mining ? ('⛏ Minerando — ' + taps + '/100 taps') : '⏸ Aguardando epoch...';
+                    statusEl.textContent = window._mining
+                        ? ('⛏ ' + taps + '/100 taps')
+                        : '⏸ Aguardando...';
                 }
+                updateStatus();
+                window._miniBarInterval = setInterval(updateStatus, 2000);
             })()
         """.trimIndent(), null)
     }
