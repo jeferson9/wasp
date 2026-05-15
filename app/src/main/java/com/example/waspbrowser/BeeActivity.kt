@@ -9,13 +9,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
-import android.view.WindowManager
-import android.view.Gravity
-import android.graphics.PixelFormat
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.provider.Settings
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -37,7 +33,6 @@ import androidx.core.view.WindowCompat
 class BeeActivity : AppCompatActivity() {
 
     private var wakeLock: PowerManager.WakeLock? = null
-    private var overlayView: android.view.View? = null
 
     companion object {
         private const val TAG = "BeeActivity"
@@ -635,67 +630,6 @@ class BeeActivity : AppCompatActivity() {
     }
 
 
-    /**
-     * Cria uma janela 1x1 pixel completamente transparente e invisível.
-     * Isso mantém o BeeActivity no estado "visível" para o Android,
-     * impedindo que o sistema o destrua quando o usuário navega para outro app.
-     * Sem isso, o Android pode matar a Activity e o WebView para liberar memória.
-     */
-    private fun showMiningOverlay() {
-        if (overlayView != null) return
-        // Android 6+: precisa de permissao para janela overlay
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Log.w(TAG, "Sem permissao SYSTEM_ALERT_WINDOW — solicitando...")
-            try {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    android.net.Uri.parse("package:$packageName"))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-            } catch (_: Exception) {}
-            return
-        }
-        try {
-            val wm = getSystemService(WINDOW_SERVICE) as WindowManager
-            // TESTE VISUAL: botão 120x120dp laranja com emoji de abelha
-            val view = android.widget.TextView(this).apply {
-                text = "🐝"
-                textSize = 32f
-                gravity = android.view.Gravity.CENTER
-                setBackgroundColor(0xFFFF6600.toInt())
-                setPadding(16, 16, 16, 16)
-            }
-            val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            } else {
-                @Suppress("DEPRECATION")
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
-            }
-            val size = (120 * resources.displayMetrics.density).toInt()
-            val params = WindowManager.LayoutParams(
-                size, size, type,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                PixelFormat.TRANSLUCENT
-            )
-            params.gravity = Gravity.TOP or Gravity.END
-            params.x = 16; params.y = 200
-            wm.addView(view, params)
-            overlayView = view
-            Log.d(TAG, "Mining overlay criado — Activity protegida de destruição")
-        } catch (e: Exception) {
-            Log.w(TAG, "Overlay não disponível: ${e.message} — usando apenas WakeLock")
-        }
-    }
-
-    private fun hideMiningOverlay() {
-        overlayView?.let {
-            try {
-                (getSystemService(WINDOW_SERVICE) as WindowManager).removeView(it)
-            } catch (_: Exception) {}
-            overlayView = null
-        }
-    }
 
     override fun onResume() {
         super.onResume()
