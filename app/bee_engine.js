@@ -542,10 +542,21 @@
   btnOpenAgain.addEventListener("click", () => { if (deepLink) openDeepLink(deepLink); });
   btnReset.addEventListener("click", doReset);
 
-  // Retorno ao app após AN Wallet
+  // Retorno ao app após AN Wallet ou navegação
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && setupRunning === false && deepLink && !saved.authorized) {
       log("App retomado. Verificando autorização...", "linf");
+    }
+    
+    // NOVO: Retoma mineração se estava ativa e foi pausada por navegação
+    if (!document.hidden && mining === false && saved.authorized && miningSwitch.checked) {
+      log("App retomado. Retomando mineração...", "linf");
+      startMining();
+    }
+    
+    // Pausa o timer de uptime quando tira foco
+    if (document.hidden && mining) {
+      stopUptimeTimer();
     }
   });
 
