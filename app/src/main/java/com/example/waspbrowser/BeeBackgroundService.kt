@@ -218,8 +218,11 @@ class BeeBackgroundService : Service() {
 
         val openIntent = PendingIntent.getActivity(
             this, 0,
-            Intent(this, BeeActivity::class.java).apply {
+            // Abre a MainActivity em vez da BeeActivity — o BeeDock dela é o WebView
+            // persistente da mineração. Evita que existam 2 WebViews concorrentes.
+            Intent(this, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                putExtra("navigate_to", "bee_panel")
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

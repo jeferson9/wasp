@@ -1,28 +1,43 @@
 package com.example.waspbrowser
 
+import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.URLUtil
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.rewarded.RewardItem
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import org.json.JSONArray
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
@@ -57,6 +72,12 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private var geckoRuntime: GeckoRuntime? = null
+
+        // ─── Bee Dock ───────────────────────────────────────────────────────
+        private const val BEE_DOCK_TAG = "BeeDock"
+        private const val BEE_DOCK_COLLAPSED_HEIGHT_DP = 48
+        // ID de teste do AdMob — trocar pelo real em produção (mesmo da BeeActivity)
+        private const val BEE_REWARDED_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
     }
 
     // =========================================================
@@ -286,6 +307,23 @@ class MainActivity : AppCompatActivity() {
     private var currentTitle: String = ""
     private var sslErrorActive = false
 
+    // ─── BEE DOCK PERSISTENTE ───────────────────────────────────────────────
+    // WebView do painel Bee fica vivo dentro da MainActivity. Nunca é destruído
+    // enquanto a Activity raiz viver — mineração não para ao navegar pelo app.
+    private lateinit var beeDock: FrameLayout
+    private lateinit var beeDockWebView: WebView
+    private lateinit var beeDockTapOverlay: View
+    private var isBeeDockExpanded = false
+    private var beeDockPageLoaded = false
+    private var beeDockSetupDone = false
+
+    // AdMob para o dock (reaproveita IDs / fluxo da BeeActivity)
+    private var beeRewardedAd: RewardedAd? = null
+    private var beeAdMode: String? = null
+    private var beeEnergyGranted = false
+    private var beeWpGranted = false
+    private var isBeeAdShowing = false
+
     // =========================================================
     // LIFECYCLE
     // =========================================================
@@ -315,6 +353,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         bindViews()
+        setupBeeDock()
         setupWebAppView()
         setupGecko()
         setupTopBar()
@@ -349,6 +388,10 @@ class MainActivity : AppCompatActivity() {
         // Salva estado para persistir entre Activities
         getSharedPreferences("bee_mining", MODE_PRIVATE)
             .edit().putBoolean("mining_active", active).apply()
+        // Reflete imediatamente no dock: ligou → mostra rodapé; desligou → oculta
+        if (beeDockSetupDone && !isBeeDockExpanded) {
+            collapseBeeDock()
+        }
     }
 
     private fun updateMiningIndicator() {
@@ -365,6 +408,18 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         webAppView.onResume()
         webAppView.resumeTimers()
+        // Despertar o WebView do dock — mantém a mineração responsiva ao voltar
+        if (::beeDockWebView.isInitialized) {
+            beeDockWebView.onResume()
+            beeDockWebView.resumeTimers()
+            beeDockWebView.post {
+                runCatching {
+                    beeDockWebView.evaluateJavascript(
+                        "if(window.onAppResume) window.onAppResume()", null
+                    )
+                }
+            }
+        }
         updateMiningIndicator()
         if (::webAppView.isInitialized && webAppView.visibility == View.VISIBLE &&
             ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
@@ -376,6 +431,18 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         webAppView.onPause()
         webAppView.pauseTimers()
+        // NÃO chamamos onPause/pauseTimers no beeDockWebView de propósito.
+        // bee_engine.js precisa continuar minerando mesmo com o app em background.
+        // (Idêntico ao comportamento da BeeActivity stand-alone.)
+        if (::beeDockWebView.isInitialized) {
+            beeDockWebView.post {
+                runCatching {
+                    beeDockWebView.evaluateJavascript(
+                        "if(window.onAppPause) window.onAppPause()", null
+                    )
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -384,10 +451,20 @@ class MainActivity : AppCompatActivity() {
         try { geckoSession.close() } catch (_: Exception) {}
         webAppView.stopLoading()
         webAppView.destroy()
+        if (::beeDockWebView.isInitialized) {
+            runCatching { beeDockWebView.stopLoading() }
+            runCatching { beeDockWebView.destroy() }
+        }
     }
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
+        // 1) Bee Dock expandido → colapsa para o rodapé (mantém mineração viva)
+        if (isBeeDockExpanded) {
+            collapseBeeDock()
+            return
+        }
+        // 2) Fluxo original
         if (geckoView.visibility == View.VISIBLE) {
             when {
                 popupSession != null -> resetToMainSession()
@@ -494,14 +571,15 @@ class MainActivity : AppCompatActivity() {
             intent.removeExtra("navigate_to")
             runOnUiThread {
                 when (navigateTo) {
-                    "home"   -> webAppView.evaluateJavascript("resetHome && resetHome()", null)
-                    "market" -> webAppView.evaluateJavascript("openMarketTab && openMarketTab()", null)
-                    "hive"   -> webAppView.evaluateJavascript("""
+                    "home"      -> webAppView.evaluateJavascript("resetHome && resetHome()", null)
+                    "market"    -> webAppView.evaluateJavascript("openMarketTab && openMarketTab()", null)
+                    "hive"      -> webAppView.evaluateJavascript("""
                         (function(){
                             if(typeof resetHome==='function') resetHome();
                             setTimeout(function(){ if(typeof openHiveTab==='function') openHiveTab(); },80);
                         })();
                     """.trimIndent(), null)
+                    "bee_panel" -> expandBeeDock()
                 }
             }
             return
@@ -1106,7 +1184,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
-        startActivityFade(Intent(this, BeeActivity::class.java))
+        // Antes: startActivityFade(Intent(this, BeeActivity::class.java))
+        // Agora: expande o dock persistente. O WebView do bee/index.html vive
+        // dentro da MainActivity e nunca é destruído enquanto o app rodar.
+        expandBeeDock()
     }
 
     // =========================================================
@@ -1230,4 +1311,210 @@ class MainActivity : AppCompatActivity() {
 
     @JavascriptInterface
     fun startBee() { runOnUiThread { Toast.makeText(this, "Bee Engine Started", Toast.LENGTH_SHORT).show() } }
+
+    // =========================================================================
+    //  BEE DOCK PERSISTENTE
+    //  WebView do painel Bee mora aqui. Nunca é destruído enquanto a
+    //  MainActivity viver — a mineração não para ao navegar pelo app.
+    //  ATENÇÃO: NÃO MEXER no bee/*.{js,html,wasm}. Toda a lógica de mineração
+    //  permanece no bee_engine.js como antes; aqui é só "casa nova" do WebView.
+    // =========================================================================
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupBeeDock() {
+        if (beeDockSetupDone) return
+        beeDock = findViewById(R.id.beeDock)
+        beeDockWebView = findViewById(R.id.beeDockWebView)
+        beeDockTapOverlay = findViewById(R.id.beeDockTapOverlay)
+
+        with(beeDockWebView.settings) {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            allowFileAccess = true
+            allowContentAccess = true
+            javaScriptCanOpenWindowsAutomatically = false
+            cacheMode = WebSettings.LOAD_NO_CACHE
+            loadsImagesAutomatically = true
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            @Suppress("DEPRECATION")
+            allowFileAccessFromFileURLs = true
+            @Suppress("DEPRECATION")
+            allowUniversalAccessFromFileURLs = true
+        }
+        beeDockWebView.isHapticFeedbackEnabled = false
+        beeDockWebView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
+        beeDockWebView.setBackgroundColor(0xFF0B0B0D.toInt())
+
+        // Bridge JS — mesmo nome window.AndroidBee da BeeActivity
+        beeDockWebView.addJavascriptInterface(BeeDockBridge(this), "AndroidBee")
+
+        // WebViewClient — serve WASM via assets (idêntico à BeeActivity)
+        beeDockWebView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView?, request: WebResourceRequest?
+            ): WebResourceResponse? {
+                val url = request?.url?.toString() ?: return null
+                if (url.endsWith(".wasm")) {
+                    return try {
+                        WebResourceResponse(
+                            "application/wasm",
+                            "binary",
+                            200,
+                            "OK",
+                            mapOf("Access-Control-Allow-Origin" to "*"),
+                            assets.open("bee/bee_sdk_bg.wasm")
+                        )
+                    } catch (e: Exception) {
+                        Log.e(BEE_DOCK_TAG, "WASM serve err: ${e.message}")
+                        null
+                    }
+                }
+                return null
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                if (beeDockPageLoaded) return
+                beeDockPageLoaded = true
+                Log.d(BEE_DOCK_TAG, "bee/index.html carregado no dock")
+            }
+        }
+
+        // Overlay clicável: quando dock está colapsado, qualquer toque expande
+        beeDockTapOverlay.setOnClickListener { expandBeeDock() }
+
+        // Inicializar admob (sem ad ainda) e pré-carregar primeiro reward
+        runCatching { MobileAds.initialize(this) {} }
+        loadBeeRewardedAd()
+
+        // Carrega o painel — bee_engine.js começa a inicializar imediatamente
+        beeDockPageLoaded = false
+        beeDockWebView.loadUrl("file:///android_asset/bee/index.html")
+
+        beeDockSetupDone = true
+        Log.d(BEE_DOCK_TAG, "setupBeeDock concluído — WebView ativo no rodapé")
+    }
+
+    /** Expande o dock para tela cheia. WebView continua sendo o mesmo objeto. */
+    fun expandBeeDock() {
+        if (!beeDockSetupDone) setupBeeDock()
+        if (isBeeDockExpanded) return
+        beeDock.visibility = View.VISIBLE
+        val lp = beeDock.layoutParams
+        lp.height = ViewGroup.LayoutParams.MATCH_PARENT
+        beeDock.layoutParams = lp
+        beeDockTapOverlay.visibility = View.GONE
+        isBeeDockExpanded = true
+        Log.d(BEE_DOCK_TAG, "dock expandido (fullscreen)")
+    }
+
+    /**
+     * Colapsa o dock para a altura de rodapé. Mantém o WebView vivo e visível
+     * — o JS continua rodando, mineração não interrompe.
+     * Se mineração não está ativa, esconde o dock por completo.
+     */
+    fun collapseBeeDock() {
+        if (!beeDockSetupDone) return
+        val mining = getSharedPreferences("bee_mining", MODE_PRIVATE)
+            .getBoolean("mining_active", false)
+        val lp = beeDock.layoutParams
+        if (mining) {
+            // Mineração ativa: mantém faixa de 132dp no rodapé com overlay clicável
+            val density = resources.displayMetrics.density
+            lp.height = (BEE_DOCK_COLLAPSED_HEIGHT_DP * density).toInt()
+            beeDock.layoutParams = lp
+            beeDock.visibility = View.VISIBLE
+            beeDockTapOverlay.visibility = View.VISIBLE
+            // Trava o scroll do WebView no topo para mostrar o cabeçalho do painel
+            beeDockWebView.post { beeDockWebView.scrollTo(0, 0) }
+            Log.d(BEE_DOCK_TAG, "dock colapsado (rodapé ${BEE_DOCK_COLLAPSED_HEIGHT_DP}dp)")
+        } else {
+            // Sem mineração: oculta completamente, mas WebView segue vivo
+            lp.height = 0
+            beeDock.layoutParams = lp
+            beeDock.visibility = View.GONE
+            beeDockTapOverlay.visibility = View.GONE
+            Log.d(BEE_DOCK_TAG, "dock oculto (mineração inativa)")
+        }
+        isBeeDockExpanded = false
+    }
+
+    // ── AdMob compartilhado pelo dock (mesmas regras da BeeActivity) ─────────
+
+    private fun loadBeeRewardedAd() {
+        RewardedAd.load(
+            this,
+            BEE_REWARDED_TEST_AD_UNIT_ID,
+            AdRequest.Builder().build(),
+            object : RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedAd) { beeRewardedAd = ad }
+                override fun onAdFailedToLoad(e: LoadAdError) { beeRewardedAd = null }
+            }
+        )
+    }
+
+    /** Chamado pelo [BeeDockBridge] quando o JS do painel pede um anúncio. */
+    fun showBeeRewardedAd(mode: String) {
+        val ad = beeRewardedAd
+        if (ad == null) {
+            Toast.makeText(this, "Anúncio ainda não carregou — tente em instantes", Toast.LENGTH_SHORT).show()
+            loadBeeRewardedAd()
+            return
+        }
+        if (isBeeAdShowing) return
+        beeAdMode = mode
+        beeEnergyGranted = false
+        beeWpGranted = false
+        isBeeAdShowing = true
+
+        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                beeRewardedAd = null
+                isBeeAdShowing = false
+                loadBeeRewardedAd()
+                when {
+                    beeAdMode == "energy" && beeEnergyGranted ->
+                        beeDockEvalJs("if(window.onEnergyAdRewarded) window.onEnergyAdRewarded()")
+                    beeAdMode == "energy" ->
+                        beeDockEvalJs("if(window.onEnergyAdClosed) window.onEnergyAdClosed()")
+                    beeAdMode == "wp" && beeWpGranted ->
+                        beeDockEvalJs("if(window.onWpAdRewarded) window.onWpAdRewarded()")
+                    beeAdMode == "wp" ->
+                        beeDockEvalJs("if(window.onWpAdClosed) window.onWpAdClosed()")
+                }
+                beeAdMode = null
+            }
+
+            override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                beeRewardedAd = null
+                isBeeAdShowing = false
+                loadBeeRewardedAd()
+                beeAdMode = null
+            }
+        }
+
+        ad.show(this) { _: RewardItem ->
+            if (mode == "energy") beeEnergyGranted = true
+            else beeWpGranted = true
+        }
+    }
+
+    private fun beeDockEvalJs(js: String) {
+        if (!::beeDockWebView.isInitialized) return
+        beeDockWebView.post { runCatching { beeDockWebView.evaluateJavascript(js, null) } }
+    }
+
+    /**
+     * onMiningStatusChanged já existe acima — quando a mineração começa,
+     * deixamos o dock visível no modo colapsado para o usuário saber.
+     * Esse método é só um hook para o callback existente expor ao dock.
+     */
+    fun ensureBeeDockVisibleIfMining() {
+        val active = getSharedPreferences("bee_mining", MODE_PRIVATE)
+            .getBoolean("mining_active", false)
+        if (active && !isBeeDockExpanded && beeDockSetupDone) {
+            collapseBeeDock()  // mostra modo rodapé
+        }
+    }
 }

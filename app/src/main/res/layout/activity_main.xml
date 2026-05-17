@@ -1,47 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:fitsSystemWindows="true"
     android:background="#111420">
 
-    <!-- Toolbar: começa GONE, só aparece ao navegar -->
-    <include
-        android:id="@+id/topBar"
-        layout="@layout/toolbar_wasp"
+    <!-- ===== Conteúdo principal (browser + home) ============================ -->
+    <LinearLayout
+        android:id="@+id/mainContentRoot"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <!-- Toolbar: começa GONE, só aparece ao navegar -->
+        <include
+            android:id="@+id/topBar"
+            layout="@layout/toolbar_wasp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <WebView
+                android:id="@+id/webAppView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#111420" />
+
+            <org.mozilla.geckoview.GeckoView
+                android:id="@+id/geckoView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#111420"
+                android:visibility="gone" />
+
+            <ProgressBar
+                android:id="@+id/pageProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:max="100"
+                android:progressTint="@color/wasp_yellow"
+                android:progressBackgroundTint="#22000000"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- ===== Bee Dock persistente no rodapé ================================= -->
+    <!-- Mora aqui o WebView de bee/index.html — nunca é destruído enquanto
+         a MainActivity viver. Mineração não para ao navegar.
+         Altura inicial 0dp (invisível); o Kotlin alterna entre:
+           - colapsado: 48dp  (faixa mínima tocável + handle amarelo)
+           - expandido: MATCH_PARENT (tela cheia) -->
     <FrameLayout
+        android:id="@+id/beeDock"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_gravity="bottom"
+        android:background="#0B0B0D"
+        android:elevation="8dp"
+        android:visibility="gone">
 
         <WebView
-            android:id="@+id/webAppView"
+            android:id="@+id/beeDockWebView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#111420" />
+            android:background="#0B0B0D" />
 
-        <org.mozilla.geckoview.GeckoView
-            android:id="@+id/geckoView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#111420"
-            android:visibility="gone" />
-
-        <ProgressBar
-            android:id="@+id/pageProgress"
-            style="?android:attr/progressBarStyleHorizontal"
+        <!-- Faixa fina amarela no topo, sinaliza que é clicável quando colapsado -->
+        <View
+            android:id="@+id/beeDockHandle"
             android:layout_width="match_parent"
             android:layout_height="3dp"
-            android:max="100"
-            android:progressTint="@color/wasp_yellow"
-            android:progressBackgroundTint="#22000000"
-            android:visibility="gone" />
+            android:layout_gravity="top"
+            android:background="@color/wasp_yellow" />
+
+        <!-- Overlay transparente: absorve toques quando colapsado e expande o dock.
+             Quando expandido, fica GONE e o usuário interage com o WebView normalmente. -->
+        <View
+            android:id="@+id/beeDockTapOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Abrir painel Bee" />
 
     </FrameLayout>
 
-</LinearLayout>
+</FrameLayout>
