@@ -310,6 +310,7 @@ class MainActivity : AppCompatActivity() {
     // ─── BEE DOCK PERSISTENTE ───────────────────────────────────────────────
     // WebView do painel Bee fica vivo dentro da MainActivity. Nunca é destruído
     // enquanto a Activity raiz viver — mineração não para ao navegar pelo app.
+    private lateinit var mainContentRoot: View
     private lateinit var beeDock: FrameLayout
     private lateinit var beeDockWebView: WebView
     private lateinit var beeDockTapOverlay: View
@@ -1323,6 +1324,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupBeeDock() {
         if (beeDockSetupDone) return
+        mainContentRoot = findViewById(R.id.mainContentRoot)
         beeDock = findViewById(R.id.beeDock)
         beeDockWebView = findViewById(R.id.beeDockWebView)
         beeDockTapOverlay = findViewById(R.id.beeDockTapOverlay)
@@ -1405,6 +1407,8 @@ class MainActivity : AppCompatActivity() {
         lp.height = ViewGroup.LayoutParams.MATCH_PARENT
         beeDock.layoutParams = lp
         beeDockTapOverlay.visibility = View.GONE
+        // Em fullscreen o dock cobre tudo — não precisa reservar espaço pro conteúdo
+        mainContentRoot.setPadding(0, 0, 0, 0)
         isBeeDockExpanded = true
         Log.d(BEE_DOCK_TAG, "dock expandido (fullscreen)")
     }
@@ -1413,19 +1417,26 @@ class MainActivity : AppCompatActivity() {
      * Colapsa o dock para a altura de rodapé. Mantém o WebView vivo e visível
      * — o JS continua rodando, mineração não interrompe.
      * Se mineração não está ativa, esconde o dock por completo.
+     *
+     * IMPORTANTE: ajusta paddingBottom do mainContentRoot para que o bottom-nav
+     * da home (e qualquer conteúdo no rodapé) não fique sobreposto pelo dock.
      */
     fun collapseBeeDock() {
         if (!beeDockSetupDone) return
         val mining = getSharedPreferences("bee_mining", MODE_PRIVATE)
             .getBoolean("mining_active", false)
         val lp = beeDock.layoutParams
+        val density = resources.displayMetrics.density
         if (mining) {
-            // Mineração ativa: mantém faixa de 132dp no rodapé com overlay clicável
-            val density = resources.displayMetrics.density
-            lp.height = (BEE_DOCK_COLLAPSED_HEIGHT_DP * density).toInt()
+            // Mineração ativa: mantém faixa de 48dp no rodapé com overlay clicável
+            val dockPx = (BEE_DOCK_COLLAPSED_HEIGHT_DP * density).toInt()
+            lp.height = dockPx
             beeDock.layoutParams = lp
             beeDock.visibility = View.VISIBLE
             beeDockTapOverlay.visibility = View.VISIBLE
+            // Reserva o mesmo espaço no fundo do conteúdo principal — bottom-nav
+            // da home e tudo mais sobe pra cima do dock, sem sobreposição
+            mainContentRoot.setPadding(0, 0, 0, dockPx)
             // Trava o scroll do WebView no topo para mostrar o cabeçalho do painel
             beeDockWebView.post { beeDockWebView.scrollTo(0, 0) }
             Log.d(BEE_DOCK_TAG, "dock colapsado (rodapé ${BEE_DOCK_COLLAPSED_HEIGHT_DP}dp)")
@@ -1435,6 +1446,7 @@ class MainActivity : AppCompatActivity() {
             beeDock.layoutParams = lp
             beeDock.visibility = View.GONE
             beeDockTapOverlay.visibility = View.GONE
+            mainContentRoot.setPadding(0, 0, 0, 0)
             Log.d(BEE_DOCK_TAG, "dock oculto (mineração inativa)")
         }
         isBeeDockExpanded = false
