@@ -982,9 +982,10 @@
     if (!mining && saved.autoMine) {
       log("Auto-start no resume — religando...", "linf");
       if (miningSwitch) miningSwitch.checked = true;
-      tryClaimPendingReward(function() {
-        setTimeout(startMining, 800);
-      });
+      // Nao chama tryClaimPendingReward aqui — ela cria um miner novo
+      // que nao tem contexto da sessao anterior e pode coletar reward errado.
+      // O handleEpochEnd ja coleta com a instancia correta (claimMiner).
+      setTimeout(startMining, 800);
     }
   };
 
