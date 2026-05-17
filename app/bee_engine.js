@@ -42,6 +42,7 @@
   let cycles       = 0;
   let sessionStart = null;
   let uptimeTimer  = null;
+  let miningPaused = false;  // NOVO: rastreia se mineração foi pausada por navegação
 
   /* ─── ELEMENTOS DOM ─────────────────────────────────────────── */
 
@@ -404,6 +405,7 @@
       });
 
       mining = true;
+      miningPaused = false;
       sessionStart = Date.now();
 
       startUptimeTimer();
@@ -546,6 +548,19 @@
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && setupRunning === false && deepLink && !saved.authorized) {
       log("App retomado. Verificando autorização...", "linf");
+    }
+    
+    // NOVO: Retoma mineração se foi pausada por navegação
+    if (!document.hidden && miningPaused && miningSwitch.checked) {
+      log("App retomado. Retomando mineração...", "linf");
+      miningPaused = false;
+      startMining();
+    }
+    
+    // Marca mineração como pausada quando app fica oculto
+    if (document.hidden && mining) {
+      miningPaused = true;
+      stopUptimeTimer();
     }
   });
 
