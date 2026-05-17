@@ -687,21 +687,8 @@
     // Propagacao pendente NAO deve bloquear o claim -- a rede aceita mesmo assim.
     function claimRewardSafe(claimMiner) {
       return new Promise(function(resolve) {
-        var waitStart = Date.now();
-        var MAX_WAIT = 90000; // 90s maximo esperando propagacao
 
-        function doClaim() {
-          if (!saved.propagated && (Date.now() - waitStart) < MAX_WAIT) {
-            var waited = Math.round((Date.now() - waitStart) / 1000);
-            log("⏳ Propagacao pendente (" + waited + "s) — aguardando mais 10s...", "linf");
-            setTimeout(doClaim, 10000);
-            return;
-          }
-          if (saved.propagated) {
-            log("✅ Propagacao confirmada — chamando get_reward()...", "lok");
-          } else {
-            log("⚠️ Propagacao nao confirmada apos " + Math.round(MAX_WAIT/1000) + "s — tentando claim mesmo assim...", "lwrn");
-          }
+        function doGetReward() {
           log("💰 Chamando get_reward()...", "linf");
           claimMiner.get_reward().then(function() {
             log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
@@ -717,7 +704,31 @@
             resolve();
           });
         }
-        doClaim();
+
+        // Se já propagado, vai direto
+        if (saved.propagated) {
+          log("✅ Propagacao confirmada — chamando get_reward()...", "lok");
+          doGetReward();
+          return;
+        }
+
+        // Não propagado: tenta propagar rapidamente antes do claim
+        log("🔄 Confirmando propagacao antes do get_reward()...", "linf");
+        window.BeeSDK.ensure_mining_keys_propagated({
+          client_config: { network: { endpoints: ENDPOINTS } },
+          miner_address: saved.minerAddress,
+          app_id: APP_ID,
+          expected_owner_public: saved.publicKey,
+          max_attempts: 10,
+          interval_ms: 2000
+        }).then(function() {
+          saved.propagated = true; saveSaved();
+          log("✅ Propagacao confirmada — chamando get_reward()...", "lok");
+        }).catch(function(e) {
+          log("⚠️ Propagacao falhou — tentando get_reward() mesmo assim...", "lwrn");
+        }).finally(function() {
+          doGetReward();
+        });
       });
     }
 
