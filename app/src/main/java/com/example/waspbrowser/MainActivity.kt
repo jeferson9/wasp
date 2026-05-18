@@ -406,7 +406,7 @@ class MainActivity : AppCompatActivity() {
         when {
             beePanelExpanded -> {
                 collapseBeePanel()
-                goHome()
+                // Não chama goHome() — preserva o site ou tela que estava aberta
             }
             geckoView.visibility == View.VISIBLE -> when {
                 popupSession != null -> resetToMainSession()

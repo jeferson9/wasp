@@ -140,9 +140,9 @@ class BeeActivity : AppCompatActivity() {
                 @android.webkit.JavascriptInterface
                 fun goBack() {
                     // Usuário clicou voltar no painel Bee → minimiza para rodapé
+                    // Não chama goHome() para preservar o site/tela que estava aberta
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         (context as? MainActivity)?.collapseBeePanel()
-                        (context as? MainActivity)?.goHome()
                     }
                 }
 
