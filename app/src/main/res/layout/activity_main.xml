@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:fitsSystemWindows="true"
     android:background="#111420">
 
@@ -12,12 +11,26 @@
         layout="@layout/toolbar_wasp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:visibility="gone" />
 
+    <!-- Bee Panel: começa GONE (height=0). Quando mineração ativa aparece no rodapé (120dp).
+         Quando expandido ocupa a tela toda (MATCH_PARENT). -->
     <FrameLayout
+        android:id="@+id/bee_panel_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_alignParentBottom="true"
+        android:background="#0B0B0D"
+        android:visibility="gone" />
+
+    <!-- Conteúdo principal: browser + home -->
+    <FrameLayout
+        android:id="@+id/main_content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/topBar"
+        android:layout_above="@id/bee_panel_container">
 
         <WebView
             android:id="@+id/webAppView"
@@ -44,4 +57,4 @@
 
     </FrameLayout>
 
-</LinearLayout>
+</RelativeLayout>

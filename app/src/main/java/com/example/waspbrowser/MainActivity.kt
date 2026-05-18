@@ -265,6 +265,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webAppView: WebView
     private lateinit var beeMiningIndicator: MiningIndicator
     private lateinit var geckoView: GeckoView
+    private var persistentBeeView: android.webkit.WebView? = null
+    private var beePanelExpanded = false
+    private var mainRewardedAd: com.google.android.gms.ads.rewarded.RewardedAd? = null
+    private var mainAdShowing = false
+    private val REWARDED_AD_UNIT = "ca-app-pub-3940256099942544/5224354917"
     private lateinit var btnBack: ImageButton
     private lateinit var btnHome: ImageButton
     private lateinit var btnMenu: ImageButton
@@ -319,6 +324,8 @@ class MainActivity : AppCompatActivity() {
         setupGecko()
         setupTopBar()
         setupUrlInput()
+        setupPersistentBee()
+        loadMainRewardedAd()
 
         webAppView.loadUrl("file:///android_asset/index.html")
         webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
@@ -363,12 +370,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         webAppView.onResume()
         webAppView.resumeTimers()
         updateMiningIndicator()
         if (::webAppView.isInitialized && webAppView.visibility == View.VISIBLE &&
             ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
             webAppView.evaluateJavascript("setBottomTab('main')", null)
+        }
+        // Notifica a Bee persistente que o app voltou ao foco
+        persistentBeeView?.post {
+            persistentBeeView?.resumeTimers()
+            persistentBeeView?.evaluateJavascript(
+                "if(window.onWalletReturn) window.onWalletReturn();", null)
         }
     }
 
@@ -388,14 +403,17 @@ class MainActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (geckoView.visibility == View.VISIBLE) {
-            when {
+        when {
+            beePanelExpanded -> {
+                collapseBeePanel()
+                goHome()
+            }
+            geckoView.visibility == View.VISIBLE -> when {
                 popupSession != null -> resetToMainSession()
                 canGoBackGecko -> getActiveSession().goBack()
                 else -> goHome()
             }
-        } else {
-            super.onBackPressed()
+            else -> moveTaskToBack(true)
         }
     }
 
@@ -1106,7 +1124,167 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
-        startActivityFade(Intent(this, BeeActivity::class.java))
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: run {
+            // Fallback: se o layout não tem o container, abre como Activity separada
+            startActivityFade(Intent(this, BeeActivity::class.java))
+            return
+        }
+        container.visibility = android.view.View.VISIBLE
+        val params = container.layoutParams
+        params.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+        container.layoutParams = params
+        beePanelExpanded = true
+        findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.GONE
+        topBar.visibility = android.view.View.GONE
+        persistentBeeView?.evaluateJavascript("""
+            (function(){
+                if (window._miniBarInterval) { clearInterval(window._miniBarInterval); window._miniBarInterval = null; }
+                var overlay = document.getElementById('wasp-tap-overlay');
+                if (overlay) overlay.style.display = 'none';
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                window.scrollTo(0, 0);
+            })()
+        """.trimIndent(), null)
+    }
+
+    fun collapseBeePanel() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        val dp120 = (120 * resources.displayMetrics.density).toInt()
+        val params = container.layoutParams
+        params.height = dp120
+        container.layoutParams = params
+        container.visibility = android.view.View.VISIBLE
+        beePanelExpanded = false
+        findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.VISIBLE
+        topBar.visibility = if (geckoView.visibility == android.view.View.VISIBLE) android.view.View.VISIBLE else android.view.View.GONE
+        persistentBeeView?.evaluateJavascript("""
+            (function(){
+                if (window._miniBarInterval) { clearInterval(window._miniBarInterval); window._miniBarInterval = null; }
+                var central = document.getElementById('wasp-central-frame');
+                if (central) central.style.display = 'none';
+                var old = document.getElementById('wasp-mini-bar');
+                if (old) old.remove();
+                var overlay = document.getElementById('wasp-tap-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'wasp-tap-overlay';
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;cursor:pointer;background:transparent;';
+                    overlay.onclick = function() {
+                        try { AndroidBee.openPanel(); } catch(e) {}
+                    };
+                    document.body.appendChild(overlay);
+                }
+                overlay.style.display = 'block';
+                window.scrollTo(0, 0);
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+            })()
+        """.trimIndent(), null)
+    }
+
+    fun showBeeFooter() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        if (container.visibility == android.view.View.GONE) {
+            val dp120 = (120 * resources.displayMetrics.density).toInt()
+            container.layoutParams.height = dp120
+            container.visibility = android.view.View.VISIBLE
+        }
+    }
+
+    fun hideBeeFooter() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        container.visibility = android.view.View.GONE
+        beePanelExpanded = false
+    }
+
+    fun showPersistentBeeAd(mode: String, targetWv: android.webkit.WebView) {
+        if (mainAdShowing) return
+        val ad = mainRewardedAd ?: run { loadMainRewardedAd(); return }
+        mainAdShowing = true
+        var rewarded = false
+        ad.fullScreenContentCallback = object : com.google.android.gms.ads.FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                mainRewardedAd = null
+                mainAdShowing = false
+                loadMainRewardedAd()
+                val js = if (rewarded) {
+                    if (mode == "energy") "if(window.onEnergyRewarded) window.onEnergyRewarded()"
+                    else "if(window.onWpAdRewarded) window.onWpAdRewarded()"
+                } else {
+                    if (mode == "energy") "if(window.onEnergyAdClosed) window.onEnergyAdClosed()"
+                    else "if(window.onWpAdClosed) window.onWpAdClosed()"
+                }
+                targetWv.post { targetWv.evaluateJavascript(js, null) }
+            }
+            override fun onAdFailedToShowFullScreenContent(e: com.google.android.gms.ads.AdError) {
+                mainRewardedAd = null
+                mainAdShowing = false
+                loadMainRewardedAd()
+            }
+        }
+        ad.show(this) { rewarded = true }
+    }
+
+    private fun loadMainRewardedAd() {
+        com.google.android.gms.ads.rewarded.RewardedAd.load(
+            this, REWARDED_AD_UNIT,
+            com.google.android.gms.ads.AdRequest.Builder().build(),
+            object : com.google.android.gms.ads.rewarded.RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: com.google.android.gms.ads.rewarded.RewardedAd) { mainRewardedAd = ad }
+                override fun onAdFailedToLoad(e: com.google.android.gms.ads.LoadAdError) { mainRewardedAd = null }
+            }
+        )
+    }
+
+    @android.annotation.SuppressLint("SetJavaScriptEnabled")
+    private fun setupPersistentBee() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+
+        val wv = android.webkit.WebView(this)
+        wv.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            allowFileAccess = true
+            @Suppress("DEPRECATION") allowFileAccessFromFileURLs = true
+            @Suppress("DEPRECATION") allowUniversalAccessFromFileURLs = true
+            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
+        }
+        wv.setBackgroundColor(0xFF0B0B0D.toInt())
+
+        val bridge = BeeActivity.createBridge(this, wv)
+        wv.addJavascriptInterface(bridge, "AndroidBee")
+
+        wv.webViewClient = object : android.webkit.WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: android.webkit.WebView?,
+                request: android.webkit.WebResourceRequest?
+            ): android.webkit.WebResourceResponse? {
+                val url = request?.url?.toString() ?: return null
+                if (url.endsWith(".wasm")) {
+                    return try {
+                        android.webkit.WebResourceResponse(
+                            "application/wasm", "binary", 200, "OK",
+                            mapOf("Access-Control-Allow-Origin" to "*"),
+                            assets.open("bee/bee_sdk_bg.wasm")
+                        )
+                    } catch (e: Exception) { null }
+                }
+                return null
+            }
+
+            override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                android.util.Log.d("PersistentBee", "Página carregada — Bee persistente pronta")
+                BeeActivity.setPersistentWebView(wv)
+            }
+        }
+
+        wv.loadUrl("file:///android_asset/bee/index.html")
+        container.addView(wv)
+        persistentBeeView = wv
+        android.util.Log.d("PersistentBee", "Bee WebView persistente criada na MainActivity")
     }
 
     // =========================================================

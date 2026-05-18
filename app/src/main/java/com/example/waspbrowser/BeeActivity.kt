@@ -6,7 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -30,6 +32,8 @@ import androidx.core.view.WindowCompat
 
 class BeeActivity : AppCompatActivity() {
 
+    private var wakeLock: PowerManager.WakeLock? = null
+
     companion object {
         private const val TAG = "BeeActivity"
         private const val REWARDED_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
@@ -37,6 +41,248 @@ class BeeActivity : AppCompatActivity() {
         private const val PREFS_MINING      = "bee_mining"
         private const val KEY_MINING_ACTIVE  = "mining_active"
         private const val KEY_ENERGY_READY = "energy_ready"
+
+        var instance: java.lang.ref.WeakReference<BeeActivity>? = null
+
+        // WebView persistente na MainActivity — nunca é destruída
+        private var persistentWebView: java.lang.ref.WeakReference<android.webkit.WebView>? = null
+
+        fun setPersistentWebView(wv: android.webkit.WebView) {
+            persistentWebView = java.lang.ref.WeakReference(wv)
+            Log.d(TAG, "persistentWebView registrada")
+        }
+
+        fun runJs(js: String) {
+            // Tenta primeiro na WebView persistente da MainActivity
+            val persistent = persistentWebView?.get()
+            if (persistent != null) {
+                persistent.post {
+                    runCatching {
+                        persistent.resumeTimers()
+                        persistent.evaluateJavascript(js, null)
+                    }
+                }
+                return
+            }
+            // Fallback: BeeActivity se ainda existir
+            val activity = instance?.get()
+            if (activity == null) {
+                Log.w(TAG, "runJs: sem WebView disponível — JS não executado")
+            } else {
+                activity.evaluateJs(js)
+            }
+        }
+
+        // Cria a bridge para ser usada pela WebView persistente na MainActivity
+        fun createBridge(context: android.content.Context, wv: android.webkit.WebView): Any {
+            // Retorna uma instância da bridge interna
+            // A MainActivity vai usar essa bridge com addJavascriptInterface
+            return object {
+                @android.webkit.JavascriptInterface
+                fun ping(): String = "pong-persistent"
+
+                @android.webkit.JavascriptInterface
+                fun setMiningStatus(active: Boolean, wallet: String) {
+                    Log.d(TAG, "[PersistentBee] setMiningStatus: $active wallet=$wallet")
+                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .edit().putBoolean("mining_active", active).apply()
+                    try {
+                        if (active) {
+                            val intent = BeeBackgroundService.buildStartIntent(context, wallet)
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                context.startForegroundService(intent)
+                            } else { context.startService(intent) }
+                        }
+                    } catch (e: Exception) { Log.e(TAG, "setMiningStatus error: ${e.message}") }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun onEpochStarted() {
+                    try {
+                        context.startService(Intent(context, BeeBackgroundService::class.java).apply {
+                            action = "com.example.waspbrowser.BEE_EPOCH_STARTED"
+                        })
+                    } catch (_: Exception) {}
+                }
+
+                @android.webkit.JavascriptInterface
+                fun onEpochEnded() {
+                    try {
+                        context.startService(Intent(context, BeeBackgroundService::class.java).apply {
+                            action = BeeBackgroundService.ACTION_EPOCH_ENDED
+                        })
+                    } catch (_: Exception) {}
+                }
+
+                @android.webkit.JavascriptInterface
+                fun stopBgMining() {
+                    try { context.startService(BeeBackgroundService.buildStopIntent(context)) }
+                    catch (_: Exception) {}
+                }
+
+                @android.webkit.JavascriptInterface
+                fun toast(msg: String) {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun openPanel() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        (context as? MainActivity)?.openBeePanel()
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun navigateTo(screen: String) {}
+
+                @android.webkit.JavascriptInterface
+                fun goBack() {
+                    // Usuário clicou voltar no painel Bee → minimiza para rodapé
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        (context as? MainActivity)?.collapseBeePanel()
+                        (context as? MainActivity)?.goHome()
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun hasWasm(): Boolean = try {
+                    context.assets.open("bee/bee_sdk_bg.wasm").close(); true
+                } catch (_: Exception) { false }
+
+                @android.webkit.JavascriptInterface
+                fun checkAssets(): String = try {
+                    context.assets.list("bee")?.joinToString(", ") ?: "vazio"
+                } catch (e: Exception) { "erro: ${e.message}" }
+
+                @android.webkit.JavascriptInterface
+                fun startBgMining(durationMs: Long, walletName: String) {
+                    setMiningStatus(true, walletName)
+                }
+
+                @android.webkit.JavascriptInterface
+                fun getBgMiningStatus(): String {
+                    val active = BeeBackgroundService.isActive(context)
+                    return """{"active":$active,"remainingMs":999999999,"cycles":0,"wallet":""}"""
+                }
+
+                @android.webkit.JavascriptInterface
+                fun getMiningStatus(): String = """{"running":${BeeBackgroundService.isActive(context)}}"""
+
+                @android.webkit.JavascriptInterface
+                fun openDeepLink(url: String) {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(url)).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "openDeepLink erro: ${e.message}")
+                        }
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun openExternalUrl(url: String) {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(url)).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "openExternalUrl erro: ${e.message}")
+                        }
+                    }
+                }
+                @android.webkit.JavascriptInterface
+                fun openEnergyPage() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        // Mostra anúncio via MainActivity — tem contexto de Activity
+                        (context as? MainActivity)?.showPersistentBeeAd("energy", wv)
+                            ?: run {
+                                // Fallback: BeeActivity
+                                val i = android.content.Intent(context, BeeActivity::class.java).apply {
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                    putExtra("action", "energy")
+                                }
+                                context.startActivity(i)
+                            }
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun openWpAd() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        (context as? MainActivity)?.showPersistentBeeAd("wp", wv)
+                            ?: run {
+                                val i = android.content.Intent(context, BeeActivity::class.java).apply {
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                    putExtra("action", "wp_ad")
+                                }
+                                context.startActivity(i)
+                            }
+                    }
+                }
+                @android.webkit.JavascriptInterface
+                fun openCentral() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        wv.evaluateJavascript("""
+                            (function(){
+                                // Listener para fechar Central via postMessage
+                                if (!window._centralMsgListener) {
+                                    window._centralMsgListener = true;
+                                    window.addEventListener('message', function(e) {
+                                        if (e.data && e.data.type === 'closeCentral') {
+                                            var overlay = document.getElementById('wasp-central-frame');
+                                            if (overlay) overlay.style.display = 'none';
+                                        }
+                                    });
+                                }
+                                var existing = document.getElementById('wasp-central-frame');
+                                if (existing) { existing.style.display='flex'; return; }
+                                var overlay = document.createElement('div');
+                                overlay.id = 'wasp-central-frame';
+                                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:8888;background:#0B0B0D;display:flex;flex-direction:column;';
+                                var iframe = document.createElement('iframe');
+                                iframe.src = 'file:///android_asset/bee/central.html';
+                                iframe.style.cssText = 'width:100%;height:100%;border:none;flex:1;';
+                                overlay.appendChild(iframe);
+                                document.body.appendChild(overlay);
+                            })()
+                        """.trimIndent(), null)
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun closeCentral() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        // Esconde o overlay — index.html continua vivo com estado preservado
+                        wv.evaluateJavascript("""
+                            (function(){
+                                var overlay = document.getElementById('wasp-central-frame');
+                                if (overlay) overlay.style.display = 'none';
+                            })()
+                        """.trimIndent(), null)
+                    }
+                }
+                @android.webkit.JavascriptInterface
+                fun isEnergyReady(): Boolean {
+                    return context.getSharedPreferences("bee_energy", android.content.Context.MODE_PRIVATE)
+                        .getBoolean("energy_ready", false)
+                }
+
+                @android.webkit.JavascriptInterface
+                fun clearEnergyReady() {
+                    context.getSharedPreferences("bee_energy", android.content.Context.MODE_PRIVATE)
+                        .edit().putBoolean("energy_ready", false).apply()
+                }
+            }
+        }
     }
 
     private lateinit var beeWebView: WebView
@@ -55,20 +301,10 @@ class BeeActivity : AppCompatActivity() {
     private val keepAliveReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != BeeBackgroundService.ACTION_KEEP_ALIVE) return
-            val remaining = intent.getLongExtra("remaining_ms", 0L)
-            Log.d(TAG, "Keep-alive recebido | restam ${remaining / 1000}s")
-            // Tenta manter a mineração ativa chamando as funções exportadas no window
-            evaluateJs("""
-                (function(){
-                    if(window.BeeEngine && typeof window.BeeEngine.isRunning === 'function'){
-                        if(!window.BeeEngine.isRunning()){
-                           console.log('[KeepAlive] Retomando mineracao...');
-                           if(typeof window.BeeEngine.startMining === 'function') window.BeeEngine.startMining();
-                        }
-                    }
-                    if(window.onAppResume) window.onAppResume();
-                })()
-            """.trimIndent())
+            val tick = intent.getIntExtra("tick", 0)
+            Log.d(TAG, "Keep-alive recebido | tick=$tick")
+            // Mantém o WebView responsivo — o Service já cuida do restart via runJs
+            beeWebView.resumeTimers()
         }
     }
 
@@ -78,6 +314,19 @@ class BeeActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_bee)
 
+        instance = java.lang.ref.WeakReference(this)
+
+        // Se relançado pelo Service em background, volta imediatamente para o app anterior
+        if (intent?.getBooleanExtra("background_restart", false) == true) {
+            Log.d(TAG, "Relançado pelo Service em background — voltando ao app anterior")
+            moveTaskToBack(true)
+        }
+
+        // Ação solicitada pela WebView persistente (anúncio, energia)
+        when (intent?.getStringExtra("action")) {
+            "wp_ad"  -> mainHandler.postDelayed({ showRewardedAd("wp") }, 1500)
+            "energy" -> mainHandler.postDelayed({ showRewardedAd("energy") }, 1500)
+        }
         beeWebView = findViewById(R.id.beeWebView)
         window.decorView.setBackgroundColor(0xFF0B0B0D.toInt())
         beeWebView.setBackgroundColor(0xFF0B0B0D.toInt())
@@ -133,7 +382,8 @@ class BeeActivity : AppCompatActivity() {
     }
 
     private fun loadBeePanel() {
-        pageLoaded = false
+        // Só carrega se ainda não inicializou — evita reiniciar o miner ao voltar
+        if (pageLoaded) return
         beeWebView.loadUrl("file:///android_asset/bee/index.html")
     }
 
@@ -169,9 +419,16 @@ class BeeActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                if (pageLoaded) return
-                pageLoaded = true
-                beeWebView.animate().alpha(1f).setDuration(200).start()
+                if (!pageLoaded) {
+                    pageLoaded = true
+                    beeWebView.animate().alpha(1f).setDuration(200).start()
+                } else {
+                    // Recarga do WebView (JS morreu) — reinicia mineração após carregar
+                    Log.d(TAG, "onPageFinished: recarga detectada — reiniciando mineração")
+                    mainHandler.postDelayed({
+                        evaluateJs("if(window.onAppResume) window.onAppResume()")
+                    }, 3000) // aguarda 3s para o WASM carregar
+                }
             }
         }
     }
@@ -248,12 +505,13 @@ class BeeActivity : AppCompatActivity() {
 
     private fun returnToMain(screen: String) {
         val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra("navigate_to", screen)
         }
-        val opts = android.app.ActivityOptions
-            .makeCustomAnimation(this, R.anim.fade_in, R.anim.fade_out)
-        startActivity(intent, opts.toBundle())
+        startActivity(intent)
+        // Sem animacao ao sair — evita slide branco entre tasks
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
     }
 
     inner class BeeBridge {
@@ -317,9 +575,28 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun setMiningStatus(active: Boolean, wallet: String) {
-            Log.d(TAG, "Bridge setMiningStatus: $active")
+            Log.d(TAG, "Bridge setMiningStatus: $active wallet=$wallet")
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, active).apply()
+            try {
+                if (active) {
+                    // Mineração ligou — inicia Service e mostra overlay
+                    val intent = BeeBackgroundService.buildStartIntent(this@BeeActivity, wallet)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        startForegroundService(intent)
+                    } else {
+                        startService(intent)
+                    }
+                } else {
+                    // JS chama setMiningStatus(false) durante transição entre epochs
+                    // (coletando reward, aguardando restart). NÃO remove o overlay
+                    // nem para o Service — o overlay só some quando o usuário
+                    // desligar manualmente via stopBgMining().
+                    Log.d(TAG, "setMiningStatus(false) — mantendo overlay e Service ativos")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "setMiningStatus service error: ${e.message}")
+            }
         }
 
         @JavascriptInterface
@@ -366,10 +643,10 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun startBgMining(durationMs: Long, walletName: String) {
-            Log.d(TAG, "startBgMining: ${durationMs/60000}min wallet=$walletName")
+            Log.d(TAG, "startBgMining: wallet=$walletName (service roda indefinidamente)")
             try {
                 val intent = BeeBackgroundService.buildStartIntent(
-                    this@BeeActivity, durationMs, walletName
+                    this@BeeActivity, walletName
                 )
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     startForegroundService(intent)
@@ -382,7 +659,35 @@ class BeeActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun onEpochStarted() {
+            Log.d(TAG, "onEpochStarted: novo epoch iniciado")
+            try {
+                val intent = Intent(this@BeeActivity, BeeBackgroundService::class.java).apply {
+                    action = "com.example.waspbrowser.BEE_EPOCH_STARTED"
+                }
+                startService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "onEpochStarted error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
+        fun onEpochEnded() {
+            // JS avisou que epoch terminou — Service agenda restart via Kotlin Handler
+            // (não depende do setTimeout do JS que é throttled em background)
+            Log.d(TAG, "onEpochEnded: epoch terminou, notificando Service")
+            try {
+                val intent = BeeBackgroundService.buildStartIntent(this@BeeActivity, "")
+                    .apply { action = BeeBackgroundService.ACTION_EPOCH_ENDED }
+                startService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "onEpochEnded error: ${e.message}")
+            }
+        }
+
+        @JavascriptInterface
         fun stopBgMining() {
+
             try {
                 startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
             } catch (e: Exception) {
@@ -401,22 +706,73 @@ class BeeActivity : AppCompatActivity() {
         }
     }
 
+
+
     override fun onResume() {
         super.onResume()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
         beeWebView.onResume()
         beeWebView.resumeTimers()
-        // O receiver agora é mantido mesmo em onPause, para garantir o Keep-Alive
         evaluateJs("if(window.onAppResume) window.onAppResume()")
+        // WakeLock: mantém CPU ativo para o JS do epoch continuar em background
+        if (wakeLock == null || wakeLock?.isHeld == false) {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            @Suppress("DEPRECATION")
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WaspBrowser:MinerWakeLock")
+            wakeLock?.acquire(6 * 60 * 1000L) // 6 min (epoch 5min + margem)
+        }
+        // Eleva prioridade do thread principal para reduzir throttling em background
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_FOREGROUND)
     }
 
     override fun onPause() {
         super.onPause()
-        // NÃO removemos o receiver aqui para permitir Keep-Alive em background
         evaluateJs("if(window.onAppPause) window.onAppPause()")
+        // NÃO pausar timers aqui — o JS do epoch precisa continuar rodando
+        // mesmo quando o usuário navega para outro app
     }
 
-    private fun evaluateJs(js: String) {
-        beeWebView.post { runCatching { beeWebView.evaluateJavascript(js, null) } }
+    override fun onStop() {
+        super.onStop()
+        // Mantém o WebView ativo em background: não chamar beeWebView.onPause()
+        // pois isso suspenderia o JS e interromperia o epoch
+    }
+
+    internal fun evaluateJs(js: String) {
+        mainHandler.post {
+            runCatching {
+                beeWebView.resumeTimers()
+                beeWebView.evaluateJavascript(js, null)
+            }
+        }
+    }
+
+    // Verifica se o JS ainda está vivo e reinicia o WebView se necessário
+    fun checkJsAlive(callback: (Boolean) -> Unit) {
+        mainHandler.post {
+            try {
+                beeWebView.resumeTimers()
+                beeWebView.evaluateJavascript("(function(){ return window._mining !== undefined ? 'alive' : 'dead'; })()") { result ->
+                    val alive = result?.contains("alive") == true
+                    callback(alive)
+                }
+            } catch (e: Exception) {
+                callback(false)
+            }
+        }
+    }
+
+    fun reloadWebView() {
+        mainHandler.post {
+            Log.w(TAG, "Recarregando WebView — contexto JS morto")
+            try {
+                beeWebView.resumeTimers()
+                beeWebView.reload()
+            } catch (e: Exception) {
+                Log.e(TAG, "reloadWebView erro: ${e.message}")
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -429,6 +785,10 @@ class BeeActivity : AppCompatActivity() {
             getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
                 .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
         }
+        // Libera o WakeLock ao destruir a Activity
+        runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
+        wakeLock = null
+        instance = null
         beeWebView.destroy()
         super.onDestroy()
     }
