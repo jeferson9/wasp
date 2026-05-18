@@ -190,7 +190,7 @@ class CentralActivity : AppCompatActivity() {
             android.util.Log.d(TAG, "startBgMining: ${durationMs/60000}min wallet=$walletName")
             try {
                 val intent = BeeBackgroundService.buildStartIntent(
-                    this@CentralActivity, durationMs, walletName
+                    this@CentralActivity, walletName
                 )
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     startForegroundService(intent)
