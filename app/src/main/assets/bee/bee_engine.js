@@ -24,6 +24,7 @@
   var cycles       = 0;
   var sessionStart = null;
   var uptimeTimer  = null;
+  var miningPaused = false;  // rastreia se mineração foi pausada por navegação (Activity em background)
 
   // ─── Refs ao DOM ─────────────────────────────────────────────────────────
   var dotStatus, txtTitle, txtDesc;
@@ -803,7 +804,7 @@
       if (action === "submit_session_root")             log("📦 Sessão submetida!", "lok");
     });
 
-    mining = true; sessionStart = Date.now(); startUptimeTimer();
+    mining = true; miningPaused = false; sessionStart = Date.now(); startUptimeTimer();
     if (tapSection) tapSection.classList.remove("hidden");
     if (switchSub)  switchSub.textContent = "Minerando NACKL ⚡";
     setStatus("on", "Minerando NACKL ⚡", "Wallet: " + saved.walletName);
@@ -1046,6 +1047,21 @@
       });
     }
     document.addEventListener("visibilitychange", function() {
+      // App ficou oculto enquanto minerava → marca como pausada e para o uptime timer
+      if (document.hidden && mining) {
+        miningPaused = true;
+        stopUptimeTimer();
+        log("App oculto. Mineração pausada.", "linf");
+        return;
+      }
+      // App voltou e a mineração estava pausada por navegação → retoma
+      if (!document.hidden && miningPaused && miningSwitch && miningSwitch.checked) {
+        log("App retomado. Retomando mineração...", "linf");
+        miningPaused = false;
+        startMining();
+        return;
+      }
+      // Fallback original: app voltou, tudo pronto, mas mineração nunca foi iniciada
       if (!document.hidden && wasmReady && saved.authorized && saved.minerAddress && !mining) {
         setTimeout(startMining, 500);
       }
