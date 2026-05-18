@@ -316,14 +316,28 @@ class BeeActivity : AppCompatActivity() {
 
         instance = java.lang.ref.WeakReference(this)
 
-        // Se relançado pelo Service em background, volta imediatamente para o app anterior
+        val action = intent?.getStringExtra("action")
+
+        // Sem action de anuncio: redireciona para o painel persistente na MainActivity
+        if (action == null && intent?.getBooleanExtra("background_restart", false) != true) {
+            Log.d(TAG, "Sem action -> redirecionando para MainActivity/painel persistente")
+            val i = Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra("navigate_to", "bee")
+            }
+            startActivity(i)
+            finish()
+            return
+        }
+
+        // Relancado pelo Service em background
         if (intent?.getBooleanExtra("background_restart", false) == true) {
-            Log.d(TAG, "Relançado pelo Service em background — voltando ao app anterior")
+            Log.d(TAG, "Relancado pelo Service em background")
             moveTaskToBack(true)
         }
 
-        // Ação solicitada pela WebView persistente (anúncio, energia)
-        when (intent?.getStringExtra("action")) {
+        // Acao de anuncio solicitada pela WebView persistente
+        when (action) {
             "wp_ad"  -> mainHandler.postDelayed({ showRewardedAd("wp") }, 1500)
             "energy" -> mainHandler.postDelayed({ showRewardedAd("energy") }, 1500)
         }
