@@ -1407,5 +1407,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     @JavascriptInterface
+    fun openCentralWP() {
+        // Alias — chamado pelo bee_engine quando falta WP para minerar
+        openCentral()
+    }
+
+    @JavascriptInterface
     fun startBee() { runOnUiThread { Toast.makeText(this, "Bee Engine Started", Toast.LENGTH_SHORT).show() } }
 }

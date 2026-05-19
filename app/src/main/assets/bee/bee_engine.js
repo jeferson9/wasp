@@ -9,6 +9,47 @@
   var KEY_STATE = "wasp_bee_state_v6";        // v6 — limpa estado corrompido de versões anteriores
   var MINING_DURATION_MS = 5 * 60 * 1000;    // 5 min por sessão (padrão Acki Nacki)
 
+  // ─── WP (WASP POINTS) COMO MOEDA DE MINERAÇÃO ───────────────────────────
+  var KEY_WP          = "wasp_wp_balance";    // mesma chave usada pela central.html
+  var KEY_WP_HISTORY  = "wasp_wp_hist";
+  var WP_MINING_COST  = 10;                   // WP por sessão de mineração (5 min)
+
+  function getWP() {
+    try { return Math.max(0, parseInt(localStorage.getItem(KEY_WP) || "0", 10) || 0); }
+    catch(e) { return 0; }
+  }
+
+  function spendWP(amount, label) {
+    try {
+      var cur = getWP();
+      if (cur < amount) return false;
+      localStorage.setItem(KEY_WP, String(cur - amount));
+      var hist = [];
+      try { hist = JSON.parse(localStorage.getItem(KEY_WP_HISTORY) || "[]"); } catch(_) {}
+      hist.unshift("[" + new Date().toLocaleString("pt-BR") + "] -" + amount + " WP • " + label);
+      localStorage.setItem(KEY_WP_HISTORY, JSON.stringify(hist.slice(0, 100)));
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function updateWpDisplay() {
+    var el = document.getElementById("wpBalanceBee");
+    if (el) el.textContent = getWP() + " WP";
+    var btn = document.getElementById("wpMineBtn");
+    if (btn) {
+      var wp = getWP();
+      if (wp >= WP_MINING_COST) {
+        btn.textContent = "Minerar (" + WP_MINING_COST + " WP)";
+        btn.disabled = false;
+        btn.classList.remove("btn-disabled");
+      } else {
+        btn.textContent = "Precisa de " + WP_MINING_COST + " WP";
+        btn.disabled = true;
+        btn.classList.add("btn-disabled");
+      }
+    }
+  }
+
   // ─── ESTADO ──────────────────────────────────────────────────────────────
   var saved = {
     walletName: "", publicKey: "", secretKey: "",
@@ -324,7 +365,11 @@
       if (setupCard)    setupCard.classList.add("hidden");
       if (btnReset)     btnReset.classList.remove("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
-      if (switchSub)    switchSub.textContent = "Ligue para iniciar mineração NACKL";
+      var _wpNow = getWP();
+      if (switchSub) switchSub.textContent = _wpNow >= WP_MINING_COST
+        ? "Ligue para minerar — custa " + WP_MINING_COST + " WP/sessão"
+        : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpNow + ")";
+      updateWpDisplay();
       setStep(5);
       log("Sessão restaurada: " + saved.walletName, "lok");
       // Mostrar aviso Mambaboard se não foi dismissado (rewards requerem ativação)
@@ -501,7 +546,11 @@
       setStatus("on", "Bee autorizada ✅", "Wallet: " + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
-      if (switchSub)    switchSub.textContent = "Ligue para iniciar mineração NACKL";
+      var _wpNow2 = getWP();
+      if (switchSub) switchSub.textContent = _wpNow2 >= WP_MINING_COST
+        ? "Ligue para minerar — custa " + WP_MINING_COST + " WP/sessão"
+        : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpNow2 + ")";
+      updateWpDisplay();
       setStep(5); updateMetrics();
       log("Bee autorizada! Ligue a mineração.", "lok");
       log("⚠️ IMPORTANTE: Para receber rewards, ative o Mambaboard em Batteries ou Ludo (Telegram).", "lwrn");
@@ -549,6 +598,29 @@
   // ─── MINERAÇÃO ───────────────────────────────────────────────────────────
   async function startMining() {
     if (!wasmReady || !saved.authorized || mining) return;
+
+    // ── Verifica e desconta WP ─────────────────────────────────────────────
+    var wp = getWP();
+    if (wp < WP_MINING_COST) {
+      // Sem WP — bloqueia e avisa
+      if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = false; }
+      if (switchSub) switchSub.textContent = "Precisa de " + WP_MINING_COST + " WP para minerar";
+      setStatus("err", "WP insuficiente", "Ganhe " + WP_MINING_COST + " WP na Central WP para iniciar mineração");
+      log("❌ WP insuficiente para iniciar mineração. Saldo: " + wp + " WP. Necessário: " + WP_MINING_COST + " WP", "lerr");
+      updateWpDisplay();
+      return;
+    }
+
+    // Desconta WP da sessão
+    var ok = spendWP(WP_MINING_COST, "Sessão de mineração NACKL");
+    if (!ok) {
+      if (miningSwitch) miningSwitch.checked = false;
+      if (switchSub) switchSub.textContent = "Erro ao debitar WP";
+      return;
+    }
+    log("✅ " + WP_MINING_COST + " WP debitados. Saldo restante: " + getWP() + " WP", "lok");
+    updateWpDisplay();
+
     // Reseta taps e incrementa epoch a cada novo inicio
     window._tapCount = 0;
     window._epochCount = (window._epochCount || 0) + 1;
@@ -1029,7 +1101,22 @@
     if (miningSwitch) {
       miningSwitch.addEventListener("change", function() {
         if (miningSwitch.checked) {
-          saved.autoMine = true; saveSaved();   // lembrar preferência
+          // Verifica WP antes de qualquer coisa
+          var wp = getWP();
+          if (wp < WP_MINING_COST) {
+            miningSwitch.checked = false;
+            if (switchSub) switchSub.textContent = "Precisa de " + WP_MINING_COST + " WP — ganhe na Central WP";
+            setStatus("err", "WP insuficiente",
+              "Você tem " + wp + " WP. Ganhe " + (WP_MINING_COST - wp) + " WP mais para minerar.");
+            log("❌ Sem WP para minerar. Saldo: " + wp + "/" + WP_MINING_COST, "lerr");
+            updateWpDisplay();
+            // Abre central WP após 1.5s para facilitar
+            setTimeout(function() {
+              try { if (window.AndroidBee && AndroidBee.openCentralWP) AndroidBee.openCentralWP(); } catch(_) {}
+            }, 1500);
+            return;
+          }
+          saved.autoMine = true; saveSaved();
           startMining();
         } else {
           saved.autoMine = false; saveSaved();  // usuário desligou — não religar
@@ -1049,8 +1136,17 @@
       });
     }
     document.addEventListener("visibilitychange", function() {
+      updateWpDisplay(); // Atualiza saldo WP sempre que painel fica visível
       if (!document.hidden && wasmReady && saved.authorized && saved.minerAddress && !mining) {
-        setTimeout(startMining, 500);
+        // Só retoma auto-mine se tiver WP suficiente
+        if (saved.autoMine && getWP() >= WP_MINING_COST) {
+          setTimeout(startMining, 500);
+        } else if (!document.hidden && saved.authorized) {
+          var _wpV = getWP();
+          if (switchSub) switchSub.textContent = _wpV >= WP_MINING_COST
+            ? "Ligue para minerar — custa " + WP_MINING_COST + " WP/sessão"
+            : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpV + ")";
+        }
       }
     });
   }
@@ -1060,6 +1156,7 @@
     grabElements();
     loadSaved();
     updateMetrics();
+    updateWpDisplay(); // Mostra saldo WP ao abrir o painel
     bindEvents();
     setStep(1);
     // Pequeno delay para garantir que o DOM e a bridge estão prontos

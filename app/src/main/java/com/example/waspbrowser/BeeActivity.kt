@@ -270,6 +270,12 @@ class BeeActivity : AppCompatActivity() {
                         """.trimIndent(), null)
                     }
                 }
+
+                @android.webkit.JavascriptInterface
+                fun openCentralWP() {
+                    // Alias de openCentral() — chamado pelo bee_engine.js quando falta WP
+                    openCentral()
+                }
                 @android.webkit.JavascriptInterface
                 fun isEnergyReady(): Boolean {
                     return context.getSharedPreferences("bee_energy", android.content.Context.MODE_PRIVATE)

@@ -316,6 +316,26 @@
     </label>
 </div>
 
+<!-- WP balance card abaixo do switch -->
+<div id="wpInfoRow" style="
+    display:flex; align-items:center; justify-content:space-between;
+    background:rgba(255,193,7,0.07); border:1px solid rgba(255,193,7,0.18);
+    border-radius:10px; padding:10px 14px; margin-bottom:12px;
+">
+    <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">⚡</span>
+        <div>
+            <div style="font-size:13px;font-weight:700;color:#ffc107;" id="wpBalanceBee">0 WP</div>
+            <div style="font-size:11px;color:var(--muted);">Custo: 10 WP / sessão 5min</div>
+        </div>
+    </div>
+    <button onclick="try{AndroidBee.openCentralWP()}catch(e){}" style="
+        background:rgba(255,193,7,0.15); border:1px solid rgba(255,193,7,0.3);
+        color:#ffc107; font-size:12px; font-weight:600; border-radius:8px;
+        padding:6px 12px; cursor:pointer;
+    ">+ Ganhar WP</button>
+</div>
+
 <div class="metrics">
     <div class="metric-card">
         <div class="metric-label">Engine</div>
