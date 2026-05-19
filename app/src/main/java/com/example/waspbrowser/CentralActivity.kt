@@ -157,8 +157,21 @@ class CentralActivity : AppCompatActivity() {
         wpRewardEarned = false
         isAdShowing = true
 
+        // Timeout de seguranca: se o ad travar (tela "instalar"), forca callback apos 60s
+        val adTimeoutRunnable = Runnable {
+            if (isAdShowing) {
+                android.util.Log.w(TAG, "Ad timeout! Forcando callback. rewarded=$wpRewardEarned")
+                isAdShowing = false
+                val cb = if (wpRewardEarned) "onWpAdRewarded" else "onWpAdClosed"
+                pendingRewardCallback = cb
+                deliverReward(cb)
+            }
+        }
+        handler.postDelayed(adTimeoutRunnable, 60_000)
+
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                handler.removeCallbacks(adTimeoutRunnable)
                 android.util.Log.d(TAG, "Ad fechado. Recompensa: $wpRewardEarned")
                 isAdShowing = false
                 rewardedAd = null
