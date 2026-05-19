@@ -126,6 +126,7 @@ class CentralActivity : AppCompatActivity() {
         }
 
         wpRewardEarned = false
+        rewardDelivered = false
         isAdShowing = true
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
@@ -154,13 +155,19 @@ class CentralActivity : AppCompatActivity() {
         }
     }
 
-    // Tenta enviar o prêmio para o site várias vezes para não falhar
+    // Envia o resultado do anúncio para o JS — apenas uma vez para não duplicar WP
+    private var rewardDelivered = false
     private fun retryRewardEvaluation(count: Int) {
-        if (wpRewardEarned) evaluateJs("onWpAdRewarded")
-        else evaluateJs("onWpAdClosed")
-
-        if (count < 2) {
-            handler.postDelayed({ retryRewardEvaluation(count + 1) }, 1000)
+        if (rewardDelivered) return  // já entregou, não repete
+        if (wpRewardEarned) {
+            rewardDelivered = true
+            evaluateJs("onWpAdRewarded")
+        } else {
+            evaluateJs("onWpAdClosed")
+            // Tenta mais vezes só para onWpAdClosed (sem risco de duplicar WP)
+            if (count < 2) {
+                handler.postDelayed({ retryRewardEvaluation(count + 1) }, 800)
+            }
         }
     }
 

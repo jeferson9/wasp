@@ -491,29 +491,44 @@ class BeeActivity : AppCompatActivity() {
         adMode = mode
         isAdShowing = true
 
+        // Reset flags antes de cada exibição
+        wpRewardGranted = false
+        energyRewardGranted = false
+
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
                 rewardedAd = null
                 isAdShowing = false
                 loadRewardedAd()
-                when {
-                    adMode == "energy" && energyRewardGranted ->
-                        evaluateJs("if(window.onEnergyRewarded) window.onEnergyRewarded()")
-                    adMode == "energy" ->
-                        evaluateJs("if(window.onEnergyAdClosed) window.onEnergyAdClosed()")
-                    adMode == "wp" && wpRewardGranted ->
-                        evaluateJs("if(window.onWpAdRewarded) window.onWpAdRewarded()")
-                    adMode == "wp" ->
-                        evaluateJs("if(window.onWpAdClosed) window.onWpAdClosed()")
-                }
+                val capturedMode = adMode
+                val capturedWpRewarded = wpRewardGranted
+                val capturedEnergyRewarded = energyRewardGranted
+                // Reset flags
+                wpRewardGranted = false
+                energyRewardGranted = false
                 adMode = null
+                mainHandler.postDelayed({
+                    when {
+                        capturedMode == "energy" && capturedEnergyRewarded ->
+                            evaluateJs("if(window.onEnergyRewarded) window.onEnergyRewarded()")
+                        capturedMode == "energy" ->
+                            evaluateJs("if(window.onEnergyAdClosed) window.onEnergyAdClosed()")
+                        capturedMode == "wp" && capturedWpRewarded ->
+                            evaluateJs("if(window.onWpAdRewarded) window.onWpAdRewarded()")
+                        capturedMode == "wp" ->
+                            evaluateJs("if(window.onWpAdClosed) window.onWpAdClosed()")
+                    }
+                }, 300)
             }
 
             override fun onAdFailedToShowFullScreenContent(error: AdError) {
                 rewardedAd = null
                 isAdShowing = false
+                wpRewardGranted = false
+                energyRewardGranted = false
                 loadRewardedAd()
                 adMode = null
+                evaluateJs("if(window.onWpAdClosed) window.onWpAdClosed()")
             }
         }
 

@@ -958,6 +958,8 @@
       el("adBtn").disabled    = true;
       el("adBtn").textContent = "Em cooldown";
       addWP(CFG.adReward, "Anúncio assistido");
+      renderAll();
+      toast("+" + CFG.adReward + " WP recebido! Obrigado por assistir.");
     };
     window.onWpAdClosed = function() {
       el("adBtn").disabled    = false;
@@ -965,6 +967,13 @@
       renderAll();
       toast("Anúncio fechado sem recompensa.");
     };
+    // Timeout de seguranca: se Android nao responder em 30s reabilita o botao
+    setInterval(function() {
+      var btn = el("adBtn");
+      if (btn && btn.disabled && btn.textContent === "Carregando...") {
+        btn.disabled = false; btn.textContent = "Assistir"; renderAll();
+      }
+    }, 30000);
     // Anúncio ainda carregando — mostra feedback visual
     window.onWpAdLoading = function() {
       el("adBtn").disabled    = true;

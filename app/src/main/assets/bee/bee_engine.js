@@ -10,8 +10,8 @@
   var MINING_DURATION_MS = 5 * 60 * 1000;    // 5 min por sessão (padrão Acki Nacki)
 
   // ─── WP (WASP POINTS) COMO MOEDA DE MINERAÇÃO ───────────────────────────
-  var KEY_WP          = "wasp_wp_balance";    // mesma chave usada pela central.html
-  var KEY_WP_HISTORY  = "wasp_wp_hist";
+  var KEY_WP          = "wasp_wp";              // mesma chave usada pela central.html
+  var KEY_WP_HISTORY  = "wasp_wp_history_v1";
   var WP_PER_MINUTE   = 1;                    // 1 WP por minuto de mineração
   var WP_MINING_COST  = WP_PER_MINUTE * Math.round(MINING_DURATION_MS / 60000); // 5 WP/sessão de 5min
 
