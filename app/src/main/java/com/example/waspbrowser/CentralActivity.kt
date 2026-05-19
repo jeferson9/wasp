@@ -220,11 +220,15 @@ class CentralActivity : AppCompatActivity() {
         super.onResume()
         webView.onResume()
         webView.resumeTimers()
-        // Se tinha callback pendente e WebView esta pronta, entrega agora
-        if (pendingRewardCallback != null && webViewReady) {
+        webViewReady = true  // assume pronta ao voltar — onPageFinished corrige se necessário
+        if (pendingRewardCallback != null) {
             val cb = pendingRewardCallback!!
             pendingRewardCallback = null
-            handler.postDelayed({ deliverReward(cb) }, 400)
+            android.util.Log.d(TAG, "onResume: entregando callback pendente $cb")
+            handler.postDelayed({
+                val script = "if(typeof window.$cb==='function'){window.$cb();}"
+                webView.evaluateJavascript(script, null)
+            }, 300)
         }
     }
     override fun onPause() { super.onPause(); webView.onPause(); webView.pauseTimers() }
@@ -243,9 +247,18 @@ class CentralActivity : AppCompatActivity() {
     }
 
     private fun deliverReward(jsFunc: String) {
-        val script = "if(typeof window.$jsFunc==='function'){window.$jsFunc();}"
-        webView.post { webView.evaluateJavascript(script, null) }
         android.util.Log.d(TAG, "deliverReward: $jsFunc")
+        val script = "if(typeof window.$jsFunc==='function'){window.$jsFunc();}"
+
+        if (webViewReady) {
+            // WebView pronta — executa direto
+            webView.post { webView.evaluateJavascript(script, null) }
+        } else {
+            // WebView ainda não pronta (p.ex. voltando do ad fullscreen)
+            // Guarda para entregar quando onPageFinished ou onResume disparar
+            android.util.Log.w(TAG, "deliverReward: WebView não pronta, guardando callback $jsFunc")
+            pendingRewardCallback = jsFunc
+        }
     }
 
     private fun evaluateJs(jsFunc: String) = deliverReward(jsFunc)
