@@ -1150,9 +1150,9 @@ class MainActivity : AppCompatActivity() {
 
     fun collapseBeePanel() {
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
-        val dp120 = (120 * resources.displayMetrics.density).toInt()
+        val dp56 = (56 * resources.displayMetrics.density).toInt()
         val params = container.layoutParams
-        params.height = dp120
+        params.height = dp56
         container.layoutParams = params
         container.visibility = android.view.View.VISIBLE
         beePanelExpanded = false
@@ -1186,8 +1186,8 @@ class MainActivity : AppCompatActivity() {
     fun showBeeFooter() {
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
         if (container.visibility == android.view.View.GONE) {
-            val dp120 = (120 * resources.displayMetrics.density).toInt()
-            container.layoutParams.height = dp120
+            val dp56 = (56 * resources.displayMetrics.density).toInt()
+            container.layoutParams.height = dp56
             container.visibility = android.view.View.VISIBLE
         }
     }

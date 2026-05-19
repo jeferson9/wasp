@@ -1063,6 +1063,14 @@
     setTimeout(loadSdk, 400);
   }
 
+  // Expõe estado de mineração para o header/rodapé
+  window.getMiningState = function() {
+    return {
+      mining: mining,
+      wallet: (saved && saved.walletName) ? saved.walletName : ""
+    };
+  };
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {

@@ -21,7 +21,7 @@
             background: #0b0b0d;
             color: var(--text);
             font-family: Arial, sans-serif;
-            padding: 20px 16px 60px;
+            padding: 72px 16px 60px;
         }
         h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
         .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
@@ -233,22 +233,38 @@
 </head>
 <body>
 
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-    <h1>🐝 Bee Engine</h1>
+<!-- ── HEADER FIXO ── -->
+<div id="bee-header" style="
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: #0b0b0d;
+    border-bottom: 1px solid rgba(255,193,7,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 1000;
+">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <span style="font-size:20px;flex-shrink:0;">🐝</span>
+        <div style="display:flex;flex-direction:column;min-width:0;">
+            <div id="hdr-status" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Bee Engine</div>
+            <div id="hdr-wallet" style="font-size:13px;font-weight:800;color:var(--yellow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">—</div>
+        </div>
+    </div>
     <button onclick="try{ AndroidBee.goBack(); }catch(e){}" style="
         background: rgba(255,255,255,0.07);
         border: 1px solid rgba(255,255,255,0.12);
-        color: #f0f0f0;
-        font-size: 20px;
-        line-height: 1;
-        width: 36px; height: 36px;
-        border-radius: 10px;
+        color: #aaa;
+        font-size: 16px;
+        width: 32px; height: 32px;
+        border-radius: 8px;
         cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
     ">✕</button>
 </div>
-<p class="sub">Mineração NACKL — Wasp Browser</p>
 
 <!-- ── BOTÃO CENTRAL WP ── -->
 <button class="central-wp-btn" onclick="openCentralWP()">
@@ -510,5 +526,35 @@ async function initSDK() {
 initSDK();
 </script>
 
+<script>
+// Atualiza o header fixo com estado de mineração
+(function() {
+    function updateHeader() {
+        try {
+            var state = window.getMiningState ? window.getMiningState() : null;
+            var hdrStatus = document.getElementById('hdr-status');
+            var hdrWallet = document.getElementById('hdr-wallet');
+            if (!hdrStatus || !hdrWallet) return;
+
+            if (state && state.mining) {
+                hdrStatus.style.color = '#31c46d';
+                hdrStatus.textContent = '⚡ Minerando NACKL';
+            } else {
+                hdrStatus.style.color = '#888';
+                hdrStatus.textContent = 'Bee Engine';
+            }
+            if (state && state.wallet) {
+                hdrWallet.textContent = state.wallet;
+            } else {
+                hdrWallet.textContent = '—';
+            }
+        } catch(e) {}
+    }
+    setInterval(updateHeader, 2000);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(updateHeader, 1000);
+    });
+})();
+</script>
 </body>
 </html>
