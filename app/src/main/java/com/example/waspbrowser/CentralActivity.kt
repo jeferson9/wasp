@@ -216,6 +216,14 @@ class CentralActivity : AppCompatActivity() {
         }
     }
 
+    private fun deliverReward(jsFunc: String) {
+        val script = "if(typeof window.$jsFunc==='function'){window.$jsFunc();}"
+        webView.post { webView.evaluateJavascript(script, null) }
+        android.util.Log.d(TAG, "deliverReward: $jsFunc")
+    }
+
+    private fun evaluateJs(jsFunc: String) = deliverReward(jsFunc)
+
     inner class CentralBridge {
         @JavascriptInterface
         fun openWpAd() { handler.post { showRewardedAd() } }
