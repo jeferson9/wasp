@@ -151,15 +151,10 @@ class CentralActivity : AppCompatActivity() {
                 loadRewardedAd()
 
                 val callback = if (wpRewardEarned) "onWpAdRewarded" else "onWpAdClosed"
-                // Aguarda 400ms para garantir que o app voltou ao foreground
+                // Aguarda 800ms para garantir que o app voltou ao foreground e WebView respondendo
                 handler.postDelayed({
-                    if (webViewReady) {
-                        deliverReward(callback)
-                    } else {
-                        // WebView ainda recarregando — guarda para entregar no onPageFinished
-                        pendingRewardCallback = callback
-                    }
-                }, 400)
+                    deliverReward(callback)
+                }, 800)
             }
 
             override fun onAdFailedToShowFullScreenContent(e: AdError) {
@@ -179,13 +174,16 @@ class CentralActivity : AppCompatActivity() {
 
     // Entrega o callback JS uma única vez, com retry se a WebView demorar
     private fun deliverReward(jsFunc: String, attempt: Int = 0) {
-        if (!webViewReady && attempt < 5) {
-            handler.postDelayed({ deliverReward(jsFunc, attempt + 1) }, 500)
-            return
-        }
         val script = "if(typeof window.$jsFunc==='function'){window.$jsFunc();}"
-        webView.post { webView.evaluateJavascript(script, null) }
-        android.util.Log.d(TAG, "deliverReward: $jsFunc (tentativa $attempt)")
+        webView.post {
+            webView.evaluateJavascript(script) { result ->
+                android.util.Log.d(TAG, "deliverReward: $jsFunc tentativa=$attempt result=$result")
+                // Se funcao nao foi encontrada e ainda tem tentativas, tenta de novo
+                if ((result == null || result == "null" || result == "false") && attempt < 4) {
+                    handler.postDelayed({ deliverReward(jsFunc, attempt + 1) }, 600)
+                }
+            }
+        }
     }
 
     inner class CentralBridge {
