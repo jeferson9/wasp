@@ -36,6 +36,7 @@ class CentralActivity : AppCompatActivity() {
     private var isAdShowing = false
     private var wpRewardEarned = false
     private var adPendingShow = false
+    private var rewardAlreadyDelivered = false  // evita duplo disparo
 
     // Controla se a WebView já carregou o HTML ao menos uma vez
     private var webViewReady = false
@@ -155,6 +156,7 @@ class CentralActivity : AppCompatActivity() {
         }
 
         wpRewardEarned = false
+        rewardAlreadyDelivered = false
         isAdShowing = true
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
@@ -163,7 +165,8 @@ class CentralActivity : AppCompatActivity() {
                 isAdShowing = false
                 rewardedAd = null
                 loadRewardedAd()
-                retryRewardEvaluation(0)
+                // Aguarda até 2s para o callback de recompensa chegar antes de decidir
+                waitAndDeliverReward(0)
             }
 
             override fun onAdFailedToShowFullScreenContent(e: AdError) {
@@ -177,15 +180,38 @@ class CentralActivity : AppCompatActivity() {
         ad.show(this) { _: RewardItem ->
             wpRewardEarned = true
             android.util.Log.e("WASP_AD", "✅ RECOMPENSA CONFIRMADA pelo AdMob!")
-            handler.post { Toast.makeText(this@CentralActivity, "WP Recebido! 🐝", Toast.LENGTH_SHORT).show() }
+            handler.post {
+                Toast.makeText(this@CentralActivity, "WP Recebido! 🐝", Toast.LENGTH_SHORT).show()
+                // Se dismiss já ocorreu, entrega imediatamente sem esperar
+                if (!isAdShowing && !rewardAlreadyDelivered) {
+                    rewardAlreadyDelivered = true
+                    deliverReward("onWpAdRewarded")
+                }
+            }
         }
     }
 
-    private fun retryRewardEvaluation(count: Int) {
-        val cb = if (wpRewardEarned) "onWpAdRewarded" else "onWpAdClosed"
-        deliverReward(cb)
-        if (count < 2) {
-            handler.postDelayed({ retryRewardEvaluation(count + 1) }, 1000)
+    /**
+     * Aguarda o callback de recompensa do AdMob, que pode chegar APÓS onAdDismissed.
+     * Tenta por até 2s (4 x 500ms). Se wpRewardEarned for true, entrega recompensa.
+     * Se esgotar sem recompensa, entrega onWpAdClosed (fechou sem assistir).
+     */
+    private fun waitAndDeliverReward(attempt: Int) {
+        if (rewardAlreadyDelivered) return  // já entregue pelo callback inline acima
+
+        if (wpRewardEarned) {
+            rewardAlreadyDelivered = true
+            deliverReward("onWpAdRewarded")
+            return
+        }
+
+        if (attempt < 4) {
+            // ainda aguardando o callback de recompensa
+            handler.postDelayed({ waitAndDeliverReward(attempt + 1) }, 500)
+        } else {
+            // sem recompensa após 2s — usuário fechou antes do fim
+            rewardAlreadyDelivered = true
+            deliverReward("onWpAdClosed")
         }
     }
 
