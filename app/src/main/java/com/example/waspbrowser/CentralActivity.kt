@@ -157,37 +157,13 @@ class CentralActivity : AppCompatActivity() {
         wpRewardEarned = false
         isAdShowing = true
 
-        // Timeout de seguranca: se o ad travar (tela "instalar"), forca callback apos 60s
-        val adTimeoutRunnable = Runnable {
-            if (isAdShowing) {
-                android.util.Log.w(TAG, "Ad timeout! Forcando callback. rewarded=$wpRewardEarned")
-                isAdShowing = false
-                val cb = if (wpRewardEarned) "onWpAdRewarded" else "onWpAdClosed"
-                pendingRewardCallback = cb
-                deliverReward(cb)
-            }
-        }
-        handler.postDelayed(adTimeoutRunnable, 60_000)
-
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
-                handler.removeCallbacks(adTimeoutRunnable)
-                android.util.Log.d(TAG, "Ad fechado. Recompensa: $wpRewardEarned")
+                android.util.Log.d(TAG, "Anuncio fechado. Ganhou pontos? $wpRewardEarned")
                 isAdShowing = false
                 rewardedAd = null
                 loadRewardedAd()
-
-                val callback = if (wpRewardEarned) "onWpAdRewarded" else "onWpAdClosed"
-                // Guarda como pendente — se a pagina recarregar, onPageFinished entrega
-                pendingRewardCallback = callback
-                // Tenta entregar apos 1200ms (tempo para voltar ao foreground)
-                handler.postDelayed({
-                    if (pendingRewardCallback != null) {
-                        val cb = pendingRewardCallback!!
-                        pendingRewardCallback = null
-                        deliverReward(cb)
-                    }
-                }, 1200)
+                retryRewardEvaluation(0)
             }
 
             override fun onAdFailedToShowFullScreenContent(e: AdError) {
@@ -200,83 +176,19 @@ class CentralActivity : AppCompatActivity() {
 
         ad.show(this) { _: RewardItem ->
             wpRewardEarned = true
-            android.util.Log.e("WASP_AD", "✅ RECOMPENSA CONFIRMADA pelo AdMob! wpRewardEarned=true")
-            handler.post { Toast.makeText(this, "WP Recebido! 🐝", Toast.LENGTH_SHORT).show() }
+            android.util.Log.e("WASP_AD", "✅ RECOMPENSA CONFIRMADA pelo AdMob!")
+            handler.post { Toast.makeText(this@CentralActivity, "WP Recebido! 🐝", Toast.LENGTH_SHORT).show() }
         }
     }
 
-    // Entrega o callback JS uma única vez, com retry se a WebView demorar
-    private fun deliverReward(jsFunc: String, attempt: Int = 0) {
-        val script = "if(typeof window.$jsFunc==='function'){window.$jsFunc();}"
-        webView.post {
-            webView.evaluateJavascript(script) { result ->
-                android.util.Log.d(TAG, "deliverReward: $jsFunc tentativa=$attempt result=$result")
-                // Se funcao nao foi encontrada e ainda tem tentativas, tenta de novo
-                if ((result == null || result == "null" || result == "false") && attempt < 4) {
-                    handler.postDelayed({ deliverReward(jsFunc, attempt + 1) }, 600)
-                }
-            }
+    private fun retryRewardEvaluation(count: Int) {
+        val cb = if (wpRewardEarned) "onWpAdRewarded" else "onWpAdClosed"
+        deliverReward(cb)
+        if (count < 2) {
+            handler.postDelayed({ retryRewardEvaluation(count + 1) }, 1000)
         }
     }
 
-    inner class CentralBridge {
-        @JavascriptInterface
-        fun openWpAd() { handler.post { showRewardedAd() } }
-
-        @JavascriptInterface
-        fun closeCentral() {
-            handler.post {
-                @Suppress("DEPRECATION")
-                overridePendingTransition(R.anim.fade_in, R.anim.slide_down)
-                finish()
-            }
-        }
-
-        @JavascriptInterface
-        fun toast(m: String) { handler.post { Toast.makeText(this@CentralActivity, m, Toast.LENGTH_SHORT).show() } }
-
-        @JavascriptInterface
-        fun log(m: String) { android.util.Log.d("CentralJS", m) }
-
-        @JavascriptInterface
-        fun startBgMining(durationMs: Long, walletName: String) {
-            android.util.Log.d(TAG, "startBgMining: ${durationMs/60000}min wallet=$walletName")
-            try {
-                val intent = BeeBackgroundService.buildStartIntent(this@CentralActivity, walletName)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    startForegroundService(intent)
-                } else {
-                    startService(intent)
-                }
-                handler.post { Toast.makeText(this@CentralActivity, "🐝 Minerando em background!", Toast.LENGTH_SHORT).show() }
-            } catch (e: Exception) {
-                android.util.Log.e(TAG, "startBgMining error: ${e.message}")
-            }
-        }
-
-        @JavascriptInterface
-        fun stopBgMining() {
-            try { startService(BeeBackgroundService.buildStopIntent(this@CentralActivity)) }
-            catch (e: Exception) { android.util.Log.e(TAG, "stopBgMining error: ${e.message}") }
-        }
-
-        @JavascriptInterface
-        fun getBgMiningStatus(): String {
-            val active = BeeBackgroundService.isActive(this@CentralActivity)
-            val remaining = BeeBackgroundService.remainingMs(this@CentralActivity)
-            val prefs = getSharedPreferences(BeeBackgroundService.PREFS_BG, MODE_PRIVATE)
-            val cycles = prefs.getInt(BeeBackgroundService.KEY_CYCLES, 0)
-            val wallet = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
-            return """{"active":$active,"remainingMs":$remaining,"cycles":$cycles,"wallet":"$wallet"}"""
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        @Suppress("DEPRECATION")
-        overridePendingTransition(R.anim.fade_in, R.anim.slide_down)
-        finish()
-    }
 
     override fun onResume() {
         super.onResume()
