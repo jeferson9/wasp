@@ -549,6 +549,8 @@
   // ─── MINERAÇÃO ───────────────────────────────────────────────────────────
   async function startMining() {
     if (!wasmReady || !saved.authorized || mining) return;
+    // Reseta o contador de taps para o novo epoch
+    window._tapCount = 0;
     try {
       setStatus("warn", "Conectando ao Miner...", "Inicializando sessão");
 
