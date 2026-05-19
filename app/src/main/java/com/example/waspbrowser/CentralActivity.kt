@@ -66,15 +66,20 @@ class CentralActivity : AppCompatActivity() {
 
         // WebViewClient que notifica quando o HTML terminou de carregar
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                webViewReady = false
+                android.util.Log.d(TAG, "WebView recarregando: $url")
+            }
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 webViewReady = true
                 android.util.Log.d(TAG, "WebView pronta: $url")
-                // Se havia recompensa pendente de entregar, entrega agora
+                // Entrega callback pendente (pode ter chegado antes ou durante reload)
                 if (pendingRewardCallback != null) {
                     val cb = pendingRewardCallback!!
                     pendingRewardCallback = null
-                    handler.postDelayed({ deliverReward(cb) }, 300)
+                    handler.postDelayed({ deliverReward(cb) }, 500)
                 }
             }
         }
@@ -151,10 +156,16 @@ class CentralActivity : AppCompatActivity() {
                 loadRewardedAd()
 
                 val callback = if (wpRewardEarned) "onWpAdRewarded" else "onWpAdClosed"
-                // Aguarda 800ms para garantir que o app voltou ao foreground e WebView respondendo
+                // Guarda como pendente — se a pagina recarregar, onPageFinished entrega
+                pendingRewardCallback = callback
+                // Tenta entregar apos 1200ms (tempo para voltar ao foreground)
                 handler.postDelayed({
-                    deliverReward(callback)
-                }, 800)
+                    if (pendingRewardCallback != null) {
+                        val cb = pendingRewardCallback!!
+                        pendingRewardCallback = null
+                        deliverReward(cb)
+                    }
+                }, 1200)
             }
 
             override fun onAdFailedToShowFullScreenContent(e: AdError) {
