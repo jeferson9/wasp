@@ -530,7 +530,7 @@
     <div class="cmc-left">
         <div class="cmc-label">MINERAÇÃO NACKL</div>
         <div class="cmc-val" id="miningStatus">WP necessário para minerar</div>
-        <div class="cmc-hint">Use WP para ativar o Boost 2x e iniciar mineração em segundo plano — o Wasp continua minerando NACKL enquanto você navega.</div>
+        <div class="cmc-hint">Ganhe 10 WP no Tap Game + 10 WP no Anúncio por hora. Use WP para minerar NACKL (10 WP/sessão de 5 min).</div>
     </div>
     <div class="cmc-icon">🐝</div>
 </div>
@@ -556,7 +556,7 @@
     <div class="c-game-card card-ad" id="cardAd" onclick="doWatchAd()">
         <div class="cgc-emoji">📺</div>
         <div class="cgc-name">Ver Anúncio</div>
-        <div class="cgc-reward">+5 WP</div>
+        <div class="cgc-reward">+10 WP</div>
         <div class="cgc-status" id="adStatus">Verificando...</div>
         <button class="cgc-btn btn-blue" id="adBtn">Assistir</button>
     </div>
@@ -653,12 +653,14 @@
     ══════════════════════════════════════════ */
     const CFG = {
       tapMax:        100,
-      tapReward:     10,
-      adReward:      5,
-      tapCooldown:   60 * 60 * 1000,   // 1h
-      adCooldown:    15 * 60 * 1000,   // 15min
+      tapReward:     10,          // 10 WP por tap game  (1×/hora)
+      adReward:      10,          // 10 WP por anúncio   (1×/hora — limite AdMob)
+      tapCooldown:   60 * 60 * 1000,   // 1h  — 1 tap por hora
+      adCooldown:    60 * 60 * 1000,   // 1h  — 1 anúncio por hora (seguro AdMob)
       boostCost:     20,
       boostDuration: 15 * 60 * 1000,   // 15min
+      // Economia: 10 WP tap + 10 WP ad = 20 WP/hora
+      // Mineração: 10 WP por sessão de 5 min = 2 sessões/hora sem boost
     };
 
     /* ══════════════════════════════════════════
@@ -771,11 +773,13 @@
       } else if (boostOn) {
         el("miningStatus").textContent = "Boost ativo — mineração 2x ⚡";
         el("miningStatus").style.color = "var(--yellow)";
-      } else if (wp >= CFG.boostCost) {
-        el("miningStatus").textContent = "Você tem WP — ative o Boost 2x + Bg Mining";
-        el("miningStatus").style.color = "";
+      } else if (wp >= 10) {
+        const sessions = Math.floor(wp / 10);
+        el("miningStatus").textContent = `✅ ${wp} WP — ${sessions} sessão(ões) de mineração disponível`;
+        el("miningStatus").style.color = "var(--green, #22C55E)";
       } else {
-        el("miningStatus").textContent = `Ganhe mais ${CFG.boostCost - wp} WP para o Boost`;
+        const falta = 10 - wp;
+        el("miningStatus").textContent = `Faltam ${falta} WP para minerar — tap ou anúncio`;
         el("miningStatus").style.color = "";
       }
 
