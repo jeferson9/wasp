@@ -530,7 +530,7 @@
     <div class="cmc-left">
         <div class="cmc-label">MINERAÇÃO NACKL</div>
         <div class="cmc-val" id="miningStatus">WP necessário para minerar</div>
-        <div class="cmc-hint">Ganhe 10 WP no Tap Game + 10 WP no Anúncio por hora. Use WP para minerar NACKL (10 WP/sessão de 5 min).</div>
+        <div class="cmc-hint">Ganhe 15 WP no Tap + 15 WP no Anúncio por hora. Mineração custa 1 WP/min — 30 min de mineração com renda natural.</div>
     </div>
     <div class="cmc-icon">🐝</div>
 </div>
@@ -547,7 +547,7 @@
     <div class="c-game-card card-tap" id="cardTap" onclick="openTap()">
         <div class="cgc-emoji">👆</div>
         <div class="cgc-name">Tap Game</div>
-        <div class="cgc-reward">+10 WP</div>
+        <div class="cgc-reward">+15 WP</div>
         <div class="cgc-status" id="tapStatus">Verificando...</div>
         <button class="cgc-btn btn-yellow" id="tapBtn">Jogar agora</button>
     </div>
@@ -556,7 +556,7 @@
     <div class="c-game-card card-ad" id="cardAd" onclick="doWatchAd()">
         <div class="cgc-emoji">📺</div>
         <div class="cgc-name">Ver Anúncio</div>
-        <div class="cgc-reward">+10 WP</div>
+        <div class="cgc-reward">+15 WP</div>
         <div class="cgc-status" id="adStatus">Verificando...</div>
         <button class="cgc-btn btn-blue" id="adBtn">Assistir</button>
     </div>
@@ -653,14 +653,14 @@
     ══════════════════════════════════════════ */
     const CFG = {
       tapMax:        100,
-      tapReward:     10,          // 10 WP por tap game  (1×/hora)
-      adReward:      10,          // 10 WP por anúncio   (1×/hora — limite AdMob)
-      tapCooldown:   60 * 60 * 1000,   // 1h  — 1 tap por hora
-      adCooldown:    60 * 60 * 1000,   // 1h  — 1 anúncio por hora (seguro AdMob)
+      tapReward:     15,          // 15 WP por tap game  (1×/hora)
+      adReward:      15,          // 15 WP por anúncio   (1×/hora — limite AdMob)
+      tapCooldown:   60 * 60 * 1000,   // 1h
+      adCooldown:    60 * 60 * 1000,   // 1h  — seguro AdMob
       boostCost:     20,
       boostDuration: 15 * 60 * 1000,   // 15min
-      // Economia: 10 WP tap + 10 WP ad = 20 WP/hora
-      // Mineração: 10 WP por sessão de 5 min = 2 sessões/hora sem boost
+      // Economia: 15 WP tap + 15 WP ad = 30 WP/hora
+      // Mineração: 1 WP/min → 30 min de mineração por hora com renda natural
     };
 
     /* ══════════════════════════════════════════
@@ -773,13 +773,13 @@
       } else if (boostOn) {
         el("miningStatus").textContent = "Boost ativo — mineração 2x ⚡";
         el("miningStatus").style.color = "var(--yellow)";
-      } else if (wp >= 10) {
-        const sessions = Math.floor(wp / 10);
-        el("miningStatus").textContent = `✅ ${wp} WP — ${sessions} sessão(ões) de mineração disponível`;
+      } else if (wp >= 5) {
+        const mins = wp; // 1 WP = 1 min
+        el("miningStatus").textContent = `✅ ${wp} WP — você pode minerar ${mins} min`;
         el("miningStatus").style.color = "var(--green, #22C55E)";
       } else {
-        const falta = 10 - wp;
-        el("miningStatus").textContent = `Faltam ${falta} WP para minerar — tap ou anúncio`;
+        const falta = 5 - wp;
+        el("miningStatus").textContent = `Faltam ${falta} WP para iniciar — tap ou anúncio`;
         el("miningStatus").style.color = "";
       }
 

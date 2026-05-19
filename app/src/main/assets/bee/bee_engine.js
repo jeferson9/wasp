@@ -12,7 +12,8 @@
   // ─── WP (WASP POINTS) COMO MOEDA DE MINERAÇÃO ───────────────────────────
   var KEY_WP          = "wasp_wp_balance";    // mesma chave usada pela central.html
   var KEY_WP_HISTORY  = "wasp_wp_hist";
-  var WP_MINING_COST  = 10;                   // WP por sessão de mineração (5 min)
+  var WP_PER_MINUTE   = 1;                    // 1 WP por minuto de mineração
+  var WP_MINING_COST  = WP_PER_MINUTE * Math.round(MINING_DURATION_MS / 60000); // 5 WP/sessão de 5min
 
   function getWP() {
     try { return Math.max(0, parseInt(localStorage.getItem(KEY_WP) || "0", 10) || 0); }
@@ -39,11 +40,11 @@
     if (btn) {
       var wp = getWP();
       if (wp >= WP_MINING_COST) {
-        btn.textContent = "Minerar (" + WP_MINING_COST + " WP)";
+        btn.textContent = "Minerar (1 WP/min)";
         btn.disabled = false;
         btn.classList.remove("btn-disabled");
       } else {
-        btn.textContent = "Precisa de " + WP_MINING_COST + " WP";
+        btn.textContent = "Precisa de " + WP_MINING_COST + " WP para iniciar";
         btn.disabled = true;
         btn.classList.add("btn-disabled");
       }
@@ -367,8 +368,8 @@
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow = getWP();
       if (switchSub) switchSub.textContent = _wpNow >= WP_MINING_COST
-        ? "Ligue para minerar — custa " + WP_MINING_COST + " WP/sessão"
-        : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpNow + ")";
+        ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
+        : "Precisa de " + WP_MINING_COST + " WP para iniciar (você tem " + _wpNow + ")";
       updateWpDisplay();
       setStep(5);
       log("Sessão restaurada: " + saved.walletName, "lok");
@@ -548,8 +549,8 @@
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow2 = getWP();
       if (switchSub) switchSub.textContent = _wpNow2 >= WP_MINING_COST
-        ? "Ligue para minerar — custa " + WP_MINING_COST + " WP/sessão"
-        : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpNow2 + ")";
+        ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
+        : "Precisa de " + WP_MINING_COST + " WP para iniciar (você tem " + _wpNow2 + ")";
       updateWpDisplay();
       setStep(5); updateMetrics();
       log("Bee autorizada! Ligue a mineração.", "lok");
@@ -1144,7 +1145,7 @@
         } else if (!document.hidden && saved.authorized) {
           var _wpV = getWP();
           if (switchSub) switchSub.textContent = _wpV >= WP_MINING_COST
-            ? "Ligue para minerar — custa " + WP_MINING_COST + " WP/sessão"
+            ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
             : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpV + ")";
         }
       }
