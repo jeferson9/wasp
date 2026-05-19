@@ -1067,7 +1067,9 @@
   window.getMiningState = function() {
     return {
       mining: mining,
-      wallet: (saved && saved.walletName) ? saved.walletName : ""
+      wallet: (saved && saved.walletName) ? saved.walletName : "",
+      tapCount: window._tapCount || 0,
+      tapTotal: 100
     };
   };
 
