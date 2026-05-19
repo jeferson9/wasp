@@ -66,6 +66,15 @@ class CentralActivity : AppCompatActivity() {
 
         // WebViewClient que notifica quando o HTML terminou de carregar
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: return false
+                // Links externos (market, http, https fora do assets) abrem no sistema
+                if (!url.startsWith("file://")) {
+                    openExternalUrl(url)
+                    return true
+                }
+                return false
+            }
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 webViewReady = false
@@ -178,7 +187,7 @@ class CentralActivity : AppCompatActivity() {
 
         ad.show(this) { _: RewardItem ->
             wpRewardEarned = true
-            android.util.Log.d(TAG, "Recompensa confirmada!")
+            android.util.Log.e("WASP_AD", "✅ RECOMPENSA CONFIRMADA pelo AdMob! wpRewardEarned=true")
             handler.post { Toast.makeText(this, "WP Recebido! 🐝", Toast.LENGTH_SHORT).show() }
         }
     }
@@ -256,7 +265,29 @@ class CentralActivity : AppCompatActivity() {
         finish()
     }
 
-    override fun onResume() { super.onResume(); webView.onResume() }
-    override fun onPause() { super.onPause(); webView.onPause() }
+    override fun onResume() {
+        super.onResume()
+        webView.onResume()
+        webView.resumeTimers()
+        // Se tinha callback pendente e WebView esta pronta, entrega agora
+        if (pendingRewardCallback != null && webViewReady) {
+            val cb = pendingRewardCallback!!
+            pendingRewardCallback = null
+            handler.postDelayed({ deliverReward(cb) }, 400)
+        }
+    }
+    override fun onPause() { super.onPause(); webView.onPause(); webView.pauseTimers() }
     override fun onDestroy() { webView.destroy(); super.onDestroy() }
+
+    // Abre links externos (market://, https://play.google.com, etc)
+    private fun openExternalUrl(url: String) {
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse(url))
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Nao foi possivel abrir URL externa: $url")
+        }
+    }
 }
