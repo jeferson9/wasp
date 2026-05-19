@@ -954,12 +954,16 @@
 
     // Chamado pelo Android quando anúncio completo
     window.onWpAdRewarded = function() {
+      // Protecao contra chamadas multiplas (retryRewardEvaluation chama 3x)
+      if (window._wpAdRewardedDone) return;
+      window._wpAdRewardedDone = true;
+      setTimeout(function() { window._wpAdRewardedDone = false; }, 3000);
       setN(K.adLast, Date.now());
       el("adBtn").disabled    = true;
       el("adBtn").textContent = "Em cooldown";
       addWP(CFG.adReward, "Anúncio assistido");
       renderAll();
-      toast("+" + CFG.adReward + " WP recebido! Obrigado por assistir.");
+      toast("+" + CFG.adReward + " WP recebido!");
     };
     window.onWpAdClosed = function() {
       el("adBtn").disabled    = false;
