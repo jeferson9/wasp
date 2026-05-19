@@ -549,8 +549,9 @@
   // ─── MINERAÇÃO ───────────────────────────────────────────────────────────
   async function startMining() {
     if (!wasmReady || !saved.authorized || mining) return;
-    // Reseta o contador de taps para o novo epoch
+    // Reseta taps e incrementa epoch a cada novo inicio
     window._tapCount = 0;
+    window._epochCount = (window._epochCount || 0) + 1;
     try {
       setStatus("warn", "Conectando ao Miner...", "Inicializando sessão");
 
@@ -1071,7 +1072,8 @@
       mining: mining,
       wallet: (saved && saved.walletName) ? saved.walletName : "",
       tapCount: window._tapCount || 0,
-      tapTotal: 100
+      tapTotal: 100,
+      epochCount: window._epochCount || 0
     };
   };
 

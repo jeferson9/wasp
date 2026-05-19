@@ -537,10 +537,7 @@ initSDK();
 // Atualiza o header fixo com estado de mineracao
 (function() {
     var SQUARES = 20;
-    var epochCount = 0;
-    var lastMining = false;
 
-    // Inicializa os quadradinhos
     function initBar() {
         var bar = document.getElementById('hdr-epoch-bar');
         if (!bar || bar.children.length === SQUARES) return;
@@ -568,16 +565,10 @@ initSDK();
             var wallet = (state && state.wallet) ? state.wallet : '—';
             var taps   = (state && state.tapCount) ? state.tapCount : 0;
             var total  = (state && state.tapTotal) ? state.tapTotal : 100;
+            var epoch  = (state && state.epochCount) ? state.epochCount : 0;
 
-            // Detecta novo epoch (taps zerou)
-            if (lastMining && mining && taps === 0) epochCount++;
-            if (!lastMining && mining) epochCount++;
-            lastMining = mining;
-
-            // Wallet
             hdrWallet.textContent = wallet;
 
-            // Status
             if (mining) {
                 hdrStatus.style.color = '#31c46d';
                 hdrStatus.textContent = 'Participando da rede Acki Nacki';
@@ -590,19 +581,14 @@ initSDK();
                 hdrDot.style.boxShadow = 'none';
             }
 
-            // Epoch label
-            if (hdrLabel) hdrLabel.textContent = mining ? 'Epoch ' + epochCount : 'Epoch —';
+            if (hdrLabel) hdrLabel.textContent = epoch > 0 ? 'Epoch ' + epoch : 'Epoch —';
 
-            // Progress bar — quantos quadradinhos acesos
+            // Progress bar — usa tapCount direto do engine (ja zerou no startMining)
             var filled = mining ? Math.min(SQUARES, Math.round((taps / total) * SQUARES)) : 0;
             for (var i = 0; i < SQUARES; i++) {
                 var sq = document.getElementById('sq-' + i);
                 if (!sq) continue;
-                if (i < filled) {
-                    sq.style.background = '#ffc107';
-                } else {
-                    sq.style.background = '#222';
-                }
+                sq.style.background = i < filled ? '#ffc107' : '#222';
             }
         } catch(e) {}
     }
