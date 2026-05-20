@@ -1134,6 +1134,10 @@ function closeSettings(){
     const panel = $("settingsPanel");
     if(panel) panel.classList.remove("active");
     restoreHiveHandleLater();
+    // Se foi aberto pelo browser nativo, notifica para voltar
+    if(window.Android && typeof Android.onSettingsClosed === "function"){
+        Android.onSettingsClosed();
+    }
 }
 
 /* =========================

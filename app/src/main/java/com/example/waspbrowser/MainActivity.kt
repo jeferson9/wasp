@@ -737,7 +737,13 @@ class MainActivity : AppCompatActivity() {
                             }, 250)
                         }
                     }
-                    "settings"   -> startActivityFade(Intent(this, SettingsActivity::class.java))
+                    "settings"   -> {
+                        // Abre o settingsPanel da home (conteudo rico, visual consistente)
+                        geckoView.visibility = android.view.View.GONE
+                        topBar.visibility = android.view.View.GONE
+                        webAppView.visibility = android.view.View.VISIBLE
+                        webAppView.evaluateJavascript("openSettings()", null)
+                    }
                     "about"      -> startActivityFade(Intent(this, AboutActivity::class.java))
                 }
             }
@@ -1414,4 +1420,17 @@ class MainActivity : AppCompatActivity() {
 
     @JavascriptInterface
     fun startBee() { runOnUiThread { Toast.makeText(this, "Bee Engine Started", Toast.LENGTH_SHORT).show() } }
+
+    @JavascriptInterface
+    fun onSettingsClosed() {
+        // Chamado quando o usuario fecha o settingsPanel
+        // Se o GeckoView estava ativo (browser), restaura ele
+        runOnUiThread {
+            if (currentUrl.isNotEmpty()) {
+                geckoView.visibility = android.view.View.VISIBLE
+                topBar.visibility = android.view.View.VISIBLE
+                webAppView.visibility = android.view.View.GONE
+            }
+        }
+    }
 }
