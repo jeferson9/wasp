@@ -1504,37 +1504,7 @@ function blurSearch(){
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Sticky search — aparece quando a busca original sai da tela
-    (function() {
-        var home       = document.getElementById("home");
-        var origSearch = document.getElementById("homeSearchWrap");
-        var stickyWrap = document.getElementById("stickySearchWrap");
-        var stickyInput = document.getElementById("homeInputSticky");
-        var stickyIcon  = document.getElementById("engineIconSticky");
-        var origIcon    = document.getElementById("engineIcon");
-        if (!home || !origSearch || !stickyWrap) return;
-
-        home.addEventListener("scroll", function() {
-            var rect = origSearch.getBoundingClientRect();
-            var homeRect = home.getBoundingClientRect();
-            // Quando a busca original sair completamente do topo do #home
-            if (rect.bottom < homeRect.top) {
-                stickyWrap.classList.add("scrolled");
-                // Sincroniza ícone do motor
-                if (stickyIcon && origIcon) stickyIcon.src = origIcon.src;
-            } else {
-                stickyWrap.classList.remove("scrolled");
-            }
-        }, { passive: true });
-
-        // Sincroniza input sticky com o original ao digitar
-        if (stickyInput) {
-            stickyInput.addEventListener("input", function() {
-                var orig = document.getElementById("homeInput");
-                if (orig) orig.value = stickyInput.value;
-            });
-        }
-    })();
+    // sticky search removido
 
     // Saudação personalizada
     initGreeting();
@@ -1556,15 +1526,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Bind engine buttons via addEventListener (capture) para evitar bloqueio
     const engineBtn = document.getElementById("engineBtn");
-    const engineBtnSticky = document.getElementById("engineBtnSticky");
     if (engineBtn) {
         engineBtn.addEventListener("click", function(e){
-            e.stopPropagation();
-            toggleEngineMenu();
-        }, true);
-    }
-    if (engineBtnSticky) {
-        engineBtnSticky.addEventListener("click", function(e){
             e.stopPropagation();
             toggleEngineMenu();
         }, true);
