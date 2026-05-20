@@ -1601,6 +1601,20 @@ document.addEventListener("DOMContentLoaded", () => {
     initEngine();
     initEngineSettingsLabel();
 
+    // Idioma atual do sistema
+    (function(){
+        const label = document.getElementById("currentLang");
+        if(!label) return;
+        const lang = navigator.language || navigator.userLanguage || "—";
+        const names = {
+            "pt":"Português","pt-BR":"Português (Brasil)","pt-PT":"Português (Portugal)",
+            "en":"English","en-US":"English (US)","en-GB":"English (UK)",
+            "es":"Español","fr":"Français","de":"Deutsch","it":"Italiano",
+            "ja":"日本語","ko":"한국어","zh":"中文","ar":"العربية"
+        };
+        label.textContent = names[lang] || names[lang.split("-")[0]] || lang;
+    })();
+
     // Bind engine buttons via addEventListener (capture) para evitar bloqueio
     const engineBtn = document.getElementById("engineBtn");
     if (engineBtn) {

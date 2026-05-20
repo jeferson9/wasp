@@ -375,7 +375,10 @@
             <div class="settings-subitem" onclick="setTheme('dark')">🌙 Dark</div>
             <div class="settings-subitem" onclick="setTheme('light')">☀️ Light</div>
         </div>
-        <div class="settings-item">Idioma</div>
+        <div class="settings-item" style="justify-content:space-between;">
+            <span>🌐 Idioma</span>
+            <span id="currentLang" style="font-size:12px;opacity:0.5;margin-left:auto;">—</span>
+        </div>
         <div class="settings-item" onclick="toggleEngineOptions()">
             <span>Motor de busca</span>
             <span id="currentEngineName" style="font-size:12px;opacity:0.6;margin-left:auto;margin-right:8px;">Google</span>
