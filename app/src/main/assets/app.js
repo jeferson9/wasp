@@ -681,10 +681,8 @@ function toggleEngineOptions(){
 
 function setEngineFromSettings(engine){
     setEngine(engine);
-    // Atualiza nome exibido nas configurações
-    const names = { google:"Google", brave:"Brave", bing:"Bing", duck:"DuckDuckGo" };
-    const label = document.getElementById("currentEngineName");
-    if(label) label.textContent = names[engine] || engine;
+    // Atualiza label nas configurações
+    initEngineSettingsLabel();
     // Fecha submenu
     const menu = document.getElementById("engineOptions");
     if(menu) menu.classList.remove("active");
@@ -692,8 +690,9 @@ function setEngineFromSettings(engine){
 
 function initEngineSettingsLabel(){
     const names = { google:"Google", brave:"Brave", bing:"Bing", duck:"DuckDuckGo" };
+    const icons = { google:"img/google.webp", brave:"img/brave.webp", bing:"img/bing.webp", duck:"img/duck.webp" };
     const label = document.getElementById("currentEngineName");
-    if(label) label.textContent = names[currentEngine] || currentEngine;
+    if(label) label.innerHTML = '<img src="' + (icons[currentEngine]||"") + '" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px;"> ' + (names[currentEngine] || currentEngine);
 }
 
 function toggleEngineMenu(){
