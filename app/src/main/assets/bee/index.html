@@ -21,7 +21,7 @@
             background: #0b0b0d;
             color: var(--text);
             font-family: Arial, sans-serif;
-            padding: 90px 16px 60px;
+            padding: 50px 16px 60px;
         }
         h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
         .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
@@ -237,19 +237,21 @@
 <div id="bee-header" style="
     position: fixed;
     top: 0; left: 0; right: 0;
-    background: #0b0b0d;
-    border-bottom: 1px solid rgba(255,193,7,0.12);
-    padding: 10px 16px 10px;
+    background: rgba(11,11,13,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: 7px 14px;
     z-index: 1000;
 ">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;">
-            <!-- Wallet name -->
-            <div id="hdr-wallet" style="font-size:14px;font-weight:900;color:#ffc107;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
-            <!-- Status -->
-            <div style="display:flex;align-items:center;gap:5px;">
-                <div id="hdr-dot" style="width:7px;height:7px;border-radius:50%;background:#555;flex-shrink:0;"></div>
-                <div id="hdr-status" style="font-size:11px;font-weight:600;color:#888;letter-spacing:0.3px;">Bee Engine</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+        <div id="hdr-dot" style="width:5px;height:5px;border-radius:50%;background:#444;flex-shrink:0;"></div>
+        <div id="hdr-wallet" style="font-size:11px;font-weight:600;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">—</div>
+        <div id="hdr-status" style="font-size:10px;color:#444;white-space:nowrap;">· Bee Engine</div>
+        <div style="display:flex;align-items:center;gap:3px;flex:1;margin-left:4px;">
+            <div id="hdr-epoch-bar" style="display:flex;gap:1px;flex:1;"></div>
+            <div id="hdr-epoch-label" style="font-size:9px;font-weight:600;color:#444;flex-shrink:0;white-space:nowrap;margin-left:4px;">—</div>
+        </div>
+    </div>
+</div>
             </div>
             <!-- Epoch progress -->
             <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
@@ -591,17 +593,17 @@ initSDK();
 
             if (mining) {
                 hdrStatus.style.color = '#31c46d';
-                hdrStatus.textContent = 'Participando da rede Acki Nacki';
+                hdrStatus.textContent = '· Acki Nacki';
                 hdrDot.style.background = '#31c46d';
-                hdrDot.style.boxShadow = '0 0 6px #31c46d';
+                hdrDot.style.boxShadow = 'none';
             } else {
-                hdrStatus.style.color = '#555';
-                hdrStatus.textContent = 'Bee Engine';
+                hdrStatus.style.color = '#444';
+                hdrStatus.textContent = '· Bee Engine';
                 hdrDot.style.background = '#333';
                 hdrDot.style.boxShadow = 'none';
             }
 
-            if (hdrLabel) hdrLabel.textContent = epoch > 0 ? 'Epoch ' + epoch : 'Epoch —';
+            if (hdrLabel) hdrLabel.textContent = epoch > 0 ? 'E' + epoch : '—';
 
             // Progress bar — usa tapCount direto do engine (ja zerou no startMining)
             var filled = mining ? Math.min(SQUARES, Math.round((taps / total) * SQUARES)) : 0;
