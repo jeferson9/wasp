@@ -603,7 +603,7 @@ initSDK();
                 hdrDot.style.boxShadow = 'none';
             }
 
-            if (hdrLabel) hdrLabel.textContent = epoch > 0 ? 'E' + epoch : '—';
+            if (hdrLabel) hdrLabel.textContent = epoch > 0 ? 'Epoch ' + epoch : '—';
 
             // Progress bar — usa tapCount direto do engine (ja zerou no startMining)
             var filled = mining ? Math.min(SQUARES, Math.round((taps / total) * SQUARES)) : 0;
