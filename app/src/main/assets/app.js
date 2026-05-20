@@ -1635,7 +1635,10 @@ document.addEventListener("DOMContentLoaded", () => {
     renderHive();
     renderRecents();
     openScreen("home");
-    setDailyBackground();
+    // Só aplica background se tema escuro
+    if((localStorage.getItem(THEME_KEY) || "dark") !== "light"){
+        setDailyBackground();
+    }
 
     // Sugestões de busca
     const input = $("homeInput");
