@@ -675,10 +675,12 @@ function initEngine(){
 }
 
 function toggleEngineMenu(){
+    console.log("toggleEngineMenu chamado");
     const menu  = $("engineMenu");
     const arrow = document.querySelector(".engine-arrow");
     if(menu)  menu.classList.toggle("active");
     if(arrow) arrow.classList.toggle("open");
+    console.log("engineMenu active:", menu ? menu.classList.contains("active") : "nao encontrado");
 }
 
 function setEngine(engine){
@@ -1551,6 +1553,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Inicializações
     initEngine();
+
+    // Bind engine buttons via addEventListener (capture) para evitar bloqueio
+    const engineBtn = document.getElementById("engineBtn");
+    const engineBtnSticky = document.getElementById("engineBtnSticky");
+    if (engineBtn) {
+        engineBtn.addEventListener("click", function(e){
+            e.stopPropagation();
+            toggleEngineMenu();
+        }, true);
+    }
+    if (engineBtnSticky) {
+        engineBtnSticky.addEventListener("click", function(e){
+            e.stopPropagation();
+            toggleEngineMenu();
+        }, true);
+    }
+
     renderHive();
     renderRecents();
     openScreen("home");
