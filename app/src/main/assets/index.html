@@ -387,7 +387,29 @@
             <div class="settings-subitem" onclick="setEngineFromSettings('bing')"><img src="img/bing.webp" style="width:20px;height:20px;object-fit:contain;margin-right:8px;vertical-align:middle;"> Bing</div>
             <div class="settings-subitem" onclick="setEngineFromSettings('duck')"><img src="img/duck.webp" style="width:20px;height:20px;object-fit:contain;margin-right:8px;vertical-align:middle;"> DuckDuckGo</div>
         </div>
-        <div class="settings-item">Privacidade</div>
+        <div class="settings-item" onclick="togglePrivacyOptions()">
+            <span>Privacidade</span>
+            <span style="margin-left:auto;margin-right:8px;opacity:0.5;font-size:12px;">›</span>
+        </div>
+        <div id="privacyOptions" class="settings-submenu">
+
+            <div class="settings-subitem" style="justify-content:space-between;cursor:default;">
+                <span>🛡️ Bloquear rastreadores</span>
+                <label class="wasp-toggle" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="trackerToggle" onchange="setTrackerBlock(this.checked)">
+                    <span class="wasp-toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-subitem" onclick="clearBrowsingHistory()">
+                🗑️ Limpar histórico de navegação
+            </div>
+
+            <div class="settings-subitem" onclick="clearCacheAndCookies()">
+                🍪 Limpar cache e cookies
+            </div>
+
+        </div>
         <div class="settings-item">Bee Engine</div>
         <div class="settings-item">Sobre</div>
     </div>

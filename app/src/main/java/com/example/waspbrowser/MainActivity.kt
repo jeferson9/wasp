@@ -1422,6 +1422,46 @@ class MainActivity : AppCompatActivity() {
     fun startBee() { runOnUiThread { Toast.makeText(this, "Bee Engine Started", Toast.LENGTH_SHORT).show() } }
 
     @JavascriptInterface
+    fun clearCacheAndCookies() {
+        runOnUiThread {
+            // Limpa WebView da home
+            webAppView.clearCache(true)
+            webAppView.clearHistory()
+            android.webkit.WebStorage.getInstance().deleteAllData()
+            // Limpa cookies
+            val cm = android.webkit.CookieManager.getInstance()
+            cm.removeAllCookies(null)
+            cm.flush()
+            // Limpa GeckoView se disponível
+            try { geckoSession.purgeHistory() } catch (_: Exception) {}
+            runOnUiThread {
+                android.widget.Toast.makeText(this, "Cache e cookies apagados ✓", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    @JavascriptInterface
+    fun setTrackerBlock(enabled: Boolean) {
+        getSharedPreferences("wasp_prefs", android.content.Context.MODE_PRIVATE)
+            .edit().putBoolean("block_trackers", enabled).apply()
+        runOnUiThread {
+            try {
+                val level = if (enabled)
+                    org.mozilla.geckoview.ContentBlocking.EtpLevel.STRICT
+                else
+                    org.mozilla.geckoview.ContentBlocking.EtpLevel.NONE
+                val settings = org.mozilla.geckoview.ContentBlocking.Settings.Builder()
+                    .enhancedTrackingProtectionLevel(level)
+                    .build()
+                geckoRuntime?.settings?.contentBlocking?.setEtpLevel(level)
+            } catch (e: Exception) {
+                android.util.Log.e("Privacy", "setTrackerBlock error: ${e.message}")
+            }
+        }
+        android.util.Log.d("Privacy", "Bloquear rastreadores: $enabled")
+    }
+
+    @JavascriptInterface
     fun onSettingsClosed() {
         // Chamado quando o usuario fecha o settingsPanel
         // Se o GeckoView estava ativo (browser), restaura ele

@@ -1527,6 +1527,57 @@ function blurSearch(){
 /* =========================
    ÚNICO DOMContentLoaded
 ========================= */
+
+/* =========================
+   PRIVACIDADE
+========================= */
+const TRACKER_KEY = "wasp_block_trackers";
+
+function togglePrivacyOptions(){
+    const menu = $("privacyOptions");
+    if(menu) menu.classList.toggle("active");
+    // Sincroniza toggle com estado salvo
+    const tog = $("trackerToggle");
+    if(tog) tog.checked = localStorage.getItem(TRACKER_KEY) === "1";
+}
+
+function setTrackerBlock(enabled){
+    localStorage.setItem(TRACKER_KEY, enabled ? "1" : "0");
+    if(window.Android && typeof Android.setTrackerBlock === "function"){
+        Android.setTrackerBlock(enabled);
+    }
+    showToast(enabled ? "🛡️ Rastreadores bloqueados" : "Bloqueio desativado");
+}
+
+function clearBrowsingHistory(){
+    if(!confirm("Limpar todo o histórico de navegação?")) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderRecents();
+    showToast("🗑️ Histórico apagado");
+}
+
+function clearCacheAndCookies(){
+    if(!confirm("Limpar cache e cookies?")) return;
+    if(window.Android && typeof Android.clearCacheAndCookies === "function"){
+        Android.clearCacheAndCookies();
+    }
+    showToast("🍪 Cache e cookies apagados");
+}
+
+function showToast(msg){
+    let t = document.getElementById("wasp-js-toast");
+    if(!t){
+        t = document.createElement("div");
+        t.id = "wasp-js-toast";
+        t.style.cssText = "position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(20,22,30,0.95);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999999;border:1px solid rgba(255,193,7,0.3);pointer-events:none;transition:opacity 0.3s;";
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = "1";
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = "0"; }, 2500);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
     // sticky search removido
