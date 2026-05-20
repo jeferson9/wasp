@@ -2565,7 +2565,7 @@ body[data-theme="light"] .central-wp-btn {
   text-transform: uppercase;
   color: #f7c600;
   font-family: 'Courier New', monospace;
-  text-shadow: 0 0 10px rgba(247,198,0,0.7), 0 0 20px rgba(247,198,0,0.35);
+  text-shadow: none;
 }
 
 @keyframes techFade {
@@ -2600,7 +2600,7 @@ body[data-theme="light"] .central-wp-btn {
   text-transform: uppercase;
   color: #f7c600;
   font-family: 'Courier New', monospace;
-  text-shadow: 0 0 10px rgba(247,198,0,0.7), 0 0 20px rgba(247,198,0,0.35);
+  text-shadow: none;
 }
 
 .scroll-hint-arrow {
@@ -2699,15 +2699,26 @@ body[data-theme="light"] .logo-center-light { display: block; }
 .tech-tag,
 .scroll-hint-label {
   color: #f7c600 !important;
-  text-shadow: 0 0 10px rgba(247,198,0,0.7), 0 0 20px rgba(247,198,0,0.35) !important;
+  text-shadow: none !important;
   font-weight: 700 !important;
+}
+
+body[data-theme="light"] .tech-tag,
+body[data-theme="light"] .scroll-hint-label {
+  color: #b8920a !important;
 }
 
 .scroll-hint-arrow,
 .scroll-hint-arrow svg {
   color: #f7c600 !important;
   stroke: #f7c600 !important;
-  filter: drop-shadow(0 0 4px rgba(247,198,0,0.7)) !important;
+  filter: none !important;
+}
+
+body[data-theme="light"] .scroll-hint-arrow,
+body[data-theme="light"] .scroll-hint-arrow svg {
+  color: #b8920a !important;
+  stroke: #b8920a !important;
 }
 
 .panel-title,
