@@ -1444,20 +1444,6 @@ class MainActivity : AppCompatActivity() {
     fun setTrackerBlock(enabled: Boolean) {
         getSharedPreferences("wasp_prefs", android.content.Context.MODE_PRIVATE)
             .edit().putBoolean("block_trackers", enabled).apply()
-        runOnUiThread {
-            try {
-                val level = if (enabled)
-                    org.mozilla.geckoview.ContentBlocking.EtpLevel.STRICT
-                else
-                    org.mozilla.geckoview.ContentBlocking.EtpLevel.NONE
-                val settings = org.mozilla.geckoview.ContentBlocking.Settings.Builder()
-                    .enhancedTrackingProtectionLevel(level)
-                    .build()
-                geckoRuntime?.settings?.contentBlocking?.setEtpLevel(level)
-            } catch (e: Exception) {
-                android.util.Log.e("Privacy", "setTrackerBlock error: ${e.message}")
-            }
-        }
         android.util.Log.d("Privacy", "Bloquear rastreadores: $enabled")
     }
 
