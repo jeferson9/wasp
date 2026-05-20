@@ -89,6 +89,14 @@ function applyTheme(theme){
     if(label){
         label.textContent = theme === "dark" ? "Dark" : "Light";
     }
+
+    // Remove background no tema claro
+    if(theme === "light"){
+        document.documentElement.style.setProperty("--wasp-home-bg", "none");
+    } else {
+        setDailyBackground();
+    }
+    updateLogoByTheme();
 }
 
 function toggleTheme(){
