@@ -1,6 +1,7 @@
 package com.example.waspbrowser
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -13,33 +14,15 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.rewarded.RewardedAd
-import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
-import com.google.android.gms.ads.rewarded.RewardItem
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.RequestConfiguration
 
 class CentralActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CentralActivity"
-        private const val REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
     }
 
     private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
-    private var rewardedAd: RewardedAd? = null
-    private var isAdShowing = false
-    private var wpRewardEarned = false
-    private var adPendingShow = false
-    private var rewardAlreadyDelivered = false  // evita duplo disparo
-
-    // Controla se a WebView já carregou o HTML ao menos uma vez
-    private var webViewReady = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,216 +39,88 @@ class CentralActivity : AppCompatActivity() {
         webView.addJavascriptInterface(bridge, "AndroidBee")
         webView.addJavascriptInterface(bridge, "Android")
 
-        val testDeviceIds = listOf("C2BDD20251E0A65AA97DD561F37883A1")
-        val configuration = RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build()
-        MobileAds.setRequestConfiguration(configuration)
-
-        MobileAds.initialize(this) {
-            android.util.Log.d(TAG, "AdMob Inicializado")
-            loadRewardedAd()
-        }
-
-        // WebViewClient que notifica quando o HTML terminou de carregar
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?
+            ): Boolean {
                 val url = request?.url?.toString() ?: return false
-                // Links externos (market, http, https fora do assets) abrem no sistema
                 if (!url.startsWith("file://")) {
                     openExternalUrl(url)
                     return true
                 }
                 return false
             }
-            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                webViewReady = false
-                android.util.Log.d(TAG, "WebView recarregando: $url")
-            }
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                webViewReady = true
-                android.util.Log.d(TAG, "WebView pronta: $url")
-                // Entrega callback pendente (pode ter chegado antes ou durante reload)
-                if (pendingRewardCallback != null) {
-                    val cb = pendingRewardCallback!!
-                    pendingRewardCallback = null
-                    handler.postDelayed({ deliverReward(cb) }, 500)
-                }
-            }
         }
 
         webView.loadUrl("file:///android_asset/bee/central.html")
     }
 
-    // Callback pendente caso WebView não estivesse pronta quando o ad fechou
-    private var pendingRewardCallback: String? = null
+    // ── Resultado da AdActivity ──────────────────────────────────────────
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
+        if (requestCode != AdActivity.REQUEST_CODE) return
+
+        val rewarded    = data?.getBooleanExtra(AdActivity.EXTRA_REWARDED, false) ?: false
+        val unavailable = data?.getBooleanExtra("unavailable", false) ?: false
+
+        android.util.Log.d(TAG, "onActivityResult — rewarded=$rewarded unavailable=$unavailable")
+
+        val jsFunc = when {
+            rewarded    -> "onWpAdRewarded"
+            unavailable -> "onWpAdUnavailable"
+            else        -> "onWpAdClosed"
+        }
+
+        // WebView nunca pausou — executa JS diretamente
+        handler.postDelayed({
+            webView.evaluateJavascript(
+                "if(typeof window.$jsFunc==='function'){ window.$jsFunc(); }",
+                null
+            )
+        }, 100)
+    }
+
+    // ── WebView helpers ──────────────────────────────────────────────────
     private fun configureWebView() {
         with(webView.settings) {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            allowFileAccess = true
-            allowContentAccess = true
-            // LOAD_DEFAULT preserva o estado JS — não recarrega ao voltar do ad
-            cacheMode = WebSettings.LOAD_DEFAULT
+            javaScriptEnabled    = true
+            domStorageEnabled    = true
+            allowFileAccess      = true
+            allowContentAccess   = true
+            cacheMode            = WebSettings.LOAD_DEFAULT
         }
-        // NÃO chama clearCache aqui — isso destruiria o JS durante o ad
         webView.webChromeClient = WebChromeClient()
     }
 
-    private fun loadRewardedAd() {
-        if (rewardedAd != null) return
-
-        RewardedAd.load(this, REWARDED_AD_UNIT_ID, AdRequest.Builder().build(),
-            object : RewardedAdLoadCallback() {
-                override fun onAdLoaded(ad: RewardedAd) {
-                    rewardedAd = ad
-                    android.util.Log.d(TAG, "AdMob: Anúncio carregado.")
-                    if (adPendingShow) {
-                        adPendingShow = false
-                        showRewardedAd()
-                    }
-                }
-                override fun onAdFailedToLoad(e: LoadAdError) {
-                    rewardedAd = null
-                    android.util.Log.e(TAG, "AdMob falhou: ${e.message}")
-                    if (adPendingShow) {
-                        adPendingShow = false
-                        deliverReward("onWpAdUnavailable")
-                    }
-                }
-            }
-        )
-    }
-
-    private fun showRewardedAd() {
-        if (isAdShowing) return
-
-        val ad = rewardedAd
-        if (ad == null) {
-            adPendingShow = true
-            deliverReward("onWpAdLoading")
-            loadRewardedAd()
-            handler.postDelayed({
-                if (adPendingShow && rewardedAd == null) {
-                    adPendingShow = false
-                    deliverReward("onWpAdUnavailable")
-                }
-            }, 15000)
-            return
-        }
-
-        wpRewardEarned = false
-        rewardAlreadyDelivered = false
-        isAdShowing = true
-
-        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() {
-                android.util.Log.d(TAG, "Anuncio fechado. Ganhou pontos? $wpRewardEarned")
-                isAdShowing = false
-                rewardedAd = null
-                loadRewardedAd()
-                // Aguarda até 2s para o callback de recompensa chegar antes de decidir
-                waitAndDeliverReward(0)
-            }
-
-            override fun onAdFailedToShowFullScreenContent(e: AdError) {
-                isAdShowing = false
-                rewardedAd = null
-                loadRewardedAd()
-                deliverReward("onWpAdUnavailable")
-            }
-        }
-
-        ad.show(this) { _: RewardItem ->
-            wpRewardEarned = true
-            android.util.Log.e("WASP_AD", "✅ RECOMPENSA CONFIRMADA pelo AdMob!")
-            handler.post {
-                Toast.makeText(this@CentralActivity, "WP Recebido! 🐝", Toast.LENGTH_SHORT).show()
-                // Se dismiss já ocorreu, entrega imediatamente sem esperar
-                if (!isAdShowing && !rewardAlreadyDelivered) {
-                    rewardAlreadyDelivered = true
-                    deliverReward("onWpAdRewarded")
-                }
-            }
-        }
-    }
-
-    /**
-     * Aguarda o callback de recompensa do AdMob, que pode chegar APÓS onAdDismissed.
-     * Tenta por até 2s (4 x 500ms). Se wpRewardEarned for true, entrega recompensa.
-     * Se esgotar sem recompensa, entrega onWpAdClosed (fechou sem assistir).
-     */
-    private fun waitAndDeliverReward(attempt: Int) {
-        if (rewardAlreadyDelivered) return  // já entregue pelo callback inline acima
-
-        if (wpRewardEarned) {
-            rewardAlreadyDelivered = true
-            deliverReward("onWpAdRewarded")
-            return
-        }
-
-        if (attempt < 4) {
-            // ainda aguardando o callback de recompensa
-            handler.postDelayed({ waitAndDeliverReward(attempt + 1) }, 500)
-        } else {
-            // sem recompensa após 2s — usuário fechou antes do fim
-            rewardAlreadyDelivered = true
-            deliverReward("onWpAdClosed")
-        }
-    }
-
-
-    override fun onResume() {
-        super.onResume()
-        webView.onResume()
-        webView.resumeTimers()
-        webViewReady = true  // assume pronta ao voltar — onPageFinished corrige se necessário
-        if (pendingRewardCallback != null) {
-            val cb = pendingRewardCallback!!
-            pendingRewardCallback = null
-            android.util.Log.d(TAG, "onResume: entregando callback pendente $cb")
-            handler.postDelayed({
-                val script = "if(typeof window.$cb==='function'){window.$cb();}"
-                webView.evaluateJavascript(script, null)
-            }, 300)
-        }
-    }
-    override fun onPause() { super.onPause(); webView.onPause(); webView.pauseTimers() }
-    override fun onDestroy() { webView.destroy(); super.onDestroy() }
-
-    // Abre links externos (market://, https://play.google.com, etc)
     private fun openExternalUrl(url: String) {
         try {
-            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
-                android.net.Uri.parse(url))
-            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Nao foi possivel abrir URL externa: $url")
         }
     }
 
-    private fun deliverReward(jsFunc: String) {
-        android.util.Log.d(TAG, "deliverReward: $jsFunc")
-        val script = "if(typeof window.$jsFunc==='function'){window.$jsFunc();}"
+    override fun onResume()  { super.onResume();  webView.onResume();  webView.resumeTimers() }
+    override fun onPause()   { super.onPause();   webView.onPause();   webView.pauseTimers()  }
+    override fun onDestroy() { webView.destroy(); super.onDestroy() }
 
-        if (webViewReady) {
-            // WebView pronta — executa direto
-            webView.post { webView.evaluateJavascript(script, null) }
-        } else {
-            // WebView ainda não pronta (p.ex. voltando do ad fullscreen)
-            // Guarda para entregar quando onPageFinished ou onResume disparar
-            android.util.Log.w(TAG, "deliverReward: WebView não pronta, guardando callback $jsFunc")
-            pendingRewardCallback = jsFunc
-        }
-    }
-
-    private fun evaluateJs(jsFunc: String) = deliverReward(jsFunc)
-
+    // ── Bridge JS → Kotlin ───────────────────────────────────────────────
     inner class CentralBridge {
+
+        /** Abre a AdActivity dedicada ao vídeo premiado */
         @JavascriptInterface
-        fun openWpAd() { handler.post { showRewardedAd() } }
+        fun openWpAd() {
+            handler.post {
+                val intent = Intent(this@CentralActivity, AdActivity::class.java)
+                @Suppress("DEPRECATION")
+                startActivityForResult(intent, AdActivity.REQUEST_CODE)
+            }
+        }
 
         @JavascriptInterface
         fun closeCentral() {
@@ -277,14 +132,16 @@ class CentralActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun toast(m: String) { handler.post { Toast.makeText(this@CentralActivity, m, Toast.LENGTH_SHORT).show() } }
+        fun toast(m: String) {
+            handler.post { Toast.makeText(this@CentralActivity, m, Toast.LENGTH_SHORT).show() }
+        }
 
         @JavascriptInterface
         fun log(m: String) { android.util.Log.d("CentralJS", m) }
 
         @JavascriptInterface
         fun startBgMining(durationMs: Long, walletName: String) {
-            android.util.Log.d(TAG, "startBgMining: ${durationMs/60000}min wallet=$walletName")
+            android.util.Log.d(TAG, "startBgMining: ${durationMs / 60000}min wallet=$walletName")
             try {
                 val intent = BeeBackgroundService.buildStartIntent(this@CentralActivity, walletName)
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -292,7 +149,9 @@ class CentralActivity : AppCompatActivity() {
                 } else {
                     startService(intent)
                 }
-                handler.post { Toast.makeText(this@CentralActivity, "🐝 Minerando em background!", Toast.LENGTH_SHORT).show() }
+                handler.post {
+                    Toast.makeText(this@CentralActivity, "🐝 Minerando em background!", Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "startBgMining error: ${e.message}")
             }
@@ -306,13 +165,12 @@ class CentralActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun getBgMiningStatus(): String {
-            val active = BeeBackgroundService.isActive(this@CentralActivity)
+            val active    = BeeBackgroundService.isActive(this@CentralActivity)
             val remaining = BeeBackgroundService.remainingMs(this@CentralActivity)
-            val prefs = getSharedPreferences(BeeBackgroundService.PREFS_BG, MODE_PRIVATE)
-            val cycles = prefs.getInt(BeeBackgroundService.KEY_CYCLES, 0)
-            val wallet = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
+            val prefs     = getSharedPreferences(BeeBackgroundService.PREFS_BG, MODE_PRIVATE)
+            val cycles    = prefs.getInt(BeeBackgroundService.KEY_CYCLES, 0)
+            val wallet    = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
             return """{"active":$active,"remainingMs":$remaining,"cycles":$cycles,"wallet":"$wallet"}"""
         }
     }
-
 }

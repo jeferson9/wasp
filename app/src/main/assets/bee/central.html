@@ -935,38 +935,29 @@
       const rem = remMs(K.adLast, CFG.adCooldown);
       if (rem > 0) { toast(`Anúncio disponível em ${fmtTime(rem)}`); return; }
 
-      // Tenta chamar bridge Android
       if (window.AndroidBee && typeof window.AndroidBee.openWpAd === "function") {
         el("adBtn").disabled     = true;
-        el("adBtn").textContent  = "Carregando...";
+        el("adBtn").textContent  = "Abrindo...";
         window.AndroidBee.openWpAd();
         return;
       }
 
-      // Simulação para teste (remover em produção)
-      el("adBtn").disabled    = true;
-      el("adBtn").textContent = "Simulando...";
-      setTimeout(() => {
-        setN(K.adLast, Date.now());
-        addWP(CFG.adReward, "Anúncio assistido");
-      }, 1500);
+      // Fora do app Android — avisa
+      toast("Anúncios disponíveis apenas no app.");
     }
 
-    // Chamado pelo Android quando anúncio completo com recompensa
-    window.onWpAdRewarded = function() {
-      // Guard contra chamada dupla
-      if (window._wpAdRewardedDone) return;
-      window._wpAdRewardedDone = true;
-      setTimeout(function(){ window._wpAdRewardedDone = false; }, 5000);
+    // ── Callbacks chamados pelo Android via onActivityResult ────────────
+    // A WebView nunca pausou, então evaluateJavascript funciona direto.
 
+    window.onWpAdRewarded = function() {
       setN(K.adLast, Date.now());
       el("adBtn").disabled    = true;
       el("adBtn").textContent = "Em cooldown";
       addWP(CFG.adReward, "Anúncio assistido");
       renderAll();
-      // Exibe feedback visual de recompensa concedida
       showRewardGranted(CFG.adReward);
     };
+
     window.onWpAdClosed = function() {
       el("adBtn").disabled    = false;
       el("adBtn").textContent = "Assistir";
@@ -974,64 +965,43 @@
       toast("Anúncio fechado sem recompensa.");
     };
 
-    /* ══════════════════════════════════════════
-       FEEDBACK VISUAL DE RECOMPENSA
-    ══════════════════════════════════════════ */
+    window.onWpAdUnavailable = function() {
+      el("adBtn").disabled    = false;
+      el("adBtn").textContent = "Assistir";
+      renderAll();
+      toast("Anúncio indisponível. Tente novamente.");
+    };
+
+    /* Tela de confirmação de recompensa */
     function showRewardGranted(amount) {
-      // Remove overlay anterior se existir
       var old = document.getElementById("rewardOverlay");
       if (old) old.remove();
 
       var overlay = document.createElement("div");
       overlay.id = "rewardOverlay";
       overlay.style.cssText = [
-        "position:fixed","inset:0","background:rgba(0,0,0,0.82)",
-        "display:flex","flex-direction:column","align-items:center",
-        "justify-content:center","z-index:99999","padding:24px"
+        "position:fixed","inset:0","background:rgba(0,0,0,0.85)",
+        "display:flex","align-items:center","justify-content:center",
+        "z-index:99999","padding:24px"
       ].join(";");
 
-      overlay.innerHTML = [
-        '<div style="background:linear-gradient(145deg,#111318,#0a0b0f);border:1px solid rgba(55,214,122,0.35);',
-        'border-radius:28px;padding:32px 28px;max-width:320px;width:100%;text-align:center;">',
-        '<div style="font-size:64px;margin-bottom:12px">🐝</div>',
-        '<div style="font-size:22px;font-weight:900;color:#37d67a;margin-bottom:8px">Recompensa Concedida!</div>',
-        '<div style="font-size:42px;font-weight:900;color:#ffc107;margin-bottom:8px">+' + amount + ' WP</div>',
-        '<div style="font-size:13px;color:rgba(238,240,246,0.6);margin-bottom:24px">Anúncio assistido com sucesso</div>',
-        '<button id="rewardCloseBtn" style="background:rgba(55,214,122,0.2);border:1px solid rgba(55,214,122,0.4);',
-        'color:#37d67a;border-radius:14px;padding:13px 32px;font-size:15px;font-weight:800;width:100%;cursor:pointer;">',
-        '✅ Receber WP</button>',
-        '</div>'
-      ].join("");
+      overlay.innerHTML =
+        '<div style="background:#111318;border:1px solid rgba(55,214,122,0.35);border-radius:28px;' +
+        'padding:32px 28px;max-width:320px;width:100%;text-align:center;">' +
+        '<div style="font-size:60px;margin-bottom:12px">🐝</div>' +
+        '<div style="font-size:20px;font-weight:900;color:#37d67a;margin-bottom:6px">Recompensa Concedida!</div>' +
+        '<div style="font-size:44px;font-weight:900;color:#ffc107;margin-bottom:6px">+' + amount + ' WP</div>' +
+        '<div style="font-size:13px;color:rgba(238,240,246,0.55);margin-bottom:22px">Anúncio assistido com sucesso</div>' +
+        '<button onclick="document.getElementById(\'rewardOverlay\').remove();toast(\'+' + amount + ' WP adicionado! 🐝\')" ' +
+        'style="background:rgba(55,214,122,0.18);border:1px solid rgba(55,214,122,0.4);color:#37d67a;' +
+        'border-radius:14px;padding:13px 0;font-size:15px;font-weight:800;width:100%;cursor:pointer;">' +
+        '✅ Receber WP</button></div>';
 
       document.body.appendChild(overlay);
-
-      document.getElementById("rewardCloseBtn").addEventListener("click", function() {
-        overlay.remove();
-        toast("+" + amount + " WP recebido! 🐝");
-      });
-
-      // Auto-fecha após 6s
-      setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 6000);
+      // Auto-fecha em 8s se não clicar
+      setTimeout(function() { var o = document.getElementById("rewardOverlay"); if (o) o.remove(); }, 8000);
     }
-    // Timeout de seguranca: se Android nao responder em 30s reabilita o botao
-    setInterval(function() {
-      var btn = el("adBtn");
-      if (btn && btn.disabled && btn.textContent === "Carregando...") {
-        btn.disabled = false; btn.textContent = "Assistir"; renderAll();
-      }
-    }, 30000);
-    // Anúncio ainda carregando — mostra feedback visual
-    window.onWpAdLoading = function() {
-      el("adBtn").disabled    = true;
-      el("adBtn").textContent = "Carregando...";
-    };
-    // Anúncio não disponível (falhou ou timeout)
-    window.onWpAdUnavailable = function() {
-      el("adBtn").disabled    = false;
-      el("adBtn").textContent = "Assistir";
-      toast("Anúncio indisponível. Tente novamente.");
-      renderAll();
-    };
+
 
     /* ══════════════════════════════════════════
        CLEAR HISTORY
