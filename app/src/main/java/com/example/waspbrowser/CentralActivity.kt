@@ -1,7 +1,6 @@
 package com.example.waspbrowser
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -12,6 +11,8 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 
@@ -23,6 +24,33 @@ class CentralActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
+
+    // ── API moderna de resultado (substitui startActivityForResult) ──────
+    // DEVE ser registrado antes de onCreate terminar — por isso é um campo
+    private val adLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        val data        = result.data
+        val rewarded    = data?.getBooleanExtra(AdActivity.EXTRA_REWARDED, false) ?: false
+        val unavailable = data?.getBooleanExtra("unavailable", false) ?: false
+
+        android.util.Log.d(TAG, "adLauncher result — rewarded=$rewarded unavailable=$unavailable")
+
+        val jsFunc = when {
+            rewarded    -> "onWpAdRewarded"
+            unavailable -> "onWpAdUnavailable"
+            else        -> "onWpAdClosed"
+        }
+
+        // WebView nunca pausou — JS executa direto
+        handler.postDelayed({
+            webView.evaluateJavascript(
+                "if(typeof window.$jsFunc==='function'){ window.$jsFunc(); }",
+                null
+            )
+            android.util.Log.d(TAG, "JS entregue: $jsFunc")
+        }, 150)
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,33 +84,6 @@ class CentralActivity : AppCompatActivity() {
         webView.loadUrl("file:///android_asset/bee/central.html")
     }
 
-    // ── Resultado da AdActivity ──────────────────────────────────────────
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode != AdActivity.REQUEST_CODE) return
-
-        val rewarded    = data?.getBooleanExtra(AdActivity.EXTRA_REWARDED, false) ?: false
-        val unavailable = data?.getBooleanExtra("unavailable", false) ?: false
-
-        android.util.Log.d(TAG, "onActivityResult — rewarded=$rewarded unavailable=$unavailable")
-
-        val jsFunc = when {
-            rewarded    -> "onWpAdRewarded"
-            unavailable -> "onWpAdUnavailable"
-            else        -> "onWpAdClosed"
-        }
-
-        // WebView nunca pausou — executa JS diretamente
-        handler.postDelayed({
-            webView.evaluateJavascript(
-                "if(typeof window.$jsFunc==='function'){ window.$jsFunc(); }",
-                null
-            )
-        }, 100)
-    }
-
     // ── WebView helpers ──────────────────────────────────────────────────
     private fun configureWebView() {
         with(webView.settings) {
@@ -112,13 +113,13 @@ class CentralActivity : AppCompatActivity() {
     // ── Bridge JS → Kotlin ───────────────────────────────────────────────
     inner class CentralBridge {
 
-        /** Abre a AdActivity dedicada ao vídeo premiado */
         @JavascriptInterface
         fun openWpAd() {
+            android.util.Log.d(TAG, "openWpAd chamado pelo JS")
             handler.post {
                 val intent = Intent(this@CentralActivity, AdActivity::class.java)
-                @Suppress("DEPRECATION")
-                startActivityForResult(intent, AdActivity.REQUEST_CODE)
+                adLauncher.launch(intent)
+                android.util.Log.d(TAG, "adLauncher.launch() disparado")
             }
         }
 
