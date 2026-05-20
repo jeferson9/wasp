@@ -674,6 +674,28 @@ function initEngine(){
     if(icon) icon.src = engines[currentEngine].icon;
 }
 
+function toggleEngineOptions(){
+    const menu = document.getElementById("engineOptions");
+    if(menu) menu.classList.toggle("active");
+}
+
+function setEngineFromSettings(engine){
+    setEngine(engine);
+    // Atualiza nome exibido nas configurações
+    const names = { google:"Google", brave:"Brave", bing:"Bing", duck:"DuckDuckGo" };
+    const label = document.getElementById("currentEngineName");
+    if(label) label.textContent = names[engine] || engine;
+    // Fecha submenu
+    const menu = document.getElementById("engineOptions");
+    if(menu) menu.classList.remove("active");
+}
+
+function initEngineSettingsLabel(){
+    const names = { google:"Google", brave:"Brave", bing:"Bing", duck:"DuckDuckGo" };
+    const label = document.getElementById("currentEngineName");
+    if(label) label.textContent = names[currentEngine] || currentEngine;
+}
+
 function toggleEngineMenu(){
     console.log("toggleEngineMenu chamado");
     const menu  = $("engineMenu");
@@ -1523,6 +1545,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Inicializações
     initEngine();
+    initEngineSettingsLabel();
 
     // Bind engine buttons via addEventListener (capture) para evitar bloqueio
     const engineBtn = document.getElementById("engineBtn");
