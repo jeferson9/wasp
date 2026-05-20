@@ -11,46 +11,31 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 
 class CentralActivity : AppCompatActivity() {
 
     companion object {
-        private const val TAG = "CentralActivity"
+        private const val TAG      = "CentralActivity"
+        private const val AD_UNIT  = "ca-app-pub-3940256099942544/5224354917"
     }
 
     private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
 
-    // ── API moderna de resultado (substitui startActivityForResult) ──────
-    // DEVE ser registrado antes de onCreate terminar — por isso é um campo
-    private val adLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result: ActivityResult ->
-        val data        = result.data
-        val rewarded    = data?.getBooleanExtra(AdActivity.EXTRA_REWARDED, false) ?: false
-        val unavailable = data?.getBooleanExtra("unavailable", false) ?: false
+    private var rewardedAd: RewardedAd? = null
+    private var adLoading   = false
+    private var wpRewarded  = false
 
-        android.util.Log.d(TAG, "adLauncher result — rewarded=$rewarded unavailable=$unavailable")
-
-        val jsFunc = when {
-            rewarded    -> "onWpAdRewarded"
-            unavailable -> "onWpAdUnavailable"
-            else        -> "onWpAdClosed"
-        }
-
-        // WebView nunca pausou — JS executa direto
-        handler.postDelayed({
-            webView.evaluateJavascript(
-                "if(typeof window.$jsFunc==='function'){ window.$jsFunc(); }",
-                null
-            )
-            android.util.Log.d(TAG, "JS entregue: $jsFunc")
-        }, 150)
-    }
+    // ── Lifecycle ────────────────────────────────────────────────────────
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,66 +46,117 @@ class CentralActivity : AppCompatActivity() {
         webView.setBackgroundColor(0xFF08090D.toInt())
         setContentView(webView)
 
-        configureWebView()
-
-        val bridge = CentralBridge()
-        webView.addJavascriptInterface(bridge, "AndroidBee")
-        webView.addJavascriptInterface(bridge, "Android")
-
+        with(webView.settings) {
+            javaScriptEnabled   = true
+            domStorageEnabled   = true
+            allowFileAccess     = true
+            allowContentAccess  = true
+            cacheMode           = WebSettings.LOAD_DEFAULT
+        }
+        webView.webChromeClient = WebChromeClient()
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(
-                view: WebView?,
-                request: android.webkit.WebResourceRequest?
-            ): Boolean {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
-                if (!url.startsWith("file://")) {
-                    openExternalUrl(url)
-                    return true
-                }
+                if (!url.startsWith("file://")) { openExternalUrl(url); return true }
                 return false
             }
         }
 
+        webView.addJavascriptInterface(Bridge(), "AndroidBee")
+        webView.addJavascriptInterface(Bridge(), "Android")
         webView.loadUrl("file:///android_asset/bee/central.html")
-    }
 
-    // ── WebView helpers ──────────────────────────────────────────────────
-    private fun configureWebView() {
-        with(webView.settings) {
-            javaScriptEnabled    = true
-            domStorageEnabled    = true
-            allowFileAccess      = true
-            allowContentAccess   = true
-            cacheMode            = WebSettings.LOAD_DEFAULT
-        }
-        webView.webChromeClient = WebChromeClient()
-    }
-
-    private fun openExternalUrl(url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-        } catch (e: Exception) {
-            android.util.Log.e(TAG, "Nao foi possivel abrir URL externa: $url")
-        }
+        MobileAds.initialize(this) { loadAd() }
     }
 
     override fun onResume()  { super.onResume();  webView.onResume();  webView.resumeTimers() }
     override fun onPause()   { super.onPause();   webView.onPause();   webView.pauseTimers()  }
-    override fun onDestroy() { webView.destroy(); super.onDestroy() }
+    override fun onDestroy() { handler.removeCallbacksAndMessages(null); webView.destroy(); super.onDestroy() }
+
+    // ── Ad ───────────────────────────────────────────────────────────────
+
+    private fun loadAd() {
+        if (adLoading) return
+        adLoading = true
+        android.util.Log.d(TAG, "loadAd")
+        RewardedAd.load(this, AD_UNIT, AdRequest.Builder().build(),
+            object : RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedAd) {
+                    android.util.Log.d(TAG, "Ad carregado ✅")
+                    rewardedAd = ad
+                    adLoading  = false
+                }
+                override fun onAdFailedToLoad(e: LoadAdError) {
+                    android.util.Log.e(TAG, "Ad falhou ao carregar: ${e.message}")
+                    rewardedAd = null
+                    adLoading  = false
+                    // Tenta de novo em 30s
+                    handler.postDelayed({ loadAd() }, 30_000)
+                }
+            }
+        )
+    }
+
+    private fun showAd() {
+        val ad = rewardedAd
+        if (ad == null) {
+            android.util.Log.w(TAG, "Ad não disponível")
+            js("onWpAdUnavailable")
+            loadAd()
+            return
+        }
+
+        wpRewarded = false
+        rewardedAd = null
+
+        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdDismissedFullScreenContent() {
+                android.util.Log.d(TAG, "Ad fechado — rewarded=$wpRewarded")
+                loadAd()
+                // Entrega callback com retry
+                handler.postDelayed({ retryJs(0) }, 300)
+            }
+            override fun onAdFailedToShowFullScreenContent(e: AdError) {
+                android.util.Log.e(TAG, "Ad falhou ao mostrar: ${e.message}")
+                loadAd()
+                js("onWpAdUnavailable")
+            }
+        }
+
+        ad.show(this) {
+            wpRewarded = true
+            android.util.Log.e(TAG, "✅ RECOMPENSA CONFIRMADA")
+        }
+    }
+
+    private fun retryJs(count: Int) {
+        val fn = if (wpRewarded) "onWpAdRewarded" else "onWpAdClosed"
+        js(fn)
+        if (count < 3) handler.postDelayed({ retryJs(count + 1) }, 800)
+    }
+
+    private fun js(fn: String) {
+        webView.post {
+            webView.evaluateJavascript("if(typeof window.$fn==='function'){window.$fn();}", null)
+            android.util.Log.d(TAG, "JS → $fn")
+        }
+    }
+
+    private fun openExternalUrl(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
+        } catch (e: Exception) { android.util.Log.e(TAG, "openExternal: ${e.message}") }
+    }
 
     // ── Bridge JS → Kotlin ───────────────────────────────────────────────
-    inner class CentralBridge {
+
+    inner class Bridge {
 
         @JavascriptInterface
         fun openWpAd() {
-            android.util.Log.d(TAG, "openWpAd chamado pelo JS")
-            handler.post {
-                val intent = Intent(this@CentralActivity, AdActivity::class.java)
-                adLauncher.launch(intent)
-                android.util.Log.d(TAG, "adLauncher.launch() disparado")
-            }
+            android.util.Log.d(TAG, "openWpAd()")
+            handler.post { showAd() }
         }
 
         @JavascriptInterface
@@ -142,35 +178,28 @@ class CentralActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun startBgMining(durationMs: Long, walletName: String) {
-            android.util.Log.d(TAG, "startBgMining: ${durationMs / 60000}min wallet=$walletName")
             try {
                 val intent = BeeBackgroundService.buildStartIntent(this@CentralActivity, walletName)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
                     startForegroundService(intent)
-                } else {
-                    startService(intent)
-                }
-                handler.post {
-                    Toast.makeText(this@CentralActivity, "🐝 Minerando em background!", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                android.util.Log.e(TAG, "startBgMining error: ${e.message}")
-            }
+                else startService(intent)
+                handler.post { Toast.makeText(this@CentralActivity, "🐝 Minerando!", Toast.LENGTH_SHORT).show() }
+            } catch (e: Exception) { android.util.Log.e(TAG, "startBgMining: ${e.message}") }
         }
 
         @JavascriptInterface
         fun stopBgMining() {
             try { startService(BeeBackgroundService.buildStopIntent(this@CentralActivity)) }
-            catch (e: Exception) { android.util.Log.e(TAG, "stopBgMining error: ${e.message}") }
+            catch (e: Exception) { android.util.Log.e(TAG, "stopBgMining: ${e.message}") }
         }
 
         @JavascriptInterface
         fun getBgMiningStatus(): String {
-            val active    = BeeBackgroundService.isActive(this@CentralActivity)
+            val active  = BeeBackgroundService.isActive(this@CentralActivity)
             val remaining = BeeBackgroundService.remainingMs(this@CentralActivity)
-            val prefs     = getSharedPreferences(BeeBackgroundService.PREFS_BG, MODE_PRIVATE)
-            val cycles    = prefs.getInt(BeeBackgroundService.KEY_CYCLES, 0)
-            val wallet    = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
+            val prefs   = getSharedPreferences(BeeBackgroundService.PREFS_BG, MODE_PRIVATE)
+            val cycles  = prefs.getInt(BeeBackgroundService.KEY_CYCLES, 0)
+            val wallet  = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
             return """{"active":$active,"remainingMs":$remaining,"cycles":$cycles,"wallet":"$wallet"}"""
         }
     }
