@@ -516,6 +516,14 @@ class MainActivity : AppCompatActivity() {
     private fun handleIncomingIntent(intent: Intent?) {
         if (intent == null) return
 
+        // Anúncio rewarded solicitado por outra Activity
+        val showAd = intent.getStringExtra("show_ad")
+        if (!showAd.isNullOrBlank()) {
+            intent.removeExtra("show_ad")
+            runOnUiThread { showPersistentBeeAd(showAd) }
+            return
+        }
+
         val navigateTo = intent.getStringExtra("navigate_to")
         if (!navigateTo.isNullOrBlank()) {
             intent.removeExtra("navigate_to")
@@ -1213,7 +1221,7 @@ class MainActivity : AppCompatActivity() {
         beePanelExpanded = false
     }
 
-    fun showPersistentBeeAd(mode: String, targetWv: android.webkit.WebView) {
+    fun showPersistentBeeAd(mode: String, targetWv: android.webkit.WebView? = null) {
         if (mainAdShowing) return
         val ad = mainRewardedAd ?: run { loadMainRewardedAd(); return }
         mainAdShowing = true
@@ -1230,12 +1238,21 @@ class MainActivity : AppCompatActivity() {
                     if (mode == "energy") "if(window.onEnergyAdClosed) window.onEnergyAdClosed()"
                     else "if(window.onWpAdClosed) window.onWpAdClosed()"
                 }
-                targetWv.post { targetWv.evaluateJavascript(js, null) }
+                // Sempre entrega na persistentBeeView — é onde o painel está rodando
+                val wv = persistentBeeView
+                if (wv != null) {
+                    wv.post { wv.evaluateJavascript(js, null) }
+                } else {
+                    BeeActivity.runJs(js)
+                }
             }
             override fun onAdFailedToShowFullScreenContent(e: com.google.android.gms.ads.AdError) {
                 mainRewardedAd = null
                 mainAdShowing = false
                 loadMainRewardedAd()
+                val js = if (mode == "energy") "if(window.onEnergyAdClosed) window.onEnergyAdClosed()"
+                         else "if(window.onWpAdClosed) window.onWpAdClosed()"
+                persistentBeeView?.post { persistentBeeView?.evaluateJavascript(js, null) }
             }
         }
         ad.show(this) { rewarded = true }

@@ -204,30 +204,14 @@ class BeeActivity : AppCompatActivity() {
                 @android.webkit.JavascriptInterface
                 fun openEnergyPage() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        // Mostra anúncio via MainActivity — tem contexto de Activity
-                        (context as? MainActivity)?.showPersistentBeeAd("energy", wv)
-                            ?: run {
-                                // Fallback: BeeActivity
-                                val i = android.content.Intent(context, BeeActivity::class.java).apply {
-                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                                    putExtra("action", "energy")
-                                }
-                                context.startActivity(i)
-                            }
+                        (context as? MainActivity)?.showPersistentBeeAd("energy")
                     }
                 }
 
                 @android.webkit.JavascriptInterface
                 fun openWpAd() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        (context as? MainActivity)?.showPersistentBeeAd("wp", wv)
-                            ?: run {
-                                val i = android.content.Intent(context, BeeActivity::class.java).apply {
-                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                                    putExtra("action", "wp_ad")
-                                }
-                                context.startActivity(i)
-                            }
+                        (context as? MainActivity)?.showPersistentBeeAd("wp")
                     }
                 }
                 @android.webkit.JavascriptInterface
@@ -575,12 +559,26 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun openEnergyPage() {
-            mainHandler.post { showRewardedAd("energy") }
+            mainHandler.post {
+                val i = Intent(this@BeeActivity, MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    putExtra("show_ad", "energy")
+                }
+                startActivity(i)
+                finish()
+            }
         }
 
         @JavascriptInterface
         fun openWpAd() {
-            mainHandler.post { showRewardedAd("wp") }
+            mainHandler.post {
+                val i = Intent(this@BeeActivity, MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    putExtra("show_ad", "wp")
+                }
+                startActivity(i)
+                finish()
+            }
         }
 
         @JavascriptInterface
