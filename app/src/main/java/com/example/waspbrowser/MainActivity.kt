@@ -1219,7 +1219,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showPersistentBeeAd(mode: String) {
-        AdManager.show(this, mode) { rewarded ->
+        AdManager.show(mode) { rewarded ->
             AdManager.deliverJs(mode, rewarded)
         }
     }

@@ -55,8 +55,8 @@ class CentralActivity : AppCompatActivity() {
         webView.addJavascriptInterface(Bridge(), "Android")
         webView.loadUrl("file:///android_asset/bee/central.html")
 
-        // Garante que o AdManager está pronto (só inicializa uma vez)
-        AdManager.init(this)
+        // Garante que o AdManager está pronto com referência à MainActivity
+        // A MainActivity já chama AdManager.init(this) no onCreate dela
     }
 
     override fun onResume()  { super.onResume();  webView.onResume();  webView.resumeTimers() }
@@ -82,7 +82,7 @@ class CentralActivity : AppCompatActivity() {
         fun openWpAd() {
             android.util.Log.d(TAG, "openWpAd()")
             handler.post {
-                AdManager.show(this@CentralActivity, "wp") { rewarded ->
+                AdManager.show("wp") { rewarded ->
                     AdManager.deliverJs("wp", rewarded)
                 }
             }

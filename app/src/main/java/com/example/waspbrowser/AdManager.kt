@@ -9,11 +9,13 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import java.lang.ref.WeakReference
 
 /**
  * Gerenciador único de anúncios rewarded.
- * Só existe UMA instância de RewardedAd no app inteiro.
- * O callback JS sempre vai para a persistentBeeView da MainActivity.
+ * - Uma única instância de RewardedAd no app inteiro
+ * - ad.show() SEMPRE na MainActivity (Activity raiz, nunca coberta)
+ * - Callback JS sempre entregue na persistentBeeView via BeeActivity.runJs()
  */
 object AdManager {
 
@@ -21,13 +23,18 @@ object AdManager {
     private const val AD_UNIT = "ca-app-pub-3940256099942544/5224354917"
 
     private var rewardedAd: RewardedAd? = null
-    private var isLoading  = false
-    private var isShowing  = false
+    private var isLoading   = false
+    private var isShowing   = false
     private var initialized = false
+
+    // Referência fraca para a MainActivity — única Activity usada para show()
+    private var mainActivityRef: WeakReference<MainActivity>? = null
 
     // ── Init ─────────────────────────────────────────────────────────────
 
-    fun init(activity: Activity) {
+    fun init(activity: MainActivity) {
+        // Sempre atualiza a referência para a MainActivity
+        mainActivityRef = WeakReference(activity)
         if (initialized) { loadIfNeeded(activity); return }
         initialized = true
         MobileAds.initialize(activity) {
@@ -50,7 +57,7 @@ object AdManager {
                     isLoading  = false
                 }
                 override fun onAdFailedToLoad(e: LoadAdError) {
-                    Log.e(TAG, "Ad falhou: ${e.message}")
+                    Log.e(TAG, "Ad falhou ao carregar: ${e.message}")
                     rewardedAd = null
                     isLoading  = false
                 }
@@ -61,18 +68,24 @@ object AdManager {
     // ── Show ─────────────────────────────────────────────────────────────
 
     /**
-     * Mostra o anúncio.
-     * @param activity  Activity visível no momento (precisa ser a do topo da stack)
-     * @param mode      "wp" ou "energy"
-     * @param onResult  chamado com rewarded=true/false quando o ad fechar
+     * Mostra o anúncio SEMPRE na MainActivity.
+     * Qualquer Activity pode chamar isso — o show() usa a MainActivity.
      */
-    fun show(activity: Activity, mode: String, onResult: (rewarded: Boolean) -> Unit) {
-        if (isShowing) { Log.w(TAG, "Ad já sendo exibido"); return }
-
+    fun show(mode: String, onResult: (rewarded: Boolean) -> Unit) {
+        val mainActivity = mainActivityRef?.get()
+        if (mainActivity == null) {
+            Log.e(TAG, "MainActivity não disponível!")
+            onResult(false)
+            return
+        }
+        if (isShowing) {
+            Log.w(TAG, "Ad já sendo exibido")
+            return
+        }
         val ad = rewardedAd
         if (ad == null) {
-            Log.w(TAG, "Ad não disponível — carregando e notificando fechamento")
-            loadIfNeeded(activity)
+            Log.w(TAG, "Ad não disponível — carregando")
+            loadIfNeeded(mainActivity)
             onResult(false)
             return
         }
@@ -82,45 +95,42 @@ object AdManager {
         var rewarded = false
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdShowedFullScreenContent() {
+                Log.d(TAG, ">>> onAdShowedFullScreenContent")
+            }
+            override fun onAdImpression() {
+                Log.d(TAG, ">>> onAdImpression")
+            }
             override fun onAdClicked() {
                 Log.d(TAG, ">>> onAdClicked")
             }
-            override fun onAdImpression() {
-                Log.d(TAG, ">>> onAdImpression — anuncio visivel na tela")
-            }
-            override fun onAdShowedFullScreenContent() {
-                Log.d(TAG, ">>> onAdShowedFullScreenContent — tela cheia aberta")
-            }
             override fun onAdDismissedFullScreenContent() {
-                Log.d(TAG, ">>> onAdDismissedFullScreenContent — usuario fechou, rewarded=$rewarded")
+                Log.d(TAG, ">>> onAdDismissedFullScreenContent rewarded=$rewarded")
                 isShowing = false
-                loadIfNeeded(activity)
+                loadIfNeeded(mainActivity)
                 onResult(rewarded)
             }
             override fun onAdFailedToShowFullScreenContent(e: AdError) {
-                Log.e(TAG, ">>> onAdFailedToShowFullScreenContent — erro: ${e.message}")
+                Log.e(TAG, ">>> onAdFailedToShowFullScreenContent: ${e.message}")
                 isShowing = false
-                loadIfNeeded(activity)
+                loadIfNeeded(mainActivity)
                 onResult(false)
             }
         }
 
-        ad.show(activity) {
+        // SEMPRE mostra na MainActivity — nunca em Activity filha
+        ad.show(mainActivity) {
             rewarded = true
-            Log.d(TAG, "✅ RECOMPENSA CONFIRMADA — mode=$mode")
+            Log.d(TAG, "✅ RECOMPENSA CONFIRMADA mode=$mode")
         }
     }
 
     // ── JS Delivery ───────────────────────────────────────────────────────
 
-    /**
-     * Entrega o resultado do anúncio como callback JS
-     * diretamente na persistentBeeView da MainActivity.
-     */
     fun deliverJs(mode: String, rewarded: Boolean) {
         val js = when {
-            mode == "wp"     && rewarded  -> "if(window.onWpAdRewarded)  window.onWpAdRewarded()"
-            mode == "wp"     && !rewarded -> "if(window.onWpAdClosed)    window.onWpAdClosed()"
+            mode == "wp"     && rewarded  -> "if(window.onWpAdRewarded)   window.onWpAdRewarded()"
+            mode == "wp"     && !rewarded -> "if(window.onWpAdClosed)     window.onWpAdClosed()"
             mode == "energy" && rewarded  -> "if(window.onEnergyRewarded) window.onEnergyRewarded()"
             else                          -> "if(window.onEnergyAdClosed) window.onEnergyAdClosed()"
         }

@@ -474,7 +474,7 @@ class BeeActivity : AppCompatActivity() {
         @JavascriptInterface
         fun openEnergyPage() {
             mainHandler.post {
-                AdManager.show(this@BeeActivity, "energy") { rewarded ->
+                AdManager.show("energy") { rewarded ->
                     AdManager.deliverJs("energy", rewarded)
                 }
             }
@@ -483,7 +483,7 @@ class BeeActivity : AppCompatActivity() {
         @JavascriptInterface
         fun openWpAd() {
             mainHandler.post {
-                AdManager.show(this@BeeActivity, "wp") { rewarded ->
+                AdManager.show("wp") { rewarded ->
                     AdManager.deliverJs("wp", rewarded)
                 }
             }
