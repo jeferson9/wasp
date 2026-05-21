@@ -95,7 +95,12 @@ class CentralActivity : AppCompatActivity() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         webView.destroy()
-        // NÃO destrói beeView se for a persistente da MainActivity
+        // Se beeView for a persistente da MainActivity, devolve ela para lá
+        val persistent = BeeActivity.getPersistentWebView()
+        if (beeView != null && beeView === persistent) {
+            (beeView!!.parent as? android.view.ViewGroup)?.removeView(beeView)
+            // MainActivity vai readicioná-la no próximo onResume via setupPersistentBee
+        }
         super.onDestroy()
     }
 

@@ -380,6 +380,15 @@ class MainActivity : AppCompatActivity() {
             webAppView.evaluateJavascript("setBottomTab('main')", null)
         }
         // Notifica a Bee persistente que o app voltou ao foco
+        // E garante que ela está no container correto (pode ter saído pela CentralActivity)
+        val beeContainer = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container)
+        if (persistentBeeView != null && beeContainer != null && persistentBeeView?.parent !== beeContainer) {
+            (persistentBeeView?.parent as? android.view.ViewGroup)?.removeView(persistentBeeView)
+            beeContainer.addView(persistentBeeView, android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            ))
+        }
         persistentBeeView?.post {
             persistentBeeView?.resumeTimers()
             persistentBeeView?.evaluateJavascript(
