@@ -44,7 +44,42 @@ class CentralActivity : AppCompatActivity() {
 
         webView = WebView(this)
         webView.setBackgroundColor(0xFF08090D.toInt())
-        setContentView(webView)
+
+        // Layout com WebView + rodapé Bee
+        val rootLayout = android.widget.RelativeLayout(this)
+        rootLayout.setBackgroundColor(0xFF08090D.toInt())
+
+        val webParams = android.widget.RelativeLayout.LayoutParams(
+            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT,
+            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT
+        ).apply { addRule(android.widget.RelativeLayout.ABOVE, R.id.central_bee_footer) }
+        rootLayout.addView(webView, webParams)
+
+        // Rodapé Bee — mostra a WebView persistente da MainActivity
+        val beeFooter = android.widget.FrameLayout(this).apply { id = R.id.central_bee_footer }
+        val footerParams = android.widget.RelativeLayout.LayoutParams(
+            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT,
+            (56 * resources.displayMetrics.density).toInt()
+        ).apply { addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM) }
+        rootLayout.addView(beeFooter, footerParams)
+
+        setContentView(rootLayout)
+
+        // Injeta a WebView persistente do Bee no rodapé
+        handler.postDelayed({
+            val mainActivity = BeeActivity.instance?.get()?.let { null }
+            val persistentWv = BeeActivity.persistentWebView?.get()
+            if (persistentWv != null) {
+                try {
+                    (persistentWv.parent as? android.view.ViewGroup)?.removeView(persistentWv)
+                } catch (_: Exception) {}
+                beeFooter.addView(persistentWv, android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                ))
+                android.util.Log.d(TAG, "Bee footer adicionado na CentralActivity")
+            }
+        }, 300)
 
         with(webView.settings) {
             javaScriptEnabled   = true
@@ -69,9 +104,37 @@ class CentralActivity : AppCompatActivity() {
         MobileAds.initialize(this) { loadAd() }
     }
 
-    override fun onResume()  { super.onResume();  webView.onResume();  webView.resumeTimers() }
-    override fun onPause()   { super.onPause();   webView.onPause();   webView.pauseTimers()  }
-    override fun onDestroy() { handler.removeCallbacksAndMessages(null); webView.destroy(); super.onDestroy() }
+    override fun onResume() {
+        super.onResume()
+        webView.onResume()
+        webView.resumeTimers()
+        // Reanexa Bee footer se necessário
+        handler.postDelayed({
+            val footer = findViewById<android.widget.FrameLayout>(R.id.central_bee_footer) ?: return@postDelayed
+            if (footer.childCount == 0) {
+                val pWv = BeeActivity.persistentWebView?.get() ?: return@postDelayed
+                try { (pWv.parent as? android.view.ViewGroup)?.removeView(pWv) } catch (_: Exception) {}
+                footer.addView(pWv, android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                ))
+            }
+        }, 200)
+    }
+
+    override fun onPause() { super.onPause(); webView.onPause(); webView.pauseTimers() }
+
+    override fun onDestroy() {
+        // Devolve a WebView persistente para a MainActivity antes de destruir
+        val footer = findViewById<android.widget.FrameLayout?>(R.id.central_bee_footer)
+        val pWv = BeeActivity.persistentWebView?.get()
+        if (footer != null && pWv != null) {
+            try { footer.removeView(pWv) } catch (_: Exception) {}
+        }
+        handler.removeCallbacksAndMessages(null)
+        webView.destroy()
+        super.onDestroy()
+    }
 
     // ── Ad ───────────────────────────────────────────────────────────────
 
