@@ -45,7 +45,7 @@ class BeeActivity : AppCompatActivity() {
         var instance: java.lang.ref.WeakReference<BeeActivity>? = null
 
         // WebView persistente na MainActivity — nunca é destruída
-        private var persistentWebView: java.lang.ref.WeakReference<android.webkit.WebView>? = null
+        var persistentWebView: java.lang.ref.WeakReference<android.webkit.WebView>? = null
 
         fun setPersistentWebView(wv: android.webkit.WebView) {
             persistentWebView = java.lang.ref.WeakReference(wv)
