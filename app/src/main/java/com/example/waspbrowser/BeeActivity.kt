@@ -512,13 +512,13 @@ class BeeActivity : AppCompatActivity() {
                 mainHandler.postDelayed({
                     when {
                         capturedMode == "energy" && capturedEnergyRewarded ->
-                            evaluateJs("if(window.onEnergyRewarded) window.onEnergyRewarded()")
+                            runJs("if(window.onEnergyRewarded) window.onEnergyRewarded()")
                         capturedMode == "energy" ->
-                            evaluateJs("if(window.onEnergyAdClosed) window.onEnergyAdClosed()")
+                            runJs("if(window.onEnergyAdClosed) window.onEnergyAdClosed()")
                         capturedMode == "wp" && capturedWpRewarded ->
-                            evaluateJs("if(window.onWpAdRewarded) window.onWpAdRewarded()")
+                            runJs("if(window.onWpAdRewarded) window.onWpAdRewarded()")
                         capturedMode == "wp" ->
-                            evaluateJs("if(window.onWpAdClosed) window.onWpAdClosed()")
+                            runJs("if(window.onWpAdClosed) window.onWpAdClosed()")
                     }
                 }, 300)
             }
@@ -530,7 +530,7 @@ class BeeActivity : AppCompatActivity() {
                 energyRewardGranted = false
                 loadRewardedAd()
                 adMode = null
-                evaluateJs("if(window.onWpAdClosed) window.onWpAdClosed()")
+                runJs("if(window.onWpAdClosed) window.onWpAdClosed()")
             }
         }
 
