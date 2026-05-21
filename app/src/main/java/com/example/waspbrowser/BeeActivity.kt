@@ -52,6 +52,8 @@ class BeeActivity : AppCompatActivity() {
             Log.d(TAG, "persistentWebView registrada")
         }
 
+        fun getPersistentWebView(): android.webkit.WebView? = persistentWebView?.get()
+
         fun runJs(js: String) {
             // Tenta primeiro na WebView persistente da MainActivity
             val persistent = persistentWebView?.get()

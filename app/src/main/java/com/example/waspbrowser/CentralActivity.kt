@@ -29,6 +29,7 @@ class CentralActivity : AppCompatActivity() {
     }
 
     private lateinit var webView: WebView
+    private var beeView: android.webkit.WebView? = null
     private val handler = Handler(Looper.getMainLooper())
 
     private var rewardedAd: RewardedAd? = null
@@ -42,9 +43,19 @@ class CentralActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        setContentView(R.layout.activity_central)
+
+        // WebView da Central no container do layout
+        val contentFrame = findViewById<android.widget.FrameLayout>(R.id.central_content)
         webView = WebView(this)
         webView.setBackgroundColor(0xFF08090D.toInt())
-        setContentView(webView)
+        contentFrame.addView(webView, android.view.ViewGroup.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+
+        // Rodapé Bee — mantém mineração visível na Central também
+        setupBeeFooter()
 
         with(webView.settings) {
             javaScriptEnabled   = true
@@ -69,11 +80,88 @@ class CentralActivity : AppCompatActivity() {
         MobileAds.initialize(this) { loadAd() }
     }
 
-    override fun onResume()  { super.onResume();  webView.onResume();  webView.resumeTimers() }
-    override fun onPause()   { super.onPause();   webView.onPause();   webView.pauseTimers()  }
-    override fun onDestroy() { handler.removeCallbacksAndMessages(null); webView.destroy(); super.onDestroy() }
+    override fun onResume()  {
+        super.onResume()
+        webView.onResume()
+        webView.resumeTimers()
+        beeView?.onResume()
+        beeView?.resumeTimers()
+    }
+    override fun onPause()   {
+        super.onPause()
+        webView.onPause()
+        // NÃO pausa beeView — mineração precisa continuar
+    }
+    override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
+        webView.destroy()
+        // NÃO destrói beeView se for a persistente da MainActivity
+        super.onDestroy()
+    }
 
-    // ── Ad ───────────────────────────────────────────────────────────────
+    // ── Bee Footer ───────────────────────────────────────────────────────
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupBeeFooter() {
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+
+        // Usa a persistentWebView da MainActivity se disponível
+        val persistent = BeeActivity.getPersistentWebView()
+        if (persistent != null) {
+            // Remove do pai atual e adiciona aqui temporariamente
+            (persistent.parent as? android.view.ViewGroup)?.removeView(persistent)
+            container.addView(persistent, android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            ))
+            beeView = persistent
+        } else {
+            // Cria uma WebView própria para o rodapé
+            val wv = android.webkit.WebView(this)
+            with(wv.settings) {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                allowFileAccess = true
+                @Suppress("DEPRECATION") allowFileAccessFromFileURLs = true
+                @Suppress("DEPRECATION") allowUniversalAccessFromFileURLs = true
+                mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            }
+            wv.setBackgroundColor(0xFF0B0B0D.toInt())
+            val bridge = BeeActivity.createBridge(this, wv)
+            wv.addJavascriptInterface(bridge, "AndroidBee")
+            wv.webViewClient = object : android.webkit.WebViewClient() {
+                override fun shouldInterceptRequest(
+                    view: android.webkit.WebView?,
+                    request: android.webkit.WebResourceRequest?
+                ): android.webkit.WebResourceResponse? {
+                    val url = request?.url?.toString() ?: return null
+                    if (url.endsWith(".wasm")) {
+                        return try {
+                            android.webkit.WebResourceResponse(
+                                "application/wasm", "binary", 200, "OK",
+                                mapOf("Access-Control-Allow-Origin" to "*"),
+                                assets.open("bee/bee_sdk_bg.wasm")
+                            )
+                        } catch (e: Exception) { null }
+                    }
+                    return null
+                }
+            }
+            wv.loadUrl("file:///android_asset/bee/index.html")
+            container.addView(wv, android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            ))
+            beeView = wv
+        }
+
+        // Mostra o container no rodapé (56dp = altura mínima do painel)
+        val dp56 = (56 * resources.displayMetrics.density).toInt()
+        container.layoutParams.height = dp56
+        container.visibility = android.view.View.VISIBLE
+    }
+
+    // ── Lifecycle ────────────────────────────────────────────────────────
 
     private fun loadAd() {
         if (adLoading) return
