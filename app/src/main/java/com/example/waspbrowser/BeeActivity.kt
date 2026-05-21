@@ -20,14 +20,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.rewarded.RewardItem
-import com.google.android.gms.ads.rewarded.RewardedAd
-import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import androidx.core.view.WindowCompat
 
 class BeeActivity : AppCompatActivity() {
@@ -36,7 +28,6 @@ class BeeActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "BeeActivity"
-        private const val REWARDED_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
         private const val PREFS_BEE_ENERGY = "bee_energy"
         private const val PREFS_MINING      = "bee_mining"
         private const val KEY_MINING_ACTIVE  = "mining_active"
@@ -279,12 +270,7 @@ class BeeActivity : AppCompatActivity() {
 
     private lateinit var beeWebView: WebView
     private val mainHandler = Handler(Looper.getMainLooper())
-    private var rewardedAd: RewardedAd? = null
-    private var energyRewardGranted = false
-    private var wpRewardGranted = false
-    private var adMode: String? = null
     private var pageLoaded = false
-    private var isAdShowing = false
     private var isReceiverRegistered = false
 
     // ─── Keep-Alive Receiver ────────────────────────────────────────────────
@@ -328,21 +314,14 @@ class BeeActivity : AppCompatActivity() {
             moveTaskToBack(true)
         }
 
-        // Acao de anuncio solicitada pela WebView persistente
-        when (action) {
-            "wp_ad"  -> mainHandler.postDelayed({ showRewardedAd("wp") }, 1500)
-            "energy" -> mainHandler.postDelayed({ showRewardedAd("energy") }, 1500)
-        }
         beeWebView = findViewById(R.id.beeWebView)
         window.decorView.setBackgroundColor(0xFF0B0B0D.toInt())
         beeWebView.setBackgroundColor(0xFF0B0B0D.toInt())
         beeWebView.alpha = 0f
 
-        MobileAds.initialize(this) {}
         configureWebView()
         attachBridge()
         attachClients()
-        loadRewardedAd()
         loadBeePanel()
 
         // Registra o receiver aqui para que funcione mesmo quando a activity estiver em background
@@ -459,71 +438,6 @@ class BeeActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadRewardedAd() {
-        RewardedAd.load(
-            this,
-            REWARDED_TEST_AD_UNIT_ID,
-            AdRequest.Builder().build(),
-            object : RewardedAdLoadCallback() {
-                override fun onAdLoaded(ad: RewardedAd) { rewardedAd = ad }
-                override fun onAdFailedToLoad(e: LoadAdError) { rewardedAd = null }
-            }
-        )
-    }
-
-    private fun showRewardedAd(mode: String) {
-        if (isAdShowing) return
-        val ad = rewardedAd ?: run { loadRewardedAd(); return }
-        adMode = mode
-        isAdShowing = true
-
-        // Reset flags antes de cada exibição
-        wpRewardGranted = false
-        energyRewardGranted = false
-
-        ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() {
-                rewardedAd = null
-                isAdShowing = false
-                loadRewardedAd()
-                val capturedMode = adMode
-                val capturedWpRewarded = wpRewardGranted
-                val capturedEnergyRewarded = energyRewardGranted
-                // Reset flags
-                wpRewardGranted = false
-                energyRewardGranted = false
-                adMode = null
-                mainHandler.postDelayed({
-                    when {
-                        capturedMode == "energy" && capturedEnergyRewarded ->
-                            runJs("if(window.onEnergyRewarded) window.onEnergyRewarded()")
-                        capturedMode == "energy" ->
-                            runJs("if(window.onEnergyAdClosed) window.onEnergyAdClosed()")
-                        capturedMode == "wp" && capturedWpRewarded ->
-                            runJs("if(window.onWpAdRewarded) window.onWpAdRewarded()")
-                        capturedMode == "wp" ->
-                            runJs("if(window.onWpAdClosed) window.onWpAdClosed()")
-                    }
-                }, 300)
-            }
-
-            override fun onAdFailedToShowFullScreenContent(error: AdError) {
-                rewardedAd = null
-                isAdShowing = false
-                wpRewardGranted = false
-                energyRewardGranted = false
-                loadRewardedAd()
-                adMode = null
-                runJs("if(window.onWpAdClosed) window.onWpAdClosed()")
-            }
-        }
-
-        ad.show(this) { _: RewardItem ->
-            if (mode == "energy") energyRewardGranted = true
-            else wpRewardGranted = true
-        }
-    }
-
     private fun returnToMain(screen: String) {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -560,24 +474,18 @@ class BeeActivity : AppCompatActivity() {
         @JavascriptInterface
         fun openEnergyPage() {
             mainHandler.post {
-                val i = Intent(this@BeeActivity, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra("show_ad", "energy")
+                AdManager.show(this@BeeActivity, "energy") { rewarded ->
+                    AdManager.deliverJs("energy", rewarded)
                 }
-                startActivity(i)
-                finish()
             }
         }
 
         @JavascriptInterface
         fun openWpAd() {
             mainHandler.post {
-                val i = Intent(this@BeeActivity, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra("show_ad", "wp")
+                AdManager.show(this@BeeActivity, "wp") { rewarded ->
+                    AdManager.deliverJs("wp", rewarded)
                 }
-                startActivity(i)
-                finish()
             }
         }
 

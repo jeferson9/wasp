@@ -267,9 +267,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var geckoView: GeckoView
     private var persistentBeeView: android.webkit.WebView? = null
     private var beePanelExpanded = false
-    private var mainRewardedAd: com.google.android.gms.ads.rewarded.RewardedAd? = null
-    private var mainAdShowing = false
-    private val REWARDED_AD_UNIT = "ca-app-pub-3940256099942544/5224354917"
     private lateinit var btnBack: ImageButton
     private lateinit var btnHome: ImageButton
     private lateinit var btnMenu: ImageButton
@@ -325,7 +322,7 @@ class MainActivity : AppCompatActivity() {
         setupTopBar()
         setupUrlInput()
         setupPersistentBee()
-        loadMainRewardedAd()
+        AdManager.init(this)
 
         webAppView.loadUrl("file:///android_asset/index.html")
         webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
@@ -1221,52 +1218,10 @@ class MainActivity : AppCompatActivity() {
         beePanelExpanded = false
     }
 
-    fun showPersistentBeeAd(mode: String, targetWv: android.webkit.WebView? = null) {
-        if (mainAdShowing) return
-        val ad = mainRewardedAd ?: run { loadMainRewardedAd(); return }
-        mainAdShowing = true
-        var rewarded = false
-        ad.fullScreenContentCallback = object : com.google.android.gms.ads.FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() {
-                mainRewardedAd = null
-                mainAdShowing = false
-                loadMainRewardedAd()
-                val js = if (rewarded) {
-                    if (mode == "energy") "if(window.onEnergyRewarded) window.onEnergyRewarded()"
-                    else "if(window.onWpAdRewarded) window.onWpAdRewarded()"
-                } else {
-                    if (mode == "energy") "if(window.onEnergyAdClosed) window.onEnergyAdClosed()"
-                    else "if(window.onWpAdClosed) window.onWpAdClosed()"
-                }
-                // Sempre entrega na persistentBeeView — é onde o painel está rodando
-                val wv = persistentBeeView
-                if (wv != null) {
-                    wv.post { wv.evaluateJavascript(js, null) }
-                } else {
-                    BeeActivity.runJs(js)
-                }
-            }
-            override fun onAdFailedToShowFullScreenContent(e: com.google.android.gms.ads.AdError) {
-                mainRewardedAd = null
-                mainAdShowing = false
-                loadMainRewardedAd()
-                val js = if (mode == "energy") "if(window.onEnergyAdClosed) window.onEnergyAdClosed()"
-                         else "if(window.onWpAdClosed) window.onWpAdClosed()"
-                persistentBeeView?.post { persistentBeeView?.evaluateJavascript(js, null) }
-            }
+    fun showPersistentBeeAd(mode: String) {
+        AdManager.show(this, mode) { rewarded ->
+            AdManager.deliverJs(mode, rewarded)
         }
-        ad.show(this) { rewarded = true }
-    }
-
-    private fun loadMainRewardedAd() {
-        com.google.android.gms.ads.rewarded.RewardedAd.load(
-            this, REWARDED_AD_UNIT,
-            com.google.android.gms.ads.AdRequest.Builder().build(),
-            object : com.google.android.gms.ads.rewarded.RewardedAdLoadCallback() {
-                override fun onAdLoaded(ad: com.google.android.gms.ads.rewarded.RewardedAd) { mainRewardedAd = ad }
-                override fun onAdFailedToLoad(e: com.google.android.gms.ads.LoadAdError) { mainRewardedAd = null }
-            }
-        )
     }
 
     @android.annotation.SuppressLint("SetJavaScriptEnabled")
