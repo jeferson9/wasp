@@ -79,16 +79,6 @@ class CentralActivity : AppCompatActivity() {
     inner class Bridge {
 
         @JavascriptInterface
-        fun openWpAd() {
-            android.util.Log.d(TAG, "openWpAd()")
-            handler.post {
-                AdManager.show("wp") { rewarded ->
-                    AdManager.deliverJs("wp", rewarded)
-                }
-            }
-        }
-
-        @JavascriptInterface
         fun closeCentral() {
             handler.post {
                 finish()

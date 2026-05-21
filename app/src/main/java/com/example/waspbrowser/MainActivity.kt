@@ -322,8 +322,6 @@ class MainActivity : AppCompatActivity() {
         setupTopBar()
         setupUrlInput()
         setupPersistentBee()
-        AdManager.init(this)
-
         webAppView.loadUrl("file:///android_asset/index.html")
         webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
 
@@ -512,14 +510,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIncomingIntent(intent: Intent?) {
         if (intent == null) return
-
-        // Anúncio rewarded solicitado por outra Activity
-        val showAd = intent.getStringExtra("show_ad")
-        if (!showAd.isNullOrBlank()) {
-            intent.removeExtra("show_ad")
-            runOnUiThread { showPersistentBeeAd(showAd) }
-            return
-        }
 
         val navigateTo = intent.getStringExtra("navigate_to")
         if (!navigateTo.isNullOrBlank()) {
@@ -1216,12 +1206,6 @@ class MainActivity : AppCompatActivity() {
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
         container.visibility = android.view.View.GONE
         beePanelExpanded = false
-    }
-
-    fun showPersistentBeeAd(mode: String) {
-        AdManager.show(mode) { rewarded ->
-            AdManager.deliverJs(mode, rewarded)
-        }
     }
 
     @android.annotation.SuppressLint("SetJavaScriptEnabled")

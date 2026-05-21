@@ -193,19 +193,6 @@ class BeeActivity : AppCompatActivity() {
                     }
                 }
                 @android.webkit.JavascriptInterface
-                fun openEnergyPage() {
-                    android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        (context as? MainActivity)?.showPersistentBeeAd("energy")
-                    }
-                }
-
-                @android.webkit.JavascriptInterface
-                fun openWpAd() {
-                    android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        (context as? MainActivity)?.showPersistentBeeAd("wp")
-                    }
-                }
-                @android.webkit.JavascriptInterface
                 fun openCentral() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         wv.evaluateJavascript("""
@@ -469,24 +456,6 @@ class BeeActivity : AppCompatActivity() {
         fun openExternalUrl(url: String) {
             Log.d(TAG, "Bridge openExternalUrl: ${url.take(100)}")
             mainHandler.post { openExternal(url) }
-        }
-
-        @JavascriptInterface
-        fun openEnergyPage() {
-            mainHandler.post {
-                AdManager.show("energy") { rewarded ->
-                    AdManager.deliverJs("energy", rewarded)
-                }
-            }
-        }
-
-        @JavascriptInterface
-        fun openWpAd() {
-            mainHandler.post {
-                AdManager.show("wp") { rewarded ->
-                    AdManager.deliverJs("wp", rewarded)
-                }
-            }
         }
 
         @JavascriptInterface
