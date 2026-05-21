@@ -82,14 +82,23 @@ object AdManager {
         var rewarded = false
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdClicked() {
+                Log.d(TAG, ">>> onAdClicked")
+            }
+            override fun onAdImpression() {
+                Log.d(TAG, ">>> onAdImpression — anuncio visivel na tela")
+            }
+            override fun onAdShowedFullScreenContent() {
+                Log.d(TAG, ">>> onAdShowedFullScreenContent — tela cheia aberta")
+            }
             override fun onAdDismissedFullScreenContent() {
-                Log.d(TAG, "Ad fechado — rewarded=$rewarded")
+                Log.d(TAG, ">>> onAdDismissedFullScreenContent — usuario fechou, rewarded=$rewarded")
                 isShowing = false
                 loadIfNeeded(activity)
                 onResult(rewarded)
             }
             override fun onAdFailedToShowFullScreenContent(e: AdError) {
-                Log.e(TAG, "Ad falhou ao mostrar: ${e.message}")
+                Log.e(TAG, ">>> onAdFailedToShowFullScreenContent — erro: ${e.message}")
                 isShowing = false
                 loadIfNeeded(activity)
                 onResult(false)
