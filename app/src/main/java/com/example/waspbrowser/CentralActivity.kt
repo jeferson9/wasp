@@ -44,47 +44,7 @@ class CentralActivity : AppCompatActivity() {
 
         webView = WebView(this)
         webView.setBackgroundColor(0xFF08090D.toInt())
-
-        // Layout com WebView principal + rodapé Bee
-        val rootLayout = android.widget.RelativeLayout(this)
-        rootLayout.setBackgroundColor(0xFF08090D.toInt())
-
-        val dp56 = (56 * resources.displayMetrics.density).toInt()
-
-        val footerParams = android.widget.RelativeLayout.LayoutParams(
-            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT, dp56
-        ).apply { addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM) }
-
-        val webParams = android.widget.RelativeLayout.LayoutParams(
-            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT,
-            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT
-        ).apply { addRule(android.widget.RelativeLayout.ABOVE, R.id.central_bee_footer) }
-
-        // WebView do Bee rodapé — instância própria, sem mover a persistente
-        val beeFooterWv = android.webkit.WebView(this).apply {
-            id = R.id.central_bee_footer
-            setBackgroundColor(0xFF0B0B0D.toInt())
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.allowFileAccess = true
-            @Suppress("DEPRECATION") settings.allowFileAccessFromFileURLs = true
-            @Suppress("DEPRECATION") settings.allowUniversalAccessFromFileURLs = true
-            // Bridge mínima para o header funcionar
-            addJavascriptInterface(object {
-                @android.webkit.JavascriptInterface
-                fun openPanel() { handler.post { finish() } }
-                @android.webkit.JavascriptInterface
-                fun goBack() { handler.post { finish() } }
-                @android.webkit.JavascriptInterface
-                fun toast(m: String) {}
-            }, "AndroidBee")
-            webViewClient = android.webkit.WebViewClient()
-            loadUrl("file:///android_asset/bee/index.html")
-        }
-
-        rootLayout.addView(webView, webParams)
-        rootLayout.addView(beeFooterWv, footerParams)
-        setContentView(rootLayout)
+        setContentView(webView)
 
         with(webView.settings) {
             javaScriptEnabled   = true
@@ -202,9 +162,9 @@ class CentralActivity : AppCompatActivity() {
         @JavascriptInterface
         fun closeCentral() {
             handler.post {
+                finish()
                 @Suppress("DEPRECATION")
                 overridePendingTransition(R.anim.fade_in, R.anim.slide_down)
-                finish()
             }
         }
 
