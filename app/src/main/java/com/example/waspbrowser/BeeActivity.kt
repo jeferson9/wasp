@@ -193,6 +193,28 @@ class BeeActivity : AppCompatActivity() {
                     }
                 }
                 @android.webkit.JavascriptInterface
+                fun openWpAd() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        context.startActivity(
+                            android.content.Intent(context, AdActivity::class.java).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                putExtra(AdActivity.EXTRA_MODE, "wp")
+                            }
+                        )
+                    }
+                }
+                @android.webkit.JavascriptInterface
+                fun openEnergyPage() {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        context.startActivity(
+                            android.content.Intent(context, AdActivity::class.java).apply {
+                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                putExtra(AdActivity.EXTRA_MODE, "energy")
+                            }
+                        )
+                    }
+                }
+                @android.webkit.JavascriptInterface
                 fun openCentral() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         wv.evaluateJavascript("""
@@ -456,6 +478,24 @@ class BeeActivity : AppCompatActivity() {
         fun openExternalUrl(url: String) {
             Log.d(TAG, "Bridge openExternalUrl: ${url.take(100)}")
             mainHandler.post { openExternal(url) }
+        }
+
+        @JavascriptInterface
+        fun openWpAd() {
+            mainHandler.post {
+                startActivity(Intent(this@BeeActivity, AdActivity::class.java).apply {
+                    putExtra(AdActivity.EXTRA_MODE, "wp")
+                })
+            }
+        }
+
+        @JavascriptInterface
+        fun openEnergyPage() {
+            mainHandler.post {
+                startActivity(Intent(this@BeeActivity, AdActivity::class.java).apply {
+                    putExtra(AdActivity.EXTRA_MODE, "energy")
+                })
+            }
         }
 
         @JavascriptInterface

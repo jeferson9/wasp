@@ -90,7 +90,7 @@ androidComponents {
 
 dependencies {
     // Versão estável do AdMob
-    // AdMob removido temporariamente
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
 
     implementation("androidx.webkit:webkit:1.10.0")
     implementation("androidx.browser:browser:1.8.0")

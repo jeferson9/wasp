@@ -79,6 +79,16 @@ class CentralActivity : AppCompatActivity() {
     inner class Bridge {
 
         @JavascriptInterface
+        fun openWpAd() {
+            android.util.Log.d(TAG, "openWpAd()")
+            handler.post {
+                startActivity(android.content.Intent(this@CentralActivity, AdActivity::class.java).apply {
+                    putExtra(AdActivity.EXTRA_MODE, "wp")
+                })
+            }
+        }
+
+        @JavascriptInterface
         fun closeCentral() {
             handler.post {
                 finish()
