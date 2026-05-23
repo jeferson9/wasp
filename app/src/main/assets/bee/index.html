@@ -202,9 +202,38 @@
         .btn.danger { background: var(--red); color: #fff; }
         .btn.small  { padding: 10px; font-size: 13px; margin-top: 8px; }
         .btn.tap-btn {
-            font-size: 20px; padding: 22px;
-            background: linear-gradient(135deg,#ffc107,#ffdd55);
-            box-shadow: 0 0 30px rgba(255,193,7,0.35);
+            font-size: 13px; font-weight: 700; letter-spacing: .12em;
+            padding: 16px 28px;
+            background: transparent;
+            color: #00e5ff;
+            border: 1px solid rgba(0,229,255,0.40);
+            border-radius: 6px;
+            box-shadow:
+                0 0 12px rgba(0,229,255,0.12),
+                inset 0 0 18px rgba(0,229,255,0.04);
+            position: relative; overflow: hidden;
+            animation: tap-idle-pulse 2.8s ease-in-out infinite;
+        }
+        .btn.tap-btn::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg,
+                transparent 0%, rgba(0,229,255,0.08) 50%, transparent 100%);
+            transform: translateX(-100%);
+            animation: tap-scan 2.8s linear infinite;
+        }
+        .btn.tap-btn:active {
+            background: rgba(0,229,255,0.12);
+            box-shadow: 0 0 24px rgba(0,229,255,0.35), inset 0 0 24px rgba(0,229,255,0.10);
+            transform: scale(.97);
+        }
+        @keyframes tap-idle-pulse {
+            0%,100% { border-color: rgba(0,229,255,0.35); box-shadow: 0 0 10px rgba(0,229,255,0.10), inset 0 0 14px rgba(0,229,255,0.03); }
+            50%      { border-color: rgba(0,229,255,0.65); box-shadow: 0 0 20px rgba(0,229,255,0.22), inset 0 0 20px rgba(0,229,255,0.07); }
+        }
+        @keyframes tap-scan {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
         }
 
         .log-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
@@ -412,9 +441,8 @@
 
 <div id="tapSection" class="hidden" style="margin-bottom:14px;">
     <div class="card" style="text-align:center;">
-        <h3>Aumentar recompensa</h3>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:4px;">Cada tap adiciona uma ação ao Merkle Tree com dificuldade aumentada</p>
-        <button class="btn tap-btn" id="btnTap">⚡ TAP</button>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:.06em;text-transform:uppercase;">Merkle Tree · Ação Manual</p>
+        <button class="btn tap-btn" id="btnTap">[ EXECUTE TAP ]</button>
     </div>
 </div>
 
