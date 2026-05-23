@@ -397,63 +397,124 @@
           min-height: 20px;
         }
 
-        /* Button */
+        /* ── Orbe de Energia ────────────────────────── */
         .tap-btn-wrap {
           position: relative;
-          width: 170px; height: 170px;
+          width: 220px; height: 220px;
           display: flex; align-items: center; justify-content: center;
-          margin-bottom: 16px;
+          margin: 8px auto 20px;
         }
+
+        /* SVG de progresso circular */
+        .tap-ring-svg {
+          position: absolute;
+          inset: 0; width: 100%; height: 100%;
+          transform: rotate(-90deg);
+          pointer-events: none;
+          z-index: 4;
+        }
+        .tap-ring-track {
+          fill: none;
+          stroke: rgba(255,193,7,0.10);
+          stroke-width: 4;
+        }
+        .tap-ring-fill {
+          fill: none;
+          stroke: url(#ringGrad);
+          stroke-width: 4;
+          stroke-linecap: round;
+          stroke-dasharray: 596;
+          stroke-dashoffset: 596;
+          transition: stroke-dashoffset 0.15s ease;
+        }
+
+        /* Anéis de fundo pulsando */
         .tap-ring {
           position: absolute; border-radius: 50%;
-          border: 1px solid rgba(255,193,7,0.18);
+          border: 1px solid rgba(255,193,7,0.12);
           pointer-events: none;
         }
-        .tap-ring-1 { inset: -12px; animation: tpulse 2.4s infinite; }
-        .tap-ring-2 { inset: -24px; animation: tpulse 2.4s infinite .4s; }
-        .tap-ring-3 { inset: -36px; animation: tpulse 2.4s infinite .8s; }
+        .tap-ring-1 { inset: -14px; animation: tpulse 2.6s infinite; }
+        .tap-ring-2 { inset: -28px; animation: tpulse 2.6s infinite .5s; }
+        .tap-ring-3 { inset: -42px; animation: tpulse 2.6s infinite 1s; }
         @keyframes tpulse {
-          0%   { transform: scale(.92); opacity: 0; }
-          35%  { opacity: .28; }
-          100% { transform: scale(1.08); opacity: 0; }
+          0%   { transform: scale(.94); opacity: 0; }
+          40%  { opacity: .22; }
+          100% { transform: scale(1.07); opacity: 0; }
         }
+
+        /* Orbe principal */
         .tap-main-btn {
           width: 160px; height: 160px;
-          border-radius: 50%;
-          background: linear-gradient(145deg, var(--yellow), var(--yellow2));
-          color: #000;
-          font-size: 22px; font-weight: 900;
-          box-shadow: 0 18px 42px rgba(255,193,7,.30), inset 0 -8px 18px rgba(0,0,0,.15);
-          transition: transform .08s ease, box-shadow .1s ease;
+          border-radius: 18px;
+          background:
+            radial-gradient(ellipse at 30% 25%, #4a3728 0%, #2a1f16 45%, #1a1209 100%);
+          border: 2px solid rgba(180,120,60,0.35);
           position: relative; z-index: 2;
           display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          gap: 2px;
-          border: none;
+          align-items: center; justify-content: center; gap: 0;
+          cursor: pointer;
+          box-shadow:
+            0 0 24px rgba(180,100,20,0.20),
+            0 0 48px rgba(120,60,0,0.10),
+            inset 0 2px 8px rgba(255,180,60,0.08),
+            inset 0 -4px 12px rgba(0,0,0,0.50);
+          transition: transform .06s ease, box-shadow .08s ease, filter .08s ease;
+          -webkit-tap-highlight-color: transparent;
+          overflow: hidden;
+        }
+        /* fissuras decorativas — pseudo elementos */
+        .tap-main-btn::before {
+          content: '';
+          position: absolute; inset: 0;
+          background:
+            linear-gradient(128deg, transparent 38%, rgba(255,180,60,0.07) 40%, transparent 42%),
+            linear-gradient(220deg, transparent 55%, rgba(255,160,40,0.05) 57%, transparent 59%);
+          pointer-events: none;
+        }
+        .tap-main-btn::after {
+          content: '';
+          position: absolute;
+          top: 18%; left: 28%; width: 38%; height: 12%;
+          background: rgba(255,200,100,0.12);
+          border-radius: 50%;
+          filter: blur(4px);
+          pointer-events: none;
         }
         .tap-main-btn:active,
         .tap-main-btn.tapping {
-          transform: scale(.95);
-          box-shadow: 0 8px 24px rgba(255,193,7,.22), inset 0 -4px 12px rgba(0,0,0,.18);
+          transform: scale(.91);
+          filter: brightness(1.35);
+          box-shadow:
+            0 0 32px rgba(220,130,30,0.45),
+            0 0 64px rgba(180,80,0,0.22),
+            inset 0 2px 6px rgba(255,180,60,0.15),
+            inset 0 -6px 14px rgba(0,0,0,0.55);
         }
-        .tap-main-btn-sub { font-size: 11px; font-weight: 700; opacity: .7; }
+        .tap-mine-icon {
+          font-size: 44px; line-height: 1;
+          filter: drop-shadow(0 2px 6px rgba(0,0,0,0.7));
+          pointer-events: none;
+        }
 
         /* Floaters */
         .tap-float-zone {
           position: absolute; inset: 0;
-          pointer-events: none; overflow: hidden; z-index: 3;
+          pointer-events: none; overflow: visible; z-index: 10;
         }
         .tap-floater {
           position: absolute;
-          font-size: 20px; font-weight: 900;
-          color: var(--yellow2);
-          text-shadow: 0 0 12px rgba(255,193,7,.6);
+          font-size: 18px; font-weight: 900;
+          color: #ffe566;
+          text-shadow: 0 0 10px rgba(255,193,7,.8), 0 0 20px rgba(255,150,0,.5);
           pointer-events: none;
           animation: floatup 700ms ease forwards;
+          left: 50%; transform: translateX(-50%);
+          bottom: 50%;
         }
         @keyframes floatup {
-          0%   { opacity: 1; transform: translateY(0) scale(1.1); }
-          100% { opacity: 0; transform: translateY(-60px) scale(.9); }
+          0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.15); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-70px) scale(.85); }
         }
 
         .tap-milestone { font-size: 12px; color: var(--muted); min-height: 16px; text-align: center; }
@@ -596,10 +657,10 @@
     <div class="tap-game-card">
         <div class="tap-game-head">
             <div>
-                <div class="tap-game-title">Tap Game ⚡</div>
-                <div class="tap-game-sub">Toque 100x para ganhar 10 WP</div>
+                <div class="tap-game-title">⛏ Mineração Manual</div>
+                <div class="tap-game-sub">100 taps registram ações no Merkle Tree</div>
             </div>
-            <button class="tap-game-close" onclick="closeTap()">✕ Fechar</button>
+            <button class="tap-game-close" onclick="closeTap()">✕</button>
         </div>
 
         <div class="tap-prog-wrap">
@@ -620,13 +681,22 @@
             <div class="tap-ring tap-ring-1"></div>
             <div class="tap-ring tap-ring-2"></div>
             <div class="tap-ring tap-ring-3"></div>
+            <svg class="tap-ring-svg" viewBox="0 0 220 220">
+                <defs>
+                    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#f5a623"/>
+                        <stop offset="100%" stop-color="#ffe566"/>
+                    </linearGradient>
+                </defs>
+                <circle class="tap-ring-track" cx="110" cy="110" r="95"/>
+                <circle class="tap-ring-fill" id="tapRingFill" cx="110" cy="110" r="95"/>
+            </svg>
             <button class="tap-main-btn" id="tapMainBtn" onclick="doTap()">
-                <span>TAP</span>
-                <span class="tap-main-btn-sub">100 vezes</span>
+                <span class="tap-mine-icon">⛏️</span>
             </button>
         </div>
 
-        <div class="tap-milestone" id="tapMilestone">Comece tocando para carregar energia.</div>
+        <div class="tap-milestone" id="tapMilestone">Toque para registrar ações no Merkle Tree.</div>
     </div>
 </div>
 

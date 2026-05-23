@@ -51,8 +51,9 @@ class CentralActivity : AppCompatActivity() {
             }
         }
 
-        webView.addJavascriptInterface(Bridge(), "AndroidBee")
-        webView.addJavascriptInterface(Bridge(), "Android")
+        val bridge = Bridge()
+        webView.addJavascriptInterface(bridge, "AndroidBee")
+        webView.addJavascriptInterface(bridge, "Android")
         webView.loadUrl("file:///android_asset/bee/central.html")
 
     }
