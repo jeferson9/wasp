@@ -55,8 +55,6 @@ class CentralActivity : AppCompatActivity() {
         webView.addJavascriptInterface(Bridge(), "Android")
         webView.loadUrl("file:///android_asset/bee/central.html")
 
-        // Garante que o AdManager está pronto com referência à MainActivity
-        // A MainActivity já chama AdManager.init(this) no onCreate dela
     }
 
     override fun onResume()  { super.onResume();  webView.onResume();  webView.resumeTimers() }
@@ -64,7 +62,6 @@ class CentralActivity : AppCompatActivity() {
     override fun onDestroy() { handler.removeCallbacksAndMessages(null); webView.destroy(); super.onDestroy() }
 
     private fun js(fn: String) {
-        // Entrega o callback na persistentBeeView via AdManager/BeeActivity.runJs
         BeeActivity.runJs("if(typeof window.$fn==='function'){window.$fn();}")
         android.util.Log.d(TAG, "JS → $fn")
     }
@@ -77,16 +74,6 @@ class CentralActivity : AppCompatActivity() {
     }
 
     inner class Bridge {
-
-        @JavascriptInterface
-        fun openWpAd() {
-            android.util.Log.d(TAG, "openWpAd()")
-            handler.post {
-                startActivity(android.content.Intent(this@CentralActivity, AdActivity::class.java).apply {
-                    putExtra(AdActivity.EXTRA_MODE, "wp")
-                })
-            }
-        }
 
         @JavascriptInterface
         fun closeCentral() {
