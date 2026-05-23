@@ -14,8 +14,8 @@ const BOOST_END_KEY = "wasp_boost_end";
 // CONFIG
 // ============================
 const TAP_MAX = 100;
-const TAP_REWARD = 10;
-const AD_REWARD = 5;
+const TAP_REWARD = 30;
+const AD_REWARD = 30;
 
 const TAP_COOLDOWN = 60 * 60 * 1000;
 const AD_COOLDOWN = 15 * 60 * 1000;
@@ -707,7 +707,11 @@ function openBeeEngine() {
 // ============================
 // BIND
 // ============================
+let _wpEventsBound = false;
 function bindWpEvents() {
+  if (_wpEventsBound) return;
+  _wpEventsBound = true;
+
   document.getElementById("btnOpenWpCentral")?.addEventListener("click", openWpCentral);
   document.getElementById("btnCloseWpCentral")?.addEventListener("click", closeWpCentral);
 
