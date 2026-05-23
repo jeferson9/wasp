@@ -916,10 +916,7 @@
           log("🤖 Auto-tap: " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
         }
         // Animar botão TAP visualmente
-        if (btnTap) {
-          btnTap.style.transform = "scale(0.95)";
-          setTimeout(function(){ btnTap.style.transform = ""; }, 100);
-        }
+        if (window._tapBtnAnim) window._tapBtnAnim();
       } catch(e) {
         log("Auto-tap erro: " + e.message, "lwrn");
       }
@@ -952,10 +949,7 @@
       );
       window._tapCount = (window._tapCount || 0) + 1;
       log("⚡ Tap enviado (total: " + window._tapCount + ")", "lok");
-      if (btnTap) {
-        btnTap.style.transform = "scale(0.95)";
-        setTimeout(function(){ btnTap.style.transform = ""; }, 120);
-      }
+      if (window._tapBtnAnim) window._tapBtnAnim();
     } catch(e) { log("Erro no tap: " + e.message, "lerr"); }
   }
 

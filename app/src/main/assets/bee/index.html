@@ -202,38 +202,48 @@
         .btn.danger { background: var(--red); color: #fff; }
         .btn.small  { padding: 10px; font-size: 13px; margin-top: 8px; }
         .btn.tap-btn {
-            font-size: 13px; font-weight: 700; letter-spacing: .12em;
-            padding: 16px 28px;
+            font-size: 12px; font-weight: 700; letter-spacing: .10em;
+            padding: 16px 32px;
             background: transparent;
-            color: #00e5ff;
-            border: 1px solid rgba(0,229,255,0.40);
+            color: #ffc107;
+            border: 1px solid rgba(255,193,7,0.40);
             border-radius: 6px;
             box-shadow:
-                0 0 12px rgba(0,229,255,0.12),
-                inset 0 0 18px rgba(0,229,255,0.04);
+                0 0 12px rgba(255,193,7,0.10),
+                inset 0 0 18px rgba(255,193,7,0.03);
             position: relative; overflow: hidden;
             animation: tap-idle-pulse 2.8s ease-in-out infinite;
+            -webkit-tap-highlight-color: transparent;
         }
         .btn.tap-btn::before {
             content: '';
             position: absolute; inset: 0;
             background: linear-gradient(90deg,
-                transparent 0%, rgba(0,229,255,0.08) 50%, transparent 100%);
+                transparent 0%, rgba(255,193,7,0.10) 50%, transparent 100%);
             transform: translateX(-100%);
             animation: tap-scan 2.8s linear infinite;
+            pointer-events: none;
         }
         .btn.tap-btn:active {
-            background: rgba(0,229,255,0.12);
-            box-shadow: 0 0 24px rgba(0,229,255,0.35), inset 0 0 24px rgba(0,229,255,0.10);
+            background: rgba(255,193,7,0.08);
+            box-shadow: 0 0 22px rgba(255,193,7,0.30), inset 0 0 20px rgba(255,193,7,0.08);
             transform: scale(.97);
         }
         @keyframes tap-idle-pulse {
-            0%,100% { border-color: rgba(0,229,255,0.35); box-shadow: 0 0 10px rgba(0,229,255,0.10), inset 0 0 14px rgba(0,229,255,0.03); }
-            50%      { border-color: rgba(0,229,255,0.65); box-shadow: 0 0 20px rgba(0,229,255,0.22), inset 0 0 20px rgba(0,229,255,0.07); }
+            0%,100% { border-color: rgba(255,193,7,0.35); box-shadow: 0 0 8px rgba(255,193,7,0.08); }
+            50%      { border-color: rgba(255,193,7,0.65); box-shadow: 0 0 18px rgba(255,193,7,0.20); }
         }
         @keyframes tap-scan {
             0%   { transform: translateX(-100%); }
-            100% { transform: translateX(200%); }
+            100% { transform: translateX(250%); }
+        }
+        /* barra de progresso interna do tap */
+        .tap-btn-bar {
+            position: absolute; bottom: 0; left: 0; height: 2px;
+            background: linear-gradient(90deg, #ffc107, #ffe566);
+            width: 0%; transition: width .12s ease;
+            border-radius: 0 0 6px 6px;
+            pointer-events: none;
         }
 
         .log-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
@@ -442,7 +452,10 @@
 <div id="tapSection" class="hidden" style="margin-bottom:14px;">
     <div class="card" style="text-align:center;">
         <p style="font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:.06em;text-transform:uppercase;">Merkle Tree · Ação Manual</p>
-        <button class="btn tap-btn" id="btnTap">[ EXECUTE TAP ]</button>
+        <button class="btn tap-btn" id="btnTap">
+            <span id="btnTapLabel">SINCRONIZAR</span>
+            <div class="tap-btn-bar" id="tapBtnBar"></div>
+        </button>
     </div>
 </div>
 
@@ -625,6 +638,49 @@ initSDK();
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(updateHeader, 800);
     });
+})();
+</script>
+
+<script>
+// ── Animação visual do botão TAP ─────────────────────────────────────────
+(function() {
+    var _tapTimer = null;
+    var _tapProgress = 0;
+    var _labels = [
+        "PROCESSANDO ···",
+        "CALCULANDO ···",
+        "ENVIANDO ···",
+        "REGISTRANDO ···",
+        "SINCRONIZANDO ···"
+    ];
+    var _labelIdx = 0;
+
+    window._tapBtnAnim = function() {
+        var label = document.getElementById('btnTapLabel');
+        var bar   = document.getElementById('tapBtnBar');
+        if (!label || !bar) return;
+
+        // Avança barra
+        _tapProgress = Math.min(100, _tapProgress + (Math.random() * 12 + 6));
+        bar.style.width = _tapProgress + '%';
+
+        // Texto rotativo
+        label.textContent = _labels[_labelIdx % _labels.length];
+        _labelIdx++;
+
+        // Reseta barra se chegar perto de 100
+        if (_tapProgress >= 95) {
+            _tapProgress = 0;
+        }
+
+        // Volta para label base após 600ms sem tap
+        if (_tapTimer) clearTimeout(_tapTimer);
+        _tapTimer = setTimeout(function() {
+            if (label) label.textContent = 'SINCRONIZAR';
+            if (bar)   bar.style.width = '0%';
+            _tapProgress = 0;
+        }, 1200);
+    };
 })();
 </script>
 </body>
