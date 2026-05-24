@@ -415,11 +415,14 @@ class MainActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        // Tenta entrar em PiP em vez de fechar
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            enterPipIfPossible()
-        } else {
-            super.onBackPressed()
+        when {
+            beePanelExpanded -> collapseBeePanel()
+            geckoView.visibility == View.VISIBLE -> when {
+                popupSession != null -> resetToMainSession()
+                canGoBackGecko -> getActiveSession().goBack()
+                else -> enterPipIfPossible()
+            }
+            else -> enterPipIfPossible()
         }
     }
 
@@ -456,22 +459,6 @@ class MainActivity : AppCompatActivity() {
         try { geckoSession.close() } catch (_: Exception) {}
         webAppView.stopLoading()
         webAppView.destroy()
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        when {
-            beePanelExpanded -> {
-                collapseBeePanel()
-                // Não chama goHome() — preserva o site ou tela que estava aberta
-            }
-            geckoView.visibility == View.VISIBLE -> when {
-                popupSession != null -> resetToMainSession()
-                canGoBackGecko -> getActiveSession().goBack()
-                else -> goHome()
-            }
-            else -> moveTaskToBack(true)
-        }
     }
 
     // =========================================================
