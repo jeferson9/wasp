@@ -400,8 +400,30 @@ class MainActivity : AppCompatActivity() {
         webAppView.pauseTimers()
     }
 
+    override fun onStop() {
+        super.onStop()
+        // Botão de recentes — entra em PiP se ainda não estiver
+        if (!isInPictureInPictureMode) {
+            enterPipIfPossible()
+        }
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
+        enterPipIfPossible()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        // Tenta entrar em PiP em vez de fechar
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            enterPipIfPossible()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    private fun enterPipIfPossible() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 val params = PictureInPictureParams.Builder()
