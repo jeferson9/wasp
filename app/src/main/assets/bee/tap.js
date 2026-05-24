@@ -29,6 +29,7 @@ const BOOST_DURATION = 15 * 60 * 1000;
 let tapCount = 0;
 let tapCombo = 1;
 let lastTap = 0;
+let tapFinished = false;
 let wpAdPending = false;
 let wpUiTimer = null;
 // ============================
@@ -500,6 +501,7 @@ function openTapGame() {
   tapCount = 0;
   tapCombo = 1;
   lastTap = 0;
+  tapFinished = false;
   updateTapUI();
 
   const tapGame = document.getElementById("tapGame");
@@ -554,6 +556,8 @@ function tapHit() {
 }
 
 function finishTapGame() {
+  if (tapFinished) return;
+  tapFinished = true;
   closeTapGame();
   setNum(TAP_LAST_PLAY_KEY, Date.now());
   addWp(TAP_REWARD, "Tap Game concluído");

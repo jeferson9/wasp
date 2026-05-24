@@ -1177,6 +1177,10 @@
     ══════════════════════════════════════════ */
     function closeCentral() {
       try {
+        if (window.AndroidBee && typeof window.AndroidBee.closeCentral === "function") {
+          window.AndroidBee.closeCentral();
+          return;
+        }
         if (window.Android && typeof window.Android.closeCentral === "function") {
           window.Android.closeCentral();
           return;
