@@ -591,7 +591,7 @@
     <div class="cmc-left">
         <div class="cmc-label">MINERAÇÃO NACKL</div>
         <div class="cmc-val" id="miningStatus">WP necessário para minerar</div>
-        <div class="cmc-hint">Ganhe 15 WP no Tap + 15 WP no Anúncio por hora. Mineração custa 1 WP/min — 30 min de mineração com renda natural.</div>
+        <div class="cmc-hint">Ganhe 30 WP no Tap + 30 WP no Anúncio por hora. Mineração custa 1 WP/min — 60 min de mineração com renda natural.</div>
     </div>
     <div class="cmc-icon">🐝</div>
 </div>
@@ -608,7 +608,7 @@
     <div class="c-game-card card-tap" id="cardTap" onclick="openTap()">
         <div class="cgc-emoji">👆</div>
         <div class="cgc-name">Tap Game</div>
-        <div class="cgc-reward">+15 WP</div>
+        <div class="cgc-reward">+30 WP</div>
         <div class="cgc-status" id="tapStatus">Verificando...</div>
         <button class="cgc-btn btn-yellow" id="tapBtn">Jogar agora</button>
     </div>
@@ -617,7 +617,7 @@
     <div class="c-game-card card-ad" id="cardAd" onclick="doWatchAd()">
         <div class="cgc-emoji">📺</div>
         <div class="cgc-name">Ver Anúncio</div>
-        <div class="cgc-reward">+15 WP</div>
+        <div class="cgc-reward">+30 WP</div>
         <div class="cgc-status" id="adStatus">Verificando...</div>
         <button class="cgc-btn btn-blue" id="adBtn">Assistir</button>
     </div>
@@ -723,13 +723,13 @@
     ══════════════════════════════════════════ */
     const CFG = {
       tapMax:        100,
-      tapReward:     15,          // 15 WP por tap game  (1×/hora)
-      adReward:      15,          // 15 WP por anúncio   (1×/hora — limite AdMob)
+      tapReward:     30,          // 30 WP por tap game  (1×/hora)
+      adReward:      30,          // 30 WP por anúncio   (1×/hora)
       tapCooldown:   60 * 60 * 1000,   // 1h
       adCooldown:    60 * 60 * 1000,   // 1h  — seguro AdMob
       boostCost:     20,
       boostDuration: 15 * 60 * 1000,   // 15min
-      // Economia: 15 WP tap + 15 WP ad = 30 WP/hora
+      // Economia: 30 WP tap + 30 WP ad = 60 WP/hora
       // Mineração: 1 WP/min → 30 min de mineração por hora com renda natural
     };
 
@@ -1085,12 +1085,12 @@
     /* ══════════════════════════════════════════
        TAP GAME
     ══════════════════════════════════════════ */
-    let tapCount = 0, tapCombo = 1, lastTapTs = 0;
+    let tapCount = 0, tapCombo = 1, lastTapTs = 0, tapFinished = false;
 
     function openTap() {
       const rem = remMs(K.tapLast, CFG.tapCooldown);
       if (rem > 0) { toast(`Tap disponível em ${fmtTime(rem)}`); return; }
-      tapCount = 0; tapCombo = 1; lastTapTs = 0;
+      tapCount = 0; tapCombo = 1; lastTapTs = 0; tapFinished = false;
       updateTapUI();
       el("tapOverlay").classList.add("active");
     }
@@ -1121,6 +1121,8 @@
       updateTapUI();
 
       if (tapCount >= CFG.tapMax) {
+        if (tapFinished) return;
+        tapFinished = true;
         setTimeout(() => {
           closeTap();
           setN(K.tapLast, Date.now());
