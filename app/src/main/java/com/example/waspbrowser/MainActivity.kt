@@ -387,7 +387,7 @@ class MainActivity : AppCompatActivity() {
         persistentBeeView?.post {
             persistentBeeView?.resumeTimers()
             persistentBeeView?.evaluateJavascript(
-                "if(window.onWalletReturn) window.onWalletReturn();", null)
+                "if(window.onAppResume) window.onAppResume(); else if(window.onWalletReturn) window.onWalletReturn();", null)
         }
     }
 
