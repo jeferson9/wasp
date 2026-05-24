@@ -402,8 +402,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // Entra em PiP se bg mining estiver ativo
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isBgMiningActive()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 val params = PictureInPictureParams.Builder()
                     .setAspectRatio(Rational(9, 16))
@@ -418,29 +417,15 @@ class MainActivity : AppCompatActivity() {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         if (isInPictureInPictureMode) {
-            // Esconde tudo exceto o painel Bee
             webAppView.visibility = android.view.View.GONE
             geckoView.visibility = android.view.View.GONE
             topBar.visibility = android.view.View.GONE
-            // Garante que painel bee está visível
             openBeePanel()
         } else {
-            // Voltou do PiP — restaura UI
             webAppView.visibility = android.view.View.VISIBLE
-            topBar.visibility = android.view.View.GONE // home não tem toolbar
+            topBar.visibility = android.view.View.GONE
             collapseBeePanel()
         }
-    }
-
-    private fun isBgMiningActive(): Boolean {
-        return try {
-            // Só entra em PiP se o BeeBackgroundService estiver realmente rodando
-            val serviceActive = BeeBackgroundService.isActive(this)
-            // E se o usuário tiver ativado via Central WP
-            val prefs = getSharedPreferences("bee_pip", android.content.Context.MODE_PRIVATE)
-            val userEnabled = prefs.getBoolean("pip_enabled", false)
-            serviceActive && userEnabled
-        } catch (e: Exception) { false }
     }
 
     override fun onDestroy() {
