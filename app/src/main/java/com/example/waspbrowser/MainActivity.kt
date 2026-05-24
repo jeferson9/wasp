@@ -23,6 +23,9 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import android.app.PictureInPictureParams
+import android.os.Build
+import android.util.Rational
 import org.json.JSONArray
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
@@ -395,6 +398,46 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         webAppView.onPause()
         webAppView.pauseTimers()
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        // Entra em PiP se bg mining estiver ativo
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isBgMiningActive()) {
+            try {
+                val params = PictureInPictureParams.Builder()
+                    .setAspectRatio(Rational(9, 16))
+                    .build()
+                enterPictureInPictureMode(params)
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "PiP error: ${e.message}")
+            }
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (isInPictureInPictureMode) {
+            // Esconde tudo exceto o painel Bee
+            webAppView.visibility = android.view.View.GONE
+            geckoView.visibility = android.view.View.GONE
+            topBar.visibility = android.view.View.GONE
+            // Garante que painel bee está visível
+            openBeePanel()
+        } else {
+            // Voltou do PiP — restaura UI
+            webAppView.visibility = android.view.View.VISIBLE
+            topBar.visibility = android.view.View.GONE // home não tem toolbar
+            collapseBeePanel()
+        }
+    }
+
+    private fun isBgMiningActive(): Boolean {
+        return try {
+            val prefs = getSharedPreferences("WebViewChromiumPrefs", android.content.Context.MODE_PRIVATE)
+            // Verifica via BeeBackgroundService
+            BeeBackgroundService.isActive(this)
+        } catch (e: Exception) { false }
     }
 
     override fun onDestroy() {
