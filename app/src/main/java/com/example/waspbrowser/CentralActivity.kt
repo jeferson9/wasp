@@ -96,6 +96,9 @@ class CentralActivity : AppCompatActivity() {
         @JavascriptInterface
         fun startBgMining(durationMs: Long, walletName: String) {
             try {
+                // Marca PiP como habilitado
+                getSharedPreferences("bee_pip", MODE_PRIVATE)
+                    .edit().putBoolean("pip_enabled", true).apply()
                 val intent = BeeBackgroundService.buildStartIntent(this@CentralActivity, walletName)
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
                     startForegroundService(intent)
@@ -105,8 +108,12 @@ class CentralActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun stopBgMining() {
-            try { startService(BeeBackgroundService.buildStopIntent(this@CentralActivity)) }
-            catch (e: Exception) { android.util.Log.e(TAG, "stopBgMining: ${e.message}") }
+            try {
+                // Remove flag PiP
+                getSharedPreferences("bee_pip", MODE_PRIVATE)
+                    .edit().putBoolean("pip_enabled", false).apply()
+                startService(BeeBackgroundService.buildStopIntent(this@CentralActivity))
+            } catch (e: Exception) { android.util.Log.e(TAG, "stopBgMining: ${e.message}") }
         }
 
         @JavascriptInterface

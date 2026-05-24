@@ -434,9 +434,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun isBgMiningActive(): Boolean {
         return try {
-            val prefs = getSharedPreferences("WebViewChromiumPrefs", android.content.Context.MODE_PRIVATE)
-            // Verifica via BeeBackgroundService
-            BeeBackgroundService.isActive(this)
+            // Só entra em PiP se o BeeBackgroundService estiver realmente rodando
+            val serviceActive = BeeBackgroundService.isActive(this)
+            // E se o usuário tiver ativado via Central WP
+            val prefs = getSharedPreferences("bee_pip", android.content.Context.MODE_PRIVATE)
+            val userEnabled = prefs.getBoolean("pip_enabled", false)
+            serviceActive && userEnabled
         } catch (e: Exception) { false }
     }
 
