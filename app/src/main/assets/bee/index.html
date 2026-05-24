@@ -237,14 +237,7 @@
             0%   { transform: translateX(-100%); }
             100% { transform: translateX(250%); }
         }
-        /* barra de progresso interna do tap */
-        .tap-btn-bar {
-            position: absolute; bottom: 0; left: 0; height: 2px;
-            background: linear-gradient(90deg, #ffc107, #ffe566);
-            width: 0%; transition: width .12s ease;
-            border-radius: 0 0 6px 6px;
-            pointer-events: none;
-        }
+
 
         .log-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
         .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -451,11 +444,8 @@
 
 <div id="tapSection" class="hidden" style="margin-bottom:14px;">
     <div class="card" style="text-align:center;">
-        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:.06em;text-transform:uppercase;">Merkle Tree · Ação Manual</p>
-        <button class="btn tap-btn" id="btnTap">
-            <span id="btnTapLabel">SINCRONIZAR</span>
-            <div class="tap-btn-bar" id="tapBtnBar"></div>
-        </button>
+        
+<button class="btn tap-btn" id="btnTap">PARTICIPANDO...</button>
     </div>
 </div>
 
@@ -645,40 +635,11 @@ initSDK();
 // ── Animação visual do botão TAP ─────────────────────────────────────────
 (function() {
     var _tapTimer = null;
-    var _tapProgress = 0;
-    var _labels = [
-        "PROCESSANDO ···",
-        "CALCULANDO ···",
-        "ENVIANDO ···",
-        "REGISTRANDO ···",
-        "SINCRONIZANDO ···"
-    ];
-    var _labelIdx = 0;
-
     window._tapBtnAnim = function() {
-        var label = document.getElementById('btnTapLabel');
-        var bar   = document.getElementById('tapBtnBar');
-        if (!label || !bar) return;
-
-        // Avança barra
-        _tapProgress = Math.min(100, _tapProgress + (Math.random() * 12 + 6));
-        bar.style.width = _tapProgress + '%';
-
-        // Texto rotativo
-        label.textContent = _labels[_labelIdx % _labels.length];
-        _labelIdx++;
-
-        // Reseta barra se chegar perto de 100
-        if (_tapProgress >= 95) {
-            _tapProgress = 0;
-        }
-
-        // Volta para label base após 600ms sem tap
         if (_tapTimer) clearTimeout(_tapTimer);
         _tapTimer = setTimeout(function() {
-            if (label) label.textContent = 'SINCRONIZAR';
-            if (bar)   bar.style.width = '0%';
-            _tapProgress = 0;
+            var btn = document.getElementById('btnTap');
+            if (btn) btn.textContent = 'PARTICIPANDO...';
         }, 1200);
     };
 })();
