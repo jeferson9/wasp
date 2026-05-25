@@ -520,13 +520,6 @@
     </div>
 </div>
 
-<!-- TESTE ANUNCIO -->
-<div style="margin-bottom:14px;text-align:center;">
-    <button class="btn" id="btnTestAd" onclick="testAd()" style="background:transparent;border:1px solid rgba(255,193,7,0.4);color:#ffc107;font-size:12px;letter-spacing:.08em;padding:12px 24px;border-radius:6px;">
-        TESTAR ANÚNCIO
-    </button>
-</div>
-
 <div class="log-card">
     <div class="log-header">
         <span>Log</span>
@@ -777,17 +770,6 @@ initSDK();
 // ── Animação visual do botão TAP ─────────────────────────────────────────
 (function() {
     var _tapTimer = null;
-    // Teste de anúncio direto do painel
-    window.testAd = function() {
-        if (window.AndroidBee && typeof window.AndroidBee.openWpAd === 'function') {
-            window.AndroidBee.openWpAd();
-        } else if (window.Android && typeof window.Android.openWpAd === 'function') {
-            window.Android.openWpAd();
-        } else {
-            alert('Bridge não disponível');
-        }
-    };
-
     window._tapBtnAnim = function() {        if (_tapTimer) clearTimeout(_tapTimer);
         _tapTimer = setTimeout(function() {
             var btn = document.getElementById('btnTap');
