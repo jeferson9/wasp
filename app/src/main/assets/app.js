@@ -945,7 +945,6 @@ function renderHive(){
         { name:"Instagram",     url:"https://instagram.com" },
         { name:"Facebook",      url:"https://facebook.com" },
         { name:"X",             url:"https://twitter.com" },
-        { name:"WhatsApp",      url:"https://web.whatsapp.com" },
         { name:"TikTok",        url:"https://tiktok.com" },
         { name:"GitHub",        url:"https://github.com" },
         { name:"CoinMarketCap", url:"https://coinmarketcap.com" },
@@ -961,11 +960,11 @@ function renderHive(){
     if(list.length === 0 && !localStorage.getItem("waspHiveInitialized")){
         list = WASP_DEFAULT_SITES.map(s => ({ ...s, uses:0, lastUsed:0 }));
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "5");
+        localStorage.setItem("waspHiveInitialized", "6");
     }
 
     // Migração: versões anteriores tinham poucos sites — adicionar os que faltam
-    if(localStorage.getItem("waspHiveInitialized") !== "5"){
+    if(localStorage.getItem("waspHiveInitialized") !== "6"){
         const existingUrls = new Set(list.map(i => i.url));
         WASP_DEFAULT_SITES.forEach(s => {
             if(!existingUrls.has(s.url)){
@@ -973,7 +972,7 @@ function renderHive(){
             }
         });
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "5");
+        localStorage.setItem("waspHiveInitialized", "6");
     }
 
     // Garantir campos
