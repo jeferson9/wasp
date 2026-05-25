@@ -10,14 +10,14 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 
 object WaspMenuSheet {
 
-    private val BG_DARK   = Color.parseColor("#111420")
-    private val BG_ITEM   = Color.parseColor("#1A1E2E")
+    private val BG_DARK   = Color.parseColor("#0E1018")
+    private val BG_ITEM   = Color.parseColor("#161B28")
     private val BG_WEB3   = Color.parseColor("#1A120A")
     private val BG_BEE    = Color.parseColor("#0A1A10")
-    private val STROKE    = Color.parseColor("#252A3D")
-    private val TXT_PRI   = Color.parseColor("#C8D0E0")
-    private val TXT_SEC   = Color.parseColor("#3D4560")
-    private val TXT_MUT   = Color.parseColor("#4B5675")
+    private val STROKE    = Color.parseColor("#2A3147")
+    private val TXT_PRI   = Color.parseColor("#E2E8F0")
+    private val TXT_SEC   = Color.parseColor("#64748B")
+    private val TXT_MUT   = Color.parseColor("#8B95B0")
     private val YELLOW    = Color.parseColor("#FFD400")
     private val GREEN     = Color.parseColor("#22C55E")
 
@@ -112,10 +112,10 @@ object WaspMenuSheet {
         // Quick row: Recarregar | Avançar | Compartilhar | Hive
         data class Quick(val emoji: String, val label: String, val action: String, val accent: Boolean = false)
         val quicks = listOf(
-            Quick("↺", "Recarregar",    "reload"),
-            Quick("→", "Avançar",       "forward"),
-            Quick("⤴", "Compartilhar",  "share"),
-            Quick("+", "Nova aba",      "newtab", true)
+            Quick("↻", "Recarregar", "reload"),
+            Quick("⟶", "Avançar", "forward"),
+            Quick("⬆", "Compartilhar", "share"),
+            Quick("＋", "Nova aba", "newtab", true)
         )
         val quickRow = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
         quicks.forEach { q ->
@@ -143,7 +143,7 @@ object WaspMenuSheet {
             iconBox.addView(TextView(context).apply {
                 text = q.emoji
                 textSize = 18f
-                setTextColor(if (q.accent) YELLOW else TXT_MUT)
+                setTextColor(if (q.accent) YELLOW else Color.parseColor("#A0AABF"))
                 gravity = Gravity.CENTER
             }, LinearLayout.LayoutParams(38.dp(), 38.dp()))
             col.addView(iconBox)
@@ -175,7 +175,7 @@ object WaspMenuSheet {
         fun menuItem(
             emoji: String, name: String, sub: String? = null,
             action: String, bgColor: Int = BG_ITEM, strokeColor: Int = STROKE,
-            iconColor: Int = TXT_MUT, badge: String? = null, dot: Int? = null
+            iconColor: Int = Color.parseColor("#A0AABF"), badge: String? = null, dot: Int? = null
         ) {
             val row = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -205,7 +205,7 @@ object WaspMenuSheet {
                 }
             }
             iconBox.addView(TextView(context).apply {
-                text = emoji; textSize = 15f
+                text = emoji; textSize = 17f
                 setTextColor(iconColor); gravity = Gravity.CENTER
             }, LinearLayout.LayoutParams(34.dp(), 34.dp()))
             row.addView(iconBox)
@@ -258,13 +258,13 @@ object WaspMenuSheet {
         menuItem("🌐", "Traduzir página", "Google Translate", "translate",
             bgColor = Color.parseColor("#0A0F1A"), strokeColor = Color.parseColor("#1A2A4A"),
             iconColor = Color.parseColor("#60A5FA"))
-        menuItem("★", "Favoritos",   "Sites salvos",      "favorites")
-        menuItem("◷", "Histórico",   "Páginas visitadas", "history")
-        menuItem("↓", "Downloads",   "Arquivos baixados", "downloads")
+        menuItem("♥", "Favoritos",   "Sites salvos",      "favorites")
+        menuItem("⟳", "Histórico",   "Páginas visitadas", "history")
+        menuItem("⬇", "Downloads",   "Arquivos baixados", "downloads")
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
         sectionLabel("WEB3")
-        menuItem("◈", "Web3 Hub",    "DApps e carteiras", "web3",
+        menuItem("⬡", "Web3 Hub",    "DApps e carteiras", "web3",
             bgColor = BG_WEB3, strokeColor = Color.parseColor("#3D2F00"),
             iconColor = YELLOW, badge = "NOVO")
         menuItem("⚡", "Bee Engine",  "Mineração ativa",   "bee",
@@ -273,7 +273,7 @@ object WaspMenuSheet {
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
         menuItem("⚙", "Configurações", null, "settings")
-        menuItem("ℹ", "Sobre o Wasp",  null, "about")
+        menuItem("◐", "Sobre o Wasp",  null, "about")
 
         root.addView(View(context), LinearLayout.LayoutParams(1, 24.dp()))
 
