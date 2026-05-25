@@ -58,7 +58,7 @@ object StartioAdManager {
                     Log.d(TAG, "✅ RECOMPENSA CONFIRMADA mode=$mode")
                 })
 
-                ad.showAd(activity, object : AdDisplayListener {
+                ad.showAd(object : AdDisplayListener {
                     override fun adHidden(hiddenAd: Ad?) {
                         Log.d(TAG, "adHidden — rewarded=$rewarded")
                         isShowing = false
