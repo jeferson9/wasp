@@ -409,27 +409,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun enterPipIfPossible() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Só entra em PiP se a mineração estiver ativa
+            val miningActive = getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                .getBoolean("pip_allowed", false)
+            if (!miningActive) return
+
             try {
                 val metrics = resources.displayMetrics
                 val pipWidth = (metrics.widthPixels * 0.45f).toInt()
                 val pipHeight = (pipWidth * 7f / 16f).toInt()
                 val pipLeft = metrics.widthPixels - pipWidth - 16
-                val pipTop = 64 // topo da tela
-
-                val sourceRect = android.graphics.Rect(
-                    pipLeft, pipTop,
-                    pipLeft + pipWidth, pipTop + pipHeight
-                )
+                val pipTop = 64
 
                 val paramsBuilder = PictureInPictureParams.Builder()
                     .setAspectRatio(Rational(16, 7))
 
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    paramsBuilder.setSourceRectHint(sourceRect)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    paramsBuilder.setSourceRectHint(android.graphics.Rect(
+                        pipLeft, pipTop, pipLeft + pipWidth, pipTop + pipHeight
+                    ))
                 }
 
-                val params = paramsBuilder.build()
-                enterPictureInPictureMode(params)
+                enterPictureInPictureMode(paramsBuilder.build())
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "PiP error: ${e.message}")
             }

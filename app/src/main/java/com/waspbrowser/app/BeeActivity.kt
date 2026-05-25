@@ -79,7 +79,10 @@ class BeeActivity : AppCompatActivity() {
                 fun setMiningStatus(active: Boolean, wallet: String) {
                     Log.d(TAG, "[PersistentBee] setMiningStatus: $active wallet=$wallet")
                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
-                        .edit().putBoolean("mining_active", active).apply()
+                        .edit()
+                        .putBoolean("mining_active", active)
+                        .putBoolean("pip_allowed", active) // PiP só quando minerando
+                        .apply()
                     try {
                         if (active) {
                             val intent = BeeBackgroundService.buildStartIntent(context, wallet)
