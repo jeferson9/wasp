@@ -110,12 +110,12 @@ object WaspMenuSheet {
         divider()
 
         // Quick row: Recarregar | Avançar | Compartilhar | Hive
-        data class Quick(val emoji: String, val label: String, val action: String, val accent: Boolean = false)
+        data class Quick(val icon: Int, val label: String, val action: String, val accent: Boolean = false)
         val quicks = listOf(
-            Quick("↻", "Recarregar", "reload"),
-            Quick("⟶", "Avançar", "forward"),
-            Quick("⬆", "Compartilhar", "share"),
-            Quick("＋", "Nova aba", "newtab", true)
+            Quick(R.drawable.ic_refresh,  "Recarregar",   "reload"),
+            Quick(R.drawable.ic_forward,  "Avançar",      "forward"),
+            Quick(R.drawable.ic_share,    "Compartilhar", "share"),
+            Quick(R.drawable.ic_add_tab,  "Nova aba",     "newtab", true)
         )
         val quickRow = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
         quicks.forEach { q ->
@@ -140,12 +140,17 @@ object WaspMenuSheet {
                     setStroke(1, if (q.accent) Color.parseColor("#3D2F00") else STROKE)
                 }
             }
-            iconBox.addView(TextView(context).apply {
-                text = q.emoji
-                textSize = 18f
-                setTextColor(if (q.accent) YELLOW else Color.parseColor("#A0AABF"))
-                gravity = Gravity.CENTER
-            }, LinearLayout.LayoutParams(38.dp(), 38.dp()))
+            val qIv = android.widget.ImageView(context).apply {
+                setImageResource(q.icon)
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                android.graphics.drawable.DrawableCompat.wrap(drawable ?: return@apply).also {
+                    android.graphics.drawable.DrawableCompat.setTint(it, if (q.accent) YELLOW else Color.parseColor("#A0AABF"))
+                    setImageDrawable(it)
+                }
+            }
+            iconBox.addView(qIv, LinearLayout.LayoutParams(22.dp(), 22.dp()).also {
+                it.setMargins(8.dp(), 8.dp(), 8.dp(), 8.dp())
+            })
             col.addView(iconBox)
             col.addView(TextView(context).apply {
                 text = q.label
@@ -173,7 +178,7 @@ object WaspMenuSheet {
 
         // Menu item row
         fun menuItem(
-            emoji: String, name: String, sub: String? = null,
+            icon: Int, name: String, sub: String? = null,
             action: String, bgColor: Int = BG_ITEM, strokeColor: Int = STROKE,
             iconColor: Int = Color.parseColor("#A0AABF"), badge: String? = null, dot: Int? = null
         ) {
@@ -204,10 +209,14 @@ object WaspMenuSheet {
                     setStroke(1, strokeColor)
                 }
             }
-            iconBox.addView(TextView(context).apply {
-                text = emoji; textSize = 17f
-                setTextColor(iconColor); gravity = Gravity.CENTER
-            }, LinearLayout.LayoutParams(34.dp(), 34.dp()))
+            val iv = android.widget.ImageView(context).apply {
+                setImageResource(icon)
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                imageTintList = android.content.res.ColorStateList.valueOf(iconColor)
+            }
+            iconBox.addView(iv, LinearLayout.LayoutParams(20.dp(), 20.dp()).also {
+                it.setMargins(7.dp(), 7.dp(), 7.dp(), 7.dp())
+            })
             row.addView(iconBox)
 
             val info = LinearLayout(context).apply {
@@ -255,25 +264,25 @@ object WaspMenuSheet {
         }
 
         sectionLabel("NAVEGAÇÃO")
-        menuItem("🌐", "Traduzir página", "Google Translate", "translate",
+        menuItem(R.drawable.ic_globe, "Traduzir página", "Google Translate", "translate",
             bgColor = Color.parseColor("#0A0F1A"), strokeColor = Color.parseColor("#1A2A4A"),
             iconColor = Color.parseColor("#60A5FA"))
-        menuItem("♥", "Favoritos",   "Sites salvos",      "favorites")
-        menuItem("⟳", "Histórico",   "Páginas visitadas", "history")
-        menuItem("⬇", "Downloads",   "Arquivos baixados", "downloads")
+        menuItem(R.drawable.ic_star, "Favoritos",   "Sites salvos",      "favorites")
+        menuItem(R.drawable.ic_history, "Histórico",   "Páginas visitadas", "history")
+        menuItem(R.drawable.ic_download, "Downloads",   "Arquivos baixados", "downloads")
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
         sectionLabel("WEB3")
-        menuItem("⬡", "Web3 Hub",    "DApps e carteiras", "web3",
+        menuItem(R.drawable.ic_engine, "Web3 Hub",    "DApps e carteiras", "web3",
             bgColor = BG_WEB3, strokeColor = Color.parseColor("#3D2F00"),
             iconColor = YELLOW, badge = "NOVO")
-        menuItem("⚡", "Bee Engine",  "Mineração ativa",   "bee",
+        menuItem(R.drawable.ic_bee_tech, "Bee Engine",  "Mineração ativa",   "bee",
             bgColor = BG_BEE, strokeColor = Color.parseColor("#1A4D28"),
             iconColor = GREEN, dot = GREEN)
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
-        menuItem("⚙", "Configurações", null, "settings")
-        menuItem("◐", "Sobre o Wasp",  null, "about")
+        menuItem(R.drawable.ic_settings, "Configurações", null, "settings")
+        menuItem(R.drawable.ic_info, "Sobre o Wasp",  null, "about")
 
         root.addView(View(context), LinearLayout.LayoutParams(1, 24.dp()))
 
