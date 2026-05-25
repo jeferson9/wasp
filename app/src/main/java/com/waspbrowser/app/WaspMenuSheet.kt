@@ -263,7 +263,7 @@ object WaspMenuSheet {
         }
 
         sectionLabel("NAVEGAÇÃO")
-        menuItem(R.drawable.ic_globe, "Traduzir página", "Google Translate", "translate",
+        menuItem(R.drawable.ic_translate, "Traduzir página", "Google Translate", "translate",
             bgColor = Color.parseColor("#0A0F1A"), strokeColor = Color.parseColor("#1A2A4A"),
             iconColor = Color.parseColor("#60A5FA"))
         menuItem(R.drawable.ic_star, "Favoritos",   "Sites salvos",      "favorites")
