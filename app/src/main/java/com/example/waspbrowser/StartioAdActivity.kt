@@ -28,9 +28,6 @@ class StartioAdActivity : Activity() {
         mode = intent.getStringExtra(EXTRA_MODE) ?: "wp"
         Log.d(TAG, "onCreate mode=$mode")
 
-        // Tela transparente
-        window.setBackgroundDrawableResource(android.R.color.transparent)
-
         StartAppSDK.setTestAdsEnabled(true)
 
         val ad = StartAppAd(this)

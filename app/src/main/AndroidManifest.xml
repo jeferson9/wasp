@@ -100,7 +100,7 @@
 
         <activity
             android:name=".StartioAdActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:theme="@style/Theme.WaspBrowser"
             android:exported="false" />
 
         <activity android:name=".FavoritesActivity" />
