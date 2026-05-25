@@ -743,9 +743,7 @@ class MainActivity : AppCompatActivity() {
 
         btnHome.setOnClickListener { goHome() }
 
-        topBar.findViewById<android.view.View>(R.id.btnBeePill)?.setOnClickListener {
-            openBeePanel()
-        }
+        // btnBeePill removido — painel bee acessível pelo rodapé
 
         topBar.findViewById<android.view.View>(R.id.btnTabsPill)?.setOnClickListener {
             showTabSwitcher()
