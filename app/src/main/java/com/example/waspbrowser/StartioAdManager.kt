@@ -44,37 +44,35 @@ object StartioAdManager {
 
         val ad = StartAppAd(activity)
 
+        // Listener de display — declarado antes do showAd
+        val displayListener = object : AdDisplayListener {
+            override fun adHidden(p0: Ad?) {
+                Log.d(TAG, "adHidden rewarded=$rewarded")
+                isShowing = false
+                deliverJs(mode, rewarded)
+            }
+            override fun adDisplayed(p0: Ad?) { Log.d(TAG, "adDisplayed") }
+            override fun adClicked(p0: Ad?)   { Log.d(TAG, "adClicked") }
+            override fun adNotDisplayed(p0: Ad?) {
+                Log.e(TAG, "adNotDisplayed: ${p0?.errorMessage}")
+                isShowing = false
+                deliverJs(mode, false)
+            }
+        }
+
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(receivedAd: Ad) {
                 Log.d(TAG, "Ad carregado ✅")
-
                 ad.setVideoListener(VideoListener {
                     rewarded = true
                     Log.d(TAG, "✅ RECOMPENSA CONFIRMADA mode=$mode")
                 })
-
-                ad.showAd(object : AdDisplayListener {
-                    override fun adHidden(p0: Ad?) {
-                        Log.d(TAG, "adHidden rewarded=$rewarded")
-                        isShowing = false
-                        deliverJs(mode, rewarded)
-                    }
-                    override fun adDisplayed(p0: Ad?) {
-                        Log.d(TAG, "adDisplayed")
-                    }
-                    override fun adClicked(p0: Ad?) {
-                        Log.d(TAG, "adClicked")
-                    }
-                    override fun adNotDisplayed(p0: Ad?) {
-                        Log.e(TAG, "adNotDisplayed: ${p0?.errorMessage}")
-                        isShowing = false
-                        deliverJs(mode, false)
-                    }
-                })
+                // Registra listener e mostra
+                ad.setAdDisplayListener(displayListener)
+                ad.showAd()
             }
-
             override fun onFailedToReceiveAd(failedAd: Ad?) {
-                Log.e(TAG, "Falhou ao carregar: ${failedAd?.errorMessage}")
+                Log.e(TAG, "Falhou: ${failedAd?.errorMessage}")
                 isShowing = false
                 deliverJs(mode, false)
             }
