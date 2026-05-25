@@ -438,14 +438,21 @@ class MainActivity : AppCompatActivity() {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         if (isInPictureInPictureMode) {
+            // No PiP mostra só o topo colapsado do painel — já é compacto e tech
             webAppView.visibility = android.view.View.GONE
             geckoView.visibility = android.view.View.GONE
             topBar.visibility = android.view.View.GONE
-            openBeePanel()
-            persistentBeeView?.post {
-                persistentBeeView?.evaluateJavascript("if(window.enterPipMode) window.enterPipMode();", null)
+            collapseBeePanel()
+            // Expande o container para preencher o PiP inteiro
+            val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container)
+            container?.let {
+                val params = it.layoutParams
+                params.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                it.layoutParams = params
+                it.visibility = android.view.View.VISIBLE
             }
         } else {
+            // Volta ao normal
             webAppView.visibility = android.view.View.VISIBLE
             topBar.visibility = android.view.View.GONE
             collapseBeePanel()
