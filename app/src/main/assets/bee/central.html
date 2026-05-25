@@ -570,8 +570,8 @@
             <div class="c-stat-lbl">Streak dias</div>
         </div>
         <div class="c-stat">
-            <div class="c-stat-val" id="statBoost">OFF</div>
-            <div class="c-stat-lbl">Bg Mine</div>
+            <div class="c-stat-val" id="statBank">OFF</div>
+            <div class="c-stat-lbl">Bank</div>
         </div>
     </div>
 
@@ -614,21 +614,21 @@
     </div>
 
     <!-- ANÚNCIO -->
-    <div class="c-game-card card-ad" id="cardAd" onclick="doWatchAd()">
+    <div class="c-game-card card-ad" id="cardAd" style="opacity:0.35;pointer-events:none;filter:grayscale(1);">
         <div class="cgc-emoji">📺</div>
         <div class="cgc-name">Ver Anúncio</div>
         <div class="cgc-reward">+30 WP</div>
-        <div class="cgc-status" id="adStatus">Verificando...</div>
-        <button class="cgc-btn btn-blue" id="adBtn">Assistir</button>
+        <div class="cgc-status">Em breve</div>
+        <button class="cgc-btn btn-blue" style="opacity:0.5;">Assistir</button>
     </div>
 
-    <!-- BOOST -->
-    <div class="c-game-card card-boost" id="cardBoost" onclick="doBoost()">
-        <div class="cgc-emoji">🚀</div>
-        <div class="cgc-name">Bg Mining</div>
-        <div class="cgc-reward" id="boostRewardText">−20 WP</div>
-        <div class="cgc-status" id="boostStatus">Mineração em segundo plano</div>
-        <button class="cgc-btn btn-purple" id="boostBtn">Ativar Bg Mining</button>
+    <!-- BANK -->
+    <div class="c-game-card card-boost" id="cardBank" style="opacity:0.35;pointer-events:none;filter:grayscale(1);">
+        <div class="cgc-emoji">🏦</div>
+        <div class="cgc-name">Bank</div>
+        <div class="cgc-reward">Stake WP</div>
+        <div class="cgc-status">Em breve</div>
+        <button class="cgc-btn btn-purple" style="opacity:0.5;">Abrir Bank</button>
     </div>
 
     <!-- LOGIN DIÁRIO -->
