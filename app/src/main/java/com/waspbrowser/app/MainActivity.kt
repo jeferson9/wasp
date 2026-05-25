@@ -1460,6 +1460,13 @@ class MainActivity : AppCompatActivity() {
     private fun escapeHtml(text: String) = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
 
     @JavascriptInterface
+    fun openAbout() {
+        runOnUiThread {
+            startActivity(Intent(this@MainActivity, AboutActivity::class.java))
+        }
+    }
+
+    @JavascriptInterface
     fun openCentral() {
         runOnUiThread {
             val intent = android.content.Intent(this@MainActivity, CentralActivity::class.java)
