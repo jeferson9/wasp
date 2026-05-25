@@ -11,7 +11,7 @@ import com.startapp.sdk.adsbase.adlisteners.VideoListener
 object StartioAdManager {
 
     private const val TAG   = "StartioAdManager"
-    const val APP_ID        = "test-app-id"
+    const val APP_ID        = "204731691"
 
     private var rewardedAd  : StartAppAd? = null
     private var isLoading   = false

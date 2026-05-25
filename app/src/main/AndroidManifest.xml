@@ -44,7 +44,7 @@
         <!-- Start.io SDK — usar ID de teste até cadastrar -->
         <meta-data
             android:name="com.startapp.sdk.APPLICATION_ID"
-            android:value="test-app-id" />
+            android:value="204731691" />
         <meta-data
             android:name="com.startapp.sdk.RETURN_ADS_ENABLED"
             android:value="false" />
