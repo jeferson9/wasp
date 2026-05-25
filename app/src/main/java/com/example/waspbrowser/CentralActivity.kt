@@ -78,12 +78,8 @@ class CentralActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun openWpAd() {
-            android.util.Log.d(TAG, "openWpAd() via StartioAdActivity")
-            handler.post {
-                startActivity(android.content.Intent(this@CentralActivity, StartioAdActivity::class.java).apply {
-                    putExtra(StartioAdActivity.EXTRA_MODE, "wp")
-                })
-            }
+            // Video ads: a implementar futuramente
+            android.util.Log.d(TAG, "openWpAd: video ads em breve")
         }
 
         @JavascriptInterface

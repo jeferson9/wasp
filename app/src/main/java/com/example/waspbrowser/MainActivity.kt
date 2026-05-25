@@ -325,8 +325,6 @@ class MainActivity : AppCompatActivity() {
         setupTopBar()
         setupUrlInput()
         setupPersistentBee()
-        StartioAdManager.init(this)
-
         webAppView.loadUrl("file:///android_asset/index.html")
         webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
 
