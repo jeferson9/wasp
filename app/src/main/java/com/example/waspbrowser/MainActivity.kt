@@ -442,10 +442,16 @@ class MainActivity : AppCompatActivity() {
             geckoView.visibility = android.view.View.GONE
             topBar.visibility = android.view.View.GONE
             openBeePanel()
+            persistentBeeView?.post {
+                persistentBeeView?.evaluateJavascript("if(window.enterPipMode) window.enterPipMode();", null)
+            }
         } else {
             webAppView.visibility = android.view.View.VISIBLE
             topBar.visibility = android.view.View.GONE
             collapseBeePanel()
+            persistentBeeView?.post {
+                persistentBeeView?.evaluateJavascript("if(window.exitPipMode) window.exitPipMode();", null)
+            }
         }
     }
 

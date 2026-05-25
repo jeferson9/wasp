@@ -261,9 +261,63 @@
             margin-right: 6px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── PiP Mode ─────────────────────────────────────────── */
+    #pipOverlay {
+        display: none;
+        position: fixed; inset: 0; z-index: 9999;
+        background: #08090D;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-family: 'Courier New', monospace;
+    }
+    #pipOverlay.active { display: flex; }
+    .pip-status-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #ffc107;
+        box-shadow: 0 0 8px #ffc107;
+        animation: pip-blink 1.2s ease-in-out infinite;
+        margin-bottom: 2px;
+    }
+    @keyframes pip-blink {
+        0%,100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    .pip-label {
+        font-size: 9px; font-weight: 700;
+        color: rgba(255,193,7,0.5);
+        letter-spacing: .15em;
+        text-transform: uppercase;
+    }
+    .pip-value {
+        font-size: 15px; font-weight: 900;
+        color: #ffc107;
+        letter-spacing: .05em;
+    }
+    .pip-epoch {
+        font-size: 9px;
+        color: rgba(255,255,255,0.25);
+        letter-spacing: .08em;
+    }
+    .pip-divider {
+        width: 32px; height: 1px;
+        background: rgba(255,193,7,0.15);
+        margin: 2px 0;
+    }
     </style>
 </head>
 <body>
+
+<!-- PiP MODE OVERLAY -->
+<div id="pipOverlay">
+    <div class="pip-status-dot" id="pipDot"></div>
+    <div class="pip-label">WASP · MINING</div>
+    <div class="pip-divider"></div>
+    <div class="pip-value" id="pipCounter">──────</div>
+    <div class="pip-epoch" id="pipEpoch">EPOCH ···</div>
+</div>
 
 <!-- ── HEADER FIXO ── -->
 <div id="bee-header" style="
@@ -628,6 +682,50 @@ initSDK();
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(updateHeader, 800);
     });
+})();
+</script>
+
+<script>
+// ── PiP Mode ─────────────────────────────────────────────────────────────
+(function() {
+    var _pipTimer = null;
+
+    function updatePipDisplay() {
+        // Pega dados do bee_engine via DOM
+        var counter = document.getElementById('dCountdown') || document.getElementById('countdown');
+        var epoch   = document.getElementById('dEpoch')    || document.getElementById('epochNum');
+
+        var pipCounter = document.getElementById('pipCounter');
+        var pipEpoch   = document.getElementById('pipEpoch');
+        var pipDot     = document.getElementById('pipDot');
+
+        if (counter && pipCounter) {
+            pipCounter.textContent = counter.textContent || '──────';
+        }
+        if (epoch && pipEpoch) {
+            pipEpoch.textContent = 'EPOCH ' + (epoch.textContent || '···');
+        }
+
+        // Dot: amarelo se minerando, cinza se parado
+        var mining = document.getElementById('miningSwitch');
+        if (pipDot) {
+            pipDot.style.background = (mining && mining.checked) ? '#ffc107' : '#444';
+            pipDot.style.boxShadow  = (mining && mining.checked) ? '0 0 8px #ffc107' : 'none';
+        }
+    }
+
+    window.enterPipMode = function() {
+        var overlay = document.getElementById('pipOverlay');
+        if (overlay) overlay.classList.add('active');
+        updatePipDisplay();
+        _pipTimer = setInterval(updatePipDisplay, 1000);
+    };
+
+    window.exitPipMode = function() {
+        var overlay = document.getElementById('pipOverlay');
+        if (overlay) overlay.classList.remove('active');
+        if (_pipTimer) { clearInterval(_pipTimer); _pipTimer = null; }
+    };
 })();
 </script>
 
