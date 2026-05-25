@@ -961,11 +961,11 @@ function renderHive(){
     if(list.length === 0 && !localStorage.getItem("waspHiveInitialized")){
         list = WASP_DEFAULT_SITES.map(s => ({ ...s, uses:0, lastUsed:0 }));
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "4");
+        localStorage.setItem("waspHiveInitialized", "5");
     }
 
     // Migração: versões anteriores tinham poucos sites — adicionar os que faltam
-    if(localStorage.getItem("waspHiveInitialized") !== "4"){
+    if(localStorage.getItem("waspHiveInitialized") !== "5"){
         const existingUrls = new Set(list.map(i => i.url));
         WASP_DEFAULT_SITES.forEach(s => {
             if(!existingUrls.has(s.url)){
@@ -973,7 +973,7 @@ function renderHive(){
             }
         });
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "4");
+        localStorage.setItem("waspHiveInitialized", "5");
     }
 
     // Garantir campos
