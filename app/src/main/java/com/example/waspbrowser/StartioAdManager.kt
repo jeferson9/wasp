@@ -28,6 +28,7 @@ object StartioAdManager {
         initialized = true
         StartAppSDK.init(activity, APP_ID, false)
         StartAppSDK.setTestAdsEnabled(true)
+        com.startapp.sdk.adsbase.StartAppSDK.setUserConsent(activity, "pas", 0, false)
         Log.d(TAG, "Start.io iniciado — modo teste ON")
         preload(activity)
     }
