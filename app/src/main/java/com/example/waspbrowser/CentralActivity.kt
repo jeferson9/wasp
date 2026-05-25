@@ -79,7 +79,7 @@ class CentralActivity : AppCompatActivity() {
         @JavascriptInterface
         fun openWpAd() {
             android.util.Log.d(TAG, "openWpAd() via Start.io")
-            handler.post { StartioAdManager.show("wp", this@CentralActivity) }
+            handler.post { StartioAdManager.show("wp") }
         }
 
         @JavascriptInterface
