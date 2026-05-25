@@ -143,10 +143,9 @@ object WaspMenuSheet {
             val qIv = android.widget.ImageView(context).apply {
                 setImageResource(q.icon)
                 scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-                android.graphics.drawable.DrawableCompat.wrap(drawable ?: return@apply).also {
-                    android.graphics.drawable.DrawableCompat.setTint(it, if (q.accent) YELLOW else Color.parseColor("#A0AABF"))
-                    setImageDrawable(it)
-                }
+                imageTintList = android.content.res.ColorStateList.valueOf(
+                    if (q.accent) YELLOW else Color.parseColor("#A0AABF")
+                )
             }
             iconBox.addView(qIv, LinearLayout.LayoutParams(22.dp(), 22.dp()).also {
                 it.setMargins(8.dp(), 8.dp(), 8.dp(), 8.dp())
