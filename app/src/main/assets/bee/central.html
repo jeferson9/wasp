@@ -818,8 +818,8 @@
 
       // Boost status in hero
       const boostOn = Date.now() < getN(K.boostEnd, 0);
-      el("statBoost").textContent = boostOn ? "ATIVO ⚡" : "OFF";
-      el("statBoost").style.color = boostOn ? "var(--yellow)" : "var(--muted)";
+      el("statBank").textContent = boostOn ? "ATIVO ⚡" : "OFF";
+      el("statBank").style.color = boostOn ? "var(--yellow)" : "var(--muted)";
 
       // Mining status — checa bg mining via bridge ou localStorage
       let bgMiningActive = false;
@@ -880,10 +880,9 @@
       } else {
         el("boostStatus").textContent   = wp >= CFG.boostCost ? "Você tem WP suficiente" : `Precisa de ${CFG.boostCost} WP`;
         el("boostStatus").className     = "cgc-status " + (wp >= CFG.boostCost ? "ready" : "cooldown");
-        el("boostBtn").textContent      = "Ativar Boost";
-        el("boostRewardText").textContent = "−20 WP";
+
       }
-      el("boostBtn").disabled = boostOn;
+
 
       // DAILY card
       const today   = new Date().toDateString();
