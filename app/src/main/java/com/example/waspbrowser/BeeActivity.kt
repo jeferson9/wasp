@@ -196,13 +196,19 @@ class BeeActivity : AppCompatActivity() {
                 @android.webkit.JavascriptInterface
                 fun openWpAd() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        StartioAdManager.show("wp")
+                        context.startActivity(android.content.Intent(context, StartioAdActivity::class.java).apply {
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            putExtra(StartioAdActivity.EXTRA_MODE, "wp")
+                        })
                     }
                 }
                 @android.webkit.JavascriptInterface
                 fun openEnergyPage() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        StartioAdManager.show("energy")
+                        context.startActivity(android.content.Intent(context, StartioAdActivity::class.java).apply {
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                            putExtra(StartioAdActivity.EXTRA_MODE, "energy")
+                        })
                     }
                 }
                 @android.webkit.JavascriptInterface

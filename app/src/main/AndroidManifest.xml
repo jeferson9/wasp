@@ -98,6 +98,11 @@
             android:theme="@style/Theme.WaspBrowser.SlideUp"
             android:windowSoftInputMode="adjustResize"/>
 
+        <activity
+            android:name=".StartioAdActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false" />
+
         <activity android:name=".FavoritesActivity" />
         <activity android:name=".DownloadsActivity" />
         <activity android:name=".HistoryActivity" />

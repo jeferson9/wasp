@@ -78,14 +78,11 @@ class CentralActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun openWpAd() {
-            android.util.Log.d(TAG, "openWpAd() via Start.io")
+            android.util.Log.d(TAG, "openWpAd() via StartioAdActivity")
             handler.post {
-                // Fecha a Central primeiro para MainActivity ficar no topo
-                finish()
-                // Pequeno delay para garantir que MainActivity está no topo
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    StartioAdManager.show("wp")
-                }, 400)
+                startActivity(android.content.Intent(this@CentralActivity, StartioAdActivity::class.java).apply {
+                    putExtra(StartioAdActivity.EXTRA_MODE, "wp")
+                })
             }
         }
 
