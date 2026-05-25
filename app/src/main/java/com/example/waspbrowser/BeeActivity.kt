@@ -1,6 +1,7 @@
 package com.example.waspbrowser
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -195,13 +196,13 @@ class BeeActivity : AppCompatActivity() {
                 @android.webkit.JavascriptInterface
                 fun openWpAd() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        StartioAdManager.show("wp")
+                        StartioAdManager.show("wp", context as? Activity)
                     }
                 }
                 @android.webkit.JavascriptInterface
                 fun openEnergyPage() {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        StartioAdManager.show("energy")
+                        StartioAdManager.show("energy", context as? Activity)
                     }
                 }
                 @android.webkit.JavascriptInterface
