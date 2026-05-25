@@ -451,13 +451,29 @@ class MainActivity : AppCompatActivity() {
                 it.layoutParams = params
                 it.visibility = android.view.View.VISIBLE
             }
+            persistentBeeView?.post {
+                persistentBeeView?.evaluateJavascript("""
+                    (function(){
+                        var el = document.querySelector('.central-wp-btn');
+                        if(el) el.style.visibility='hidden';
+                        document.body.style.overflow='hidden';
+                    })()
+                """.trimIndent(), null)
+            }
         } else {
             // Volta ao normal
             webAppView.visibility = android.view.View.VISIBLE
             topBar.visibility = android.view.View.GONE
             collapseBeePanel()
             persistentBeeView?.post {
-                persistentBeeView?.evaluateJavascript("if(window.exitPipMode) window.exitPipMode();", null)
+                persistentBeeView?.evaluateJavascript("""
+                    (function(){
+                        var el = document.querySelector('.central-wp-btn');
+                        if(el) el.style.visibility='';
+                        document.body.style.overflow='';
+                        if(window.exitPipMode) window.exitPipMode();
+                    })()
+                """.trimIndent(), null)
             }
         }
     }
