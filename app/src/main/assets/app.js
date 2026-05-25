@@ -1034,7 +1034,7 @@ function renderHive(){
 // Config
         if(item.url === "__config__"){
             div.className = "hive-item hive-config";
-            div.innerHTML = '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;">⚙️</div><span>Config</span>';
+            div.innerHTML = '<img src="file:///android_asset/img/ic_settings_hive.svg" style="width:40px;height:40px;"><span>Config</span>';
             div.onclick = function(){ if(window.Android && typeof Android.openSettings==="function") Android.openSettings(); else openSettings(); };
             grid.appendChild(div);
             return;
@@ -1043,7 +1043,7 @@ function renderHive(){
         // Painel Bee
         if(item.url === "__panel__"){
             div.className = "hive-item hive-config";
-            div.innerHTML = '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;">🐝</div><span>Painel</span>';
+            div.innerHTML = '<img src="file:///android_asset/img/ic_panel_hive.svg" style="width:40px;height:40px;"><span>Painel</span>';
             div.onclick = function(){ if(window.Android && typeof Android.openPanel==="function") Android.openPanel(); };
             grid.appendChild(div);
             return;
