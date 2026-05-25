@@ -461,10 +461,18 @@ class MainActivity : AppCompatActivity() {
                 """.trimIndent(), null)
             }
         } else {
-            // Volta ao normal
+            // Voltou do PiP — restaura UI e mantém painel aberto
             webAppView.visibility = android.view.View.VISIBLE
             topBar.visibility = android.view.View.GONE
-            collapseBeePanel()
+            // Restaura altura do container
+            val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container)
+            container?.let {
+                val params = it.layoutParams
+                val dp56 = (56 * resources.displayMetrics.density).toInt()
+                params.height = dp56
+                it.layoutParams = params
+            }
+            openBeePanel()
             persistentBeeView?.post {
                 persistentBeeView?.evaluateJavascript("""
                     (function(){
