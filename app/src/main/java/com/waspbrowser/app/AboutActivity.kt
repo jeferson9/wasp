@@ -18,7 +18,7 @@ class AboutActivity : AppCompatActivity() {
         wv.setBackgroundColor(0xFF08090D.toInt())
         setContentView(wv)
 
-        val version = packageManager.getPackageInfo(packageName, 0).versionName
+        val version = packageManager.getPackageInfo(packageName, 0).versionName ?: "1.0"
 
         wv.loadDataWithBaseURL(null, buildHtml(version), "text/html", "UTF-8", null)
     }
