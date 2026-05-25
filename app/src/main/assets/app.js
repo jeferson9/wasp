@@ -947,32 +947,26 @@ function renderHive(){
         { name:"X",             url:"https://twitter.com" },
         { name:"WhatsApp",      url:"https://web.whatsapp.com" },
         { name:"TikTok",        url:"https://tiktok.com" },
-        { name:"Reddit",        url:"https://reddit.com" },
         { name:"GitHub",        url:"https://github.com" },
-        { name:"Binance",       url:"https://binance.com" },
         { name:"CoinMarketCap", url:"https://coinmarketcap.com" },
         { name:"CoinGecko",     url:"https://coingecko.com" },
         { name:"Uniswap",       url:"https://app.uniswap.org" },
         { name:"OpenSea",       url:"https://opensea.io" },
         { name:"Acki Nacki",    url:"https://ackinacki.com" },
-        { name:"AckiScan",      url:"https://ackiscan.com" },
         { name:"BeeScan",       url:"https://beescan.live" },
         { name:"Telegram",      url:"https://web.telegram.org" },
-        { name:"DuckDuckGo",    url:"https://duckduckgo.com" },
         { name:"Wikipedia",     url:"https://wikipedia.org" },
-        { name:"Bee Engine",    url:"bee://engine" },
-        { name:"Configurações", url:"settings://open" }
     ];
 
     // Seed inicial (primeira vez)
     if(list.length === 0 && !localStorage.getItem("waspHiveInitialized")){
         list = WASP_DEFAULT_SITES.map(s => ({ ...s, uses:0, lastUsed:0 }));
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "2");
+        localStorage.setItem("waspHiveInitialized", "3");
     }
 
     // Migração: versões anteriores tinham poucos sites — adicionar os que faltam
-    if(localStorage.getItem("waspHiveInitialized") !== "2"){
+    if(localStorage.getItem("waspHiveInitialized") !== "3"){
         const existingUrls = new Set(list.map(i => i.url));
         WASP_DEFAULT_SITES.forEach(s => {
             if(!existingUrls.has(s.url)){
@@ -980,7 +974,7 @@ function renderHive(){
             }
         });
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "2");
+        localStorage.setItem("waspHiveInitialized", "3");
     }
 
     // Garantir campos
@@ -992,11 +986,7 @@ function renderHive(){
     // Remover config salvo acidentalmente
     list = list.filter(i => i.url !== "__config__");
 
-    const runtimeList = [
-        ...list,
-        { name:"Bee Engine", url:"__bee__",    uses:-999, lastUsed:0 },
-        { name:"Config",     url:"__config__", uses:-999, lastUsed:0 }
-    ];
+    const runtimeList = [...list];
 
     const unpinnedItems = runtimeList.filter(i =>
         i.url !== "__config__" && i.url !== "__bee__"
@@ -1038,23 +1028,8 @@ function renderHive(){
 
         const div = document.createElement("div");
 
-        // Bee Engine
-        if(item.url === "__bee__"){
-            div.className = "hive-item hive-config";
-            div.innerHTML = '<img src="img/bee.webp"><span>Bee Engine</span>';
-            div.onclick = function(){
-                if(window.Android && typeof Android.openBee === "function"){
-                    Android.openBee();
-                }
-            };
-            grid.appendChild(div);
-            return;
-        }
-
-        // Config
-        if(item.url === "__config__"){
-            div.className = "hive-item hive-config";
-            div.innerHTML = '<img src="img/settings.webp"><span>Config</span>';
+// Config
+        if(false){
             div.onclick = openSettings;
             grid.appendChild(div);
             return;
