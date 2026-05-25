@@ -837,7 +837,10 @@ class MainActivity : AppCompatActivity() {
                         webAppView.visibility = android.view.View.VISIBLE
                         webAppView.evaluateJavascript("openSettings()", null)
                     }
-                    "about"      -> startActivityFade(Intent(this, AboutActivity::class.java))
+                    "about" -> {
+                        android.util.Log.d("MainActivity", "Abrindo AboutActivity")
+                        startActivity(Intent(this, AboutActivity::class.java))
+                    }
                 }
             }
         }
