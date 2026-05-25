@@ -266,7 +266,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var topBar: View
     private lateinit var webAppView: WebView
-    private lateinit var beeMiningIndicator: MiningIndicator
     private lateinit var geckoView: GeckoView
     private var persistentBeeView: android.webkit.WebView? = null
     private var beePanelExpanded = false
@@ -337,7 +336,6 @@ class MainActivity : AppCompatActivity() {
         getSharedPreferences("bee_mining", MODE_PRIVATE)
             .edit().putBoolean("mining_active", false).apply()
 
-        updateMiningIndicator()
         handleIncomingIntent(intent)
     }
 
@@ -348,23 +346,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onMiningStatusChanged(active: Boolean, wallet: String) {
-        if (::beeMiningIndicator.isInitialized) {
-            beeMiningIndicator.isMining = active
-        }
         // Salva estado para persistir entre Activities
         getSharedPreferences("bee_mining", MODE_PRIVATE)
             .edit().putBoolean("mining_active", active).apply()
     }
 
-    private fun updateMiningIndicator() {
-        try {
-            val prefs = getSharedPreferences("bee_mining", MODE_PRIVATE)
-            val active = prefs.getBoolean("mining_active", false)
-            if (::beeMiningIndicator.isInitialized) {
-                beeMiningIndicator.isMining = active
-            }
-        } catch (e: Exception) {}
-    }
 
     override fun onResume() {
         super.onResume()
@@ -372,7 +358,6 @@ class MainActivity : AppCompatActivity() {
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         webAppView.onResume()
         webAppView.resumeTimers()
-        updateMiningIndicator()
         if (::webAppView.isInitialized && webAppView.visibility == View.VISIBLE &&
             ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
             webAppView.evaluateJavascript("setBottomTab('main')", null)
@@ -690,7 +675,6 @@ class MainActivity : AppCompatActivity() {
         pageProgress = findViewById(R.id.pageProgress)
         iconSecurity = topBar.findViewById(R.id.iconSecurity)
         iconFavicon  = topBar.findViewById(R.id.iconFavicon)
-        beeMiningIndicator = topBar.findViewById(R.id.beeMiningIndicator)
     }
 
     private fun setupWebAppView() {

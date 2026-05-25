@@ -136,12 +136,6 @@
             android:clickable="true"
             android:focusable="true">
 
-            <com.waspbrowser.app.MiningIndicator
-                android:id="@+id/beeMiningIndicator"
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:layout_marginEnd="5dp" />
-
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
