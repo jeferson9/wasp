@@ -19,6 +19,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
         maven("https://maven.mozilla.org/maven2/")
+        maven { url = uri("https://startappdev.bintray.com/maven") }
     }
 }
 

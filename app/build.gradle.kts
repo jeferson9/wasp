@@ -90,7 +90,8 @@ androidComponents {
 
 dependencies {
     // Versão estável do AdMob
-    // anuncios de video: a implementar com Start.io futuramente
+    // anuncios de video: Start.io
+    implementation("com.startapp:inapp-sdk:5.+")
 
     implementation("androidx.webkit:webkit:1.10.0")
     implementation("androidx.browser:browser:1.8.0")
