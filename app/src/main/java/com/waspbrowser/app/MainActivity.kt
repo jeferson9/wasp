@@ -1434,6 +1434,18 @@ class MainActivity : AppCompatActivity() {
     private fun escapeHtml(text: String) = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
 
     @JavascriptInterface
+    fun openPanel() {
+        runOnUiThread { openBeePanel() }
+    }
+
+    @JavascriptInterface
+    fun openSettings() {
+        runOnUiThread {
+            webAppView.evaluateJavascript("openSettings()", null)
+        }
+    }
+
+    @JavascriptInterface
     fun openCentral() {
         runOnUiThread {
             val intent = android.content.Intent(this@MainActivity, CentralActivity::class.java)

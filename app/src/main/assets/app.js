@@ -953,7 +953,6 @@ function renderHive(){
         { name:"Uniswap",       url:"https://app.uniswap.org" },
         { name:"OpenSea",       url:"https://opensea.io" },
         { name:"Acki Nacki",    url:"https://ackinacki.com" },
-        { name:"BeeScan",       url:"https://beescan.live" },
         { name:"Telegram",      url:"https://web.telegram.org" },
         { name:"Wikipedia",     url:"https://wikipedia.org" },
     ];
@@ -962,11 +961,11 @@ function renderHive(){
     if(list.length === 0 && !localStorage.getItem("waspHiveInitialized")){
         list = WASP_DEFAULT_SITES.map(s => ({ ...s, uses:0, lastUsed:0 }));
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "3");
+        localStorage.setItem("waspHiveInitialized", "4");
     }
 
     // Migração: versões anteriores tinham poucos sites — adicionar os que faltam
-    if(localStorage.getItem("waspHiveInitialized") !== "3"){
+    if(localStorage.getItem("waspHiveInitialized") !== "4"){
         const existingUrls = new Set(list.map(i => i.url));
         WASP_DEFAULT_SITES.forEach(s => {
             if(!existingUrls.has(s.url)){
@@ -974,7 +973,7 @@ function renderHive(){
             }
         });
         saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "3");
+        localStorage.setItem("waspHiveInitialized", "4");
     }
 
     // Garantir campos
@@ -986,7 +985,11 @@ function renderHive(){
     // Remover config salvo acidentalmente
     list = list.filter(i => i.url !== "__config__");
 
-    const runtimeList = [...list];
+    const runtimeList = [
+        ...list,
+        { name:"Painel",       url:"__panel__",  uses:9999, lastUsed:Date.now() },
+        { name:"Config",       url:"__config__", uses:9998, lastUsed:Date.now() }
+    ];
 
     const unpinnedItems = runtimeList.filter(i =>
         i.url !== "__config__" && i.url !== "__bee__"
@@ -1029,8 +1032,19 @@ function renderHive(){
         const div = document.createElement("div");
 
 // Config
-        if(false){
-            div.onclick = openSettings;
+        if(item.url === "__config__"){
+            div.className = "hive-item hive-config";
+            div.innerHTML = '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;">⚙️</div><span>Config</span>';
+            div.onclick = function(){ if(window.Android && typeof Android.openSettings==="function") Android.openSettings(); else openSettings(); };
+            grid.appendChild(div);
+            return;
+        }
+
+        // Painel Bee
+        if(item.url === "__panel__"){
+            div.className = "hive-item hive-config";
+            div.innerHTML = '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;">🐝</div><span>Painel</span>';
+            div.onclick = function(){ if(window.Android && typeof Android.openPanel==="function") Android.openPanel(); };
             grid.appendChild(div);
             return;
         }
@@ -1150,7 +1164,7 @@ function toggleBeeDemo(){
 let hiveRemoveTarget = null;
 
 function openRemoveDialog(item){
-    if(item.url === "__config__" || item.url === "__bee__") return;
+    if(item.url === "__config__" || item.url === "__panel__") return;
     hiveRemoveTarget = item;
     const dialog = $("removeDialog");
     if(dialog) dialog.style.display = "flex";
