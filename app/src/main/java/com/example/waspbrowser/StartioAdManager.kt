@@ -44,33 +44,47 @@ object StartioAdManager {
 
         val ad = StartAppAd(activity)
 
-        // Listener de display — declarado antes do showAd
-        val displayListener = object : AdDisplayListener {
-            override fun adHidden(p0: Ad?) {
-                Log.d(TAG, "adHidden rewarded=$rewarded")
-                isShowing = false
-                deliverJs(mode, rewarded)
-            }
-            override fun adDisplayed(p0: Ad?) { Log.d(TAG, "adDisplayed") }
-            override fun adClicked(p0: Ad?)   { Log.d(TAG, "adClicked") }
-            override fun adNotDisplayed(p0: Ad?) {
-                Log.e(TAG, "adNotDisplayed: ${p0?.errorMessage}")
-                isShowing = false
-                deliverJs(mode, false)
-            }
-        }
-
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(receivedAd: Ad) {
                 Log.d(TAG, "Ad carregado ✅")
+
                 ad.setVideoListener(VideoListener {
                     rewarded = true
                     Log.d(TAG, "✅ RECOMPENSA CONFIRMADA mode=$mode")
                 })
-                // Registra listener e mostra
-                ad.setAdDisplayListener(displayListener)
-                ad.showAd()
+
+                // showAd sem parametros — forma mais simples e compativel
+                val shown = ad.showAd()
+                Log.d(TAG, "showAd() retornou: $shown")
+
+                if (!shown) {
+                    Log.e(TAG, "showAd retornou false")
+                    isShowing = false
+                    deliverJs(mode, false)
+                    return
+                }
+
+                // Polling para detectar quando o ad fechou
+                val handler = android.os.Handler(android.os.Looper.getMainLooper())
+                val checkInterval = 500L
+                val maxWait = 120_000L // 2 min max
+                var elapsed = 0L
+
+                val checker = object : Runnable {
+                    override fun run() {
+                        elapsed += checkInterval
+                        if (!ad.isShowing || elapsed >= maxWait) {
+                            Log.d(TAG, "Ad fechado detectado — rewarded=$rewarded")
+                            isShowing = false
+                            deliverJs(mode, rewarded)
+                        } else {
+                            handler.postDelayed(this, checkInterval)
+                        }
+                    }
+                }
+                handler.postDelayed(checker, checkInterval)
             }
+
             override fun onFailedToReceiveAd(failedAd: Ad?) {
                 Log.e(TAG, "Falhou: ${failedAd?.errorMessage}")
                 isShowing = false
