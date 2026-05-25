@@ -136,7 +136,7 @@
             android:clickable="true"
             android:focusable="true">
 
-            <com.example.waspbrowser.MiningIndicator
+            <com.waspbrowser.app.MiningIndicator
                 android:id="@+id/beeMiningIndicator"
                 android:layout_width="14dp"
                 android:layout_height="14dp"

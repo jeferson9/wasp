@@ -6,11 +6,11 @@ plugins {
 val geckoviewVersion = "136.0.20250227124745"
 
 android {
-    namespace = "com.example.waspbrowser"
+    namespace = "com.waspbrowser.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.waspbrowser"
+        applicationId = "com.waspbrowser.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

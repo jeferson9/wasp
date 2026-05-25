@@ -10,9 +10,9 @@
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
--keepclassmembers class com.example.waspbrowser.BeeActivity$BeeBridgeInner { *; }
--keepclassmembers class com.example.waspbrowser.BeeBridge { *; }
--keepclassmembers class com.example.waspbrowser.SearchBridge { *; }
+-keepclassmembers class com.waspbrowser.app.BeeActivity$BeeBridgeInner { *; }
+-keepclassmembers class com.waspbrowser.app.BeeBridge { *; }
+-keepclassmembers class com.waspbrowser.app.SearchBridge { *; }
 
 # ─── AdMob / Google Play Services ────────────────────────────────────────────
 -keep class com.google.android.gms.ads.** { *; }
@@ -50,4 +50,4 @@
 -keep class androidx.core.content.FileProvider { *; }
 
 # ─── Wasp classes principais ─────────────────────────────────────────────────
--keep class com.example.waspbrowser.** { *; }
+-keep class com.waspbrowser.app.** { *; }
