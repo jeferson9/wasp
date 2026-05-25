@@ -1176,14 +1176,14 @@ body[data-theme="light"] .hive-handle-top { background: rgba(0,0,0,0.35); }
 }
 
 /* Grid */
+/* Grid — 5 colunas tech */
 .hive-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: clamp(12px, 3vw, 16px);
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px 4px;
   justify-items: center;
   overflow-y: auto;
   flex: 1;
-  /* espaço para o FAB (60px) + folga */
   padding-bottom: 90px;
   align-content: start;
 }
@@ -1191,84 +1191,99 @@ body[data-theme="light"] .hive-handle-top { background: rgba(0,0,0,0.35); }
 /* Seção "Mais usados" */
 .hive-title {
   grid-column: 1 / -1;
-  font-size: 13px;
-  color: var(--accent);
-  font-weight: 500;
-  margin-bottom: 6px;
-  padding-left: 4px;
+  font-size: 9px;
+  color: rgba(255,193,7,0.5);
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding-left: 2px;
+  font-family: 'Courier New', monospace;
 }
-
-body[data-theme="light"] .hive-title { color: #c48c00; }
 
 /* Divisor */
 .hive-divider {
   grid-column: 1 / -1;
   width: 100%;
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255,193,7,0.75), transparent);
-  margin: 10px 0 6px;
-}
-
-body[data-theme="light"] .hive-divider {
-  background: linear-gradient(to right, transparent, rgba(0,0,0,0.25), transparent);
+  background: linear-gradient(to right, transparent, rgba(255,193,7,0.3), transparent);
+  margin: 6px 0 4px;
 }
 
 /* Item */
 .hive-item {
   width: 100%;
-  height: clamp(90px, 20vw, 110px);
+  max-width: 72px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  min-width: 0;
-  animation: hivePop .25s ease;
+  padding: 6px 2px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background .15s ease;
+  animation: hivePop .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hive-item:active {
+  background: rgba(255,193,7,0.06);
 }
 
 @keyframes hivePop {
-  from { transform: scale(.6); opacity: 0; }
+  from { transform: scale(.7); opacity: 0; }
   to   { transform: scale(1);  opacity: 1; }
 }
 
 .hive-item img {
-  width: clamp(52px, 12vw, 64px);
-  height: clamp(52px, 12vw, 64px);
-  border-radius: 18px;
-  background: linear-gradient(145deg, #1c1f26, #0e1014);
-  padding: clamp(8px, 2vw, 12px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
-  transition: transform .18s ease;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 0;
+  object-fit: cover;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
-.hive-item:active img { transform: scale(.88); }
+.hive-item:active img {
+  transform: scale(.88);
+}
 
 .hive-item span {
-  margin-top: 6px;
-  font-size: clamp(11px, 2.5vw, 13px);
-  color: var(--text);
-  max-width: 72px;
+  margin-top: 5px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  max-width: 64px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
   text-align: center;
+  font-family: -apple-system, sans-serif;
+  letter-spacing: .01em;
 }
 
-body[data-theme="light"] .hive-item span { color: #111; }
-
-/* Config / Bee icons */
+/* Config / Painel icons */
 .hive-item.hive-config img {
-  width: clamp(52px, 12vw, 64px) !important;
-  height: clamp(52px, 12vw, 64px) !important;
-  padding: 10px;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.7), 0 0 14px rgba(247,198,0,0.22);
+  width: 46px !important;
+  height: 46px !important;
+  padding: 8px !important;
+  background: rgba(255,193,7,0.06) !important;
+  border: 1px solid rgba(255,193,7,0.2) !important;
+  box-shadow: 0 0 12px rgba(255,193,7,0.08) !important;
+}
+
+.hive-item.hive-config span {
+  color: rgba(255,193,7,0.7);
 }
 
 body[data-theme="light"] .hive-item img {
-  background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.80));
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.08);
 }
+
+body[data-theme="light"] .hive-item span { color: #444; }
 
 /* FAB — posicionado acima do bottom nav (nav 78px + margem 16px + folga 16px = 110px) */
 .hive-fab {

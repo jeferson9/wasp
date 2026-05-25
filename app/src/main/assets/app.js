@@ -1017,7 +1017,7 @@ function renderHive(){
     if(topItems.length > 0){
         const title = document.createElement("div");
         title.className = "hive-title";
-        title.textContent = "Mais usados";
+        title.textContent = "MAIS USADOS";
         grid.appendChild(title);
     }
 
