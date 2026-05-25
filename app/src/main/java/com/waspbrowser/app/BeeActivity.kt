@@ -120,7 +120,14 @@ class BeeActivity : AppCompatActivity() {
                 @android.webkit.JavascriptInterface
                 fun toast(msg: String) {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                        val type = when {
+                            msg.contains("WP", true) || msg.contains("recompensa", true) ||
+                            msg.contains("mineraç", true) || msg.contains("iniciada", true) ||
+                            msg.contains("reward", true) -> WaspToast.SUCCESS
+                            msg.contains("erro", true) || msg.contains("falhou", true) -> WaspToast.ERROR
+                            else -> WaspToast.NORMAL
+                        }
+                        WaspToast.show(context, msg, type)
                     }
                 }
 
@@ -425,7 +432,7 @@ class BeeActivity : AppCompatActivity() {
             startActivity(intent)
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao abrir link: $url — ${e.message}")
-            Toast.makeText(this, "Não foi possível abrir este link", Toast.LENGTH_SHORT).show()
+            WaspToast.show(this, "Não foi possível abrir este link", WaspToast.ERROR, false)
         }
     }
 
@@ -447,7 +454,7 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun toast(m: String) {
-            mainHandler.post { Toast.makeText(this@BeeActivity, m, Toast.LENGTH_SHORT).show() }
+            mainHandler.post { WaspToast.show(this@BeeActivity, m) }
         }
 
         @JavascriptInterface

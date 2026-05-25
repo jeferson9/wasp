@@ -538,14 +538,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showWaspToast(message: String) {
-        val layout = layoutInflater.inflate(R.layout.wasp_toast, null)
-        layout.findViewById<TextView>(R.id.txtToast).text = message
-        val toast = Toast(applicationContext)
-        toast.duration = Toast.LENGTH_SHORT
-        toast.view = layout
-        toast.setGravity(android.view.Gravity.BOTTOM, 0, 120)
-        toast.show()
+    private fun showWaspToast(message: String, type: Int = WaspToast.NORMAL) {
+        WaspToast.show(this, message, type)
     }
 
     private fun showWaspConfirmDialog(
@@ -1152,7 +1146,7 @@ class MainActivity : AppCompatActivity() {
             if (packageManager.resolveActivity(intent, 0) != null) startActivity(intent)
             else startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
         } catch (e: Exception) {
-            Toast.makeText(this, "Nenhum app encontrado para este link", Toast.LENGTH_SHORT).show()
+            WaspToast.show(this, "Nenhum app encontrado para este link", WaspToast.NORMAL, false)
         }
     }
 
@@ -1391,9 +1385,9 @@ class MainActivity : AppCompatActivity() {
             }
             (getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(request)
             salvarDownloadNoWasp(fileName, url)
-            Toast.makeText(this, "Download iniciado", Toast.LENGTH_SHORT).show()
+            WaspToast.show(this, "Download iniciado", WaspToast.SUCCESS, false)
         } catch (e: Exception) {
-            Toast.makeText(this, "Nao foi possivel iniciar o download", Toast.LENGTH_SHORT).show()
+            WaspToast.show(this, "Nao foi possivel iniciar o download", WaspToast.ERROR, false)
         }
     }
 
@@ -1456,7 +1450,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @JavascriptInterface
-    fun startBee() { runOnUiThread { Toast.makeText(this, "Bee Engine Started", Toast.LENGTH_SHORT).show() } }
+    fun startBee() { runOnUiThread { WaspToast.show(this, "Bee Engine Started", WaspToast.SUCCESS, false) } }
 
     @JavascriptInterface
     fun clearCacheAndCookies() {

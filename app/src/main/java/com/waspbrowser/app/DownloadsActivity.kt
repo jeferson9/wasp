@@ -213,7 +213,7 @@ class DownloadsActivity : AppCompatActivity() {
                     dlIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(dlIntent)
                 } catch (e2: Exception) {
-                    Toast.makeText(this, "Abra o gerenciador de arquivos para ver downloads", Toast.LENGTH_LONG).show()
+                    WaspToast.show(this, "Abra o gerenciador de arquivos para ver downloads", WaspToast.NORMAL, true)
                 }
             }
         }
