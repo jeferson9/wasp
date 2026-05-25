@@ -426,7 +426,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 val params = PictureInPictureParams.Builder()
-                    .setAspectRatio(Rational(16, 5))
+                    .setAspectRatio(Rational(16, 7))
                     .build()
                 enterPictureInPictureMode(params)
             } catch (e: Exception) {
