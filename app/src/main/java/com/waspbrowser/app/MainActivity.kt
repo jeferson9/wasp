@@ -837,10 +837,7 @@ class MainActivity : AppCompatActivity() {
                         webAppView.visibility = android.view.View.VISIBLE
                         webAppView.evaluateJavascript("openSettings()", null)
                     }
-                    "about" -> {
-                        android.util.Log.d("MainActivity", "Abrindo AboutActivity")
-                        startActivity(Intent(this, AboutActivity::class.java))
-                    }
+                    "about" -> startActivityFade(Intent(this, AboutActivity::class.java))
                 }
             }
         }
@@ -1458,13 +1455,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun escapeJs(text: String) = text.replace("\\","\\\\").replace("'","\\'").replace("\n","\\n").replace("\r","")
     private fun escapeHtml(text: String) = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-
-    @JavascriptInterface
-    fun openAbout() {
-        runOnUiThread {
-            startActivity(Intent(this@MainActivity, AboutActivity::class.java))
-        }
-    }
 
     @JavascriptInterface
     fun openCentral() {
