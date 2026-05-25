@@ -398,10 +398,6 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         webAppView.onPause()
         webAppView.pauseTimers()
-        // Entra em PiP ao ir para background (cobre todos os cenários)
-        if (!isInPictureInPictureMode) {
-            enterPipIfPossible()
-        }
     }
 
     override fun onStop() {
