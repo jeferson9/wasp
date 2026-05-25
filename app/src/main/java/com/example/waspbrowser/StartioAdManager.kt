@@ -47,18 +47,32 @@ object StartioAdManager {
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(receivedAd: Ad) {
                 Log.d(TAG, "Ad carregado ✅")
+
                 ad.setVideoListener(VideoListener {
                     rewarded = true
                     Log.d(TAG, "✅ RECOMPENSA CONFIRMADA mode=$mode")
                 })
-                ad.showAd { adShown ->
-                    if (adShown == null) {
-                        Log.d(TAG, "adHidden — rewarded=$rewarded")
+
+                ad.showAd(object : AdDisplayListener {
+                    override fun adHidden(p0: Ad?) {
+                        Log.d(TAG, "adHidden rewarded=$rewarded")
                         isShowing = false
                         deliverJs(mode, rewarded)
                     }
-                }
+                    override fun adDisplayed(p0: Ad?) {
+                        Log.d(TAG, "adDisplayed")
+                    }
+                    override fun adClicked(p0: Ad?) {
+                        Log.d(TAG, "adClicked")
+                    }
+                    override fun adNotDisplayed(p0: Ad?) {
+                        Log.e(TAG, "adNotDisplayed: ${p0?.errorMessage}")
+                        isShowing = false
+                        deliverJs(mode, false)
+                    }
+                })
             }
+
             override fun onFailedToReceiveAd(failedAd: Ad?) {
                 Log.e(TAG, "Falhou ao carregar: ${failedAd?.errorMessage}")
                 isShowing = false
