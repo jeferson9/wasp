@@ -759,20 +759,28 @@
     function claimRewardSafe(claimMiner) {
       return new Promise(function(resolve) {
 
-        function doGetReward() {
-          log("💰 Chamando get_reward()...", "linf");
+        function doGetReward(attempt) {
+          attempt = attempt || 1;
+          log("💰 Chamando get_reward()... (tentativa " + attempt + "/3)", "linf");
           claimMiner.get_reward().then(function() {
             log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
             log("💎 Verifique sua AN Wallet — saldo NACKL atualizado em breve.", "lok");
             var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
             toast("Reward NACKL enviado! ✅");
-          }).catch(function(e) {
-            var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
-            log("❌ get_reward() falhou: " + errMsg, "lerr");
-            log("ℹ️ Causas: Mambaboard inativo, rede instavel, ou epoch sem taps.", "lwrn");
-          }).finally(function() {
             try { claimMiner.stop(); } catch(_) {}
             resolve();
+          }).catch(function(e) {
+            var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
+            log("❌ get_reward() falhou (tentativa " + attempt + "): " + errMsg, "lerr");
+            if (attempt < 3) {
+              var delay = attempt * 10000; // 10s, 20s
+              log("🔄 Tentando novamente em " + (delay/1000) + "s...", "lwrn");
+              setTimeout(function() { doGetReward(attempt + 1); }, delay);
+            } else {
+              log("❌ get_reward() falhou após 3 tentativas. Causas: Mambaboard inativo, rede instavel.", "lerr");
+              try { claimMiner.stop(); } catch(_) {}
+              resolve();
+            }
           });
         }
 
@@ -832,6 +840,10 @@
           return;
         }
         log("💰 Chamando get_reward() na instância que minerou...", "linf");
+        // Garante que a WebView está ativa (importante para PiP)
+        if (window.AndroidBee && window.AndroidBee.resumeForClaim) {
+          window.AndroidBee.resumeForClaim();
+        }
         claimRewardSafe(claimMiner).finally(scheduleRestart);
       }, 16000);
 

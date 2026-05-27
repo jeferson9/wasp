@@ -118,6 +118,16 @@ class BeeActivity : AppCompatActivity() {
                 }
 
                 @android.webkit.JavascriptInterface
+                fun resumeForClaim() {
+                    // Garante que WebView está ativa antes do get_reward() — crítico em PiP
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        val wv = persistentWebView?.get()
+                        wv?.resumeTimers()
+                        wv?.onResume()
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
                 fun toast(msg: String) {
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         val type = when {
