@@ -61,6 +61,7 @@
   var wasmReady    = false;
   var miner        = null;
   var mining       = false;
+  var claiming     = false; // guard: bloqueia nova epoch durante claim do reward
   var setupRunning = false;
   var rawDeepLink  = null;
   var cycles       = 0;
@@ -593,7 +594,7 @@
 
   // ─── MINERAÇÃO ───────────────────────────────────────────────────────────
   async function startMining() {
-    if (!wasmReady || !saved.authorized || mining) return;
+    if (!wasmReady || !saved.authorized || mining || claiming) return;
 
     // ── Verifica e desconta WP ─────────────────────────────────────────────
     var wp = getWP();
@@ -758,6 +759,7 @@
     // Propagacao pendente NAO deve bloquear o claim -- a rede aceita mesmo assim.
     function claimRewardSafe(claimMiner) {
       return new Promise(function(resolve) {
+        claiming = true;
 
         function doGetReward(attempt) {
           attempt = attempt || 1;
@@ -768,6 +770,7 @@
             var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
             toast("Reward NACKL enviado! ✅");
             try { claimMiner.stop(); } catch(_) {}
+            claiming = false;
             resolve();
           }).catch(function(e) {
             var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
@@ -779,6 +782,7 @@
             } else {
               log("❌ get_reward() falhou após 3 tentativas. Causas: Mambaboard inativo, rede instavel.", "lerr");
               try { claimMiner.stop(); } catch(_) {}
+              claiming = false;
               resolve();
             }
           });
