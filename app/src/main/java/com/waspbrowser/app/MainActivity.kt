@@ -362,8 +362,7 @@ class MainActivity : AppCompatActivity() {
             ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
             webAppView.evaluateJavascript("setBottomTab('main')", null)
         }
-        // Notifica a Bee persistente que o app voltou ao foco
-        // E garante que ela está no container correto (pode ter saído pela CentralActivity)
+        // Garante que a persistentBeeView está no container correto
         val beeContainer = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container)
         if (persistentBeeView != null && beeContainer != null && persistentBeeView?.parent !== beeContainer) {
             (persistentBeeView?.parent as? android.view.ViewGroup)?.removeView(persistentBeeView)
@@ -374,15 +373,21 @@ class MainActivity : AppCompatActivity() {
         }
         persistentBeeView?.post {
             persistentBeeView?.resumeTimers()
-            persistentBeeView?.evaluateJavascript(
-                "if(window.onAppResume) window.onAppResume(); else if(window.onWalletReturn) window.onWalletReturn();", null)
+            // Não notifica "voltou ao foco" se está saindo do PiP — mineração não parou
+            if (!isInPictureInPictureMode) {
+                persistentBeeView?.evaluateJavascript(
+                    "if(window.onAppResume) window.onAppResume(); else if(window.onWalletReturn) window.onWalletReturn();", null)
+            }
         }
     }
 
     override fun onPause() {
         super.onPause()
-        webAppView.onPause()
-        webAppView.pauseTimers()
+        // Não pausa timers em modo PiP — mineração deve continuar
+        if (!isInPictureInPictureMode) {
+            webAppView.onPause()
+            webAppView.pauseTimers()
+        }
     }
 
     override fun onStop() {
