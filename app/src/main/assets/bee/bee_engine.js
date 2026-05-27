@@ -862,21 +862,21 @@
       } catch(_) { eventStr = String(event); }
 
       var evLog = "action=" + (action||"?") + " | " + eventStr.substring(0,200);
-      log("[Miner] " + evLog, "linf");
+      // log("[Miner] " + evLog, "linf"); // suprimido
       window._lastMinerEvent = new Date().toLocaleTimeString("pt-BR") + " — " + evLog;
 
       // Se o SDK emitir evento de fim de epoch (não garante — mas tratamos)
       var epochEndActions = ["session_end","done","finished","complete","submit_session_root","computation_completed"];
       if (epochEndActions.indexOf(action) !== -1 && !epochDone) {
         epochDone = true;
-        log("📦 Evento de epoch recebido: " + action, "lwrn");
+        // epoch event suprimido
         handleEpochEnd(action);
       }
 
       if (action === "error" || action === "failed")    log("❌ " + eventStr.substring(0,120), "lerr");
-      if (action === "status_updated")                  log("✅ Worker conectado à rede Acki Nacki", "lok");
-      if (action === "tap_computed")                    log("⚡ Tap aceito!", "lok");
-      if (action === "submit_session_root")             log("📦 Sessão submetida!", "lok");
+      if (action === "status_updated")                  log("✅ Conectado à rede Acki Nacki", "lok");
+      if (action === "tap_computed")                    log("◈ Ação registrada na rede", "lok");
+      if (action === "submit_session_root")             log("◈ Dados submetidos à blockchain", "lok");
     });
 
     mining = true; sessionStart = Date.now(); startUptimeTimer();
@@ -884,7 +884,7 @@
     if (switchSub)  switchSub.textContent = "Minerando NACKL ⚡";
     setStatus("on", "Minerando NACKL ⚡", "Wallet: " + saved.walletName);
     updateMetrics();
-    log("✅ Mineração iniciada! Epoch de 5 min — reward coletado automaticamente no fim.", "lok");
+    log("✅ Mineração iniciada — epoch ativo", "lok");
     toast("Mineração NACKL iniciada! ⚡");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────
@@ -913,15 +913,15 @@
         autoTapCount++;
         window._tapCount = (window._tapCount || 0) + 1;
         if (autoTapCount % 10 === 0) {
-          log("🤖 Auto-tap: " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
+          log("◈ Sincronizando com a rede... " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
         }
         // Animar botão TAP visualmente
         if (window._tapBtnAnim) window._tapBtnAnim();
       } catch(e) {
-        log("Auto-tap erro: " + e.message, "lwrn");
+        log("⚠️ Erro de sincronização: " + e.message, "lwrn");
       }
     }, AUTO_TAP_INTERVAL);
-    log("🤖 Auto-tap ativado: " + AUTO_TAP_TOTAL + " taps / epoch (1 a cada " + (AUTO_TAP_INTERVAL/1000) + "s)", "linf");
+    log("◈ Protocolo de mineração ativo", "linf");
   }
 
   // ─── STOP ────────────────────────────────────────────────────────────────
@@ -948,7 +948,7 @@
         Math.floor(Math.random()*300+50)
       );
       window._tapCount = (window._tapCount || 0) + 1;
-      log("⚡ Tap enviado (total: " + window._tapCount + ")", "lok");
+      log("◈ Ação registrada (" + window._tapCount + ")", "lok");
       if (window._tapBtnAnim) window._tapBtnAnim();
     } catch(e) { log("Erro no tap: " + e.message, "lerr"); }
   }
@@ -962,7 +962,7 @@
       );
       saved.firstTapDone = true; saveSaved();
       var ftc = byId("firstTapCard"); if (ftc) ftc.classList.add("hidden");
-      log("✅ Primeiro tap — miner ativado!", "lok");
+      log("✅ Protocolo iniciado!", "lok");
       await startMining();
     } catch(e) { log("Erro no primeiro tap: " + e.message, "lerr"); }
   }
