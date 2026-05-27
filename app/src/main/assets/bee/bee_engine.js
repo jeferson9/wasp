@@ -55,7 +55,7 @@
   var saved = {
     walletName: "", publicKey: "", secretKey: "",
     minerAddress: "", authorized: false, propagated: false, firstTapDone: false,
-    autoMine: false
+    // autoMine removido
   };
 
   var wasmReady    = false;
@@ -167,7 +167,7 @@
   function clearSaved() {
     saved = {
       walletName:"", publicKey:"", secretKey:"",
-      minerAddress:"", authorized:false, propagated:false, firstTapDone:false, autoMine:false
+      minerAddress:"", authorized:false, propagated:false, firstTapDone:false
     };
     try { localStorage.removeItem(KEY_STATE); } catch(_) {}
   }
@@ -383,12 +383,7 @@
         log("Propagação pendente — tentando confirmar em background...", "lwrn");
         setTimeout(tryPropagateBackground, 3000);
       }
-      // Auto-start: religar automaticamente se o usuário tinha ligado antes
-      if (saved.autoMine) {
-        log("Auto-start ativo — ligando mineração...", "linf");
-        if (miningSwitch) miningSwitch.checked = true;
-        setTimeout(startMining, 800);
-      }
+// Auto-start removido — usuario deve ligar manualmente
     } else {
       setStatus("warn", "Configure a Bee Engine", "Informe o wallet name e autorize na AN Wallet");
       if (setupCard)    setupCard.classList.remove("hidden");
@@ -709,7 +704,7 @@
         setStatus("warn", "Nó instável — reconectando...", "Próxima tentativa em 60s");
         miner = null;
         setTimeout(function() {
-          if (saved.autoMine && miningSwitch && miningSwitch.checked) startMining();
+          // autoMine removido
         }, 60000);
       } else {
         log("Erro ao iniciar mineração: " + em, "lerr");
@@ -1049,14 +1044,7 @@
     log("App voltou ao foco", "linf");
     if (!wasmReady || !saved.authorized || !saved.minerAddress) return;
 
-    if (!mining && saved.autoMine) {
-      log("Auto-start no resume — religando...", "linf");
-      if (miningSwitch) miningSwitch.checked = true;
-      // Nao chama tryClaimPendingReward aqui — ela cria um miner novo
-      // que nao tem contexto da sessao anterior e pode coletar reward errado.
-      // O handleEpochEnd ja coleta com a instancia correta (claimMiner).
-      setTimeout(startMining, 800);
-    }
+// Auto-start no resume removido — usuario relliga manualmente
   };
 
   window.onAppPause = function() {
@@ -1111,10 +1099,10 @@
             }, 1500);
             return;
           }
-          saved.autoMine = true; saveSaved();
+          // autoMine removido
           startMining();
         } else {
-          saved.autoMine = false; saveSaved();  // usuário desligou — não religar
+          // autoMine removido
           stopMining();
         }
       });
@@ -1134,7 +1122,7 @@
       updateWpDisplay(); // Atualiza saldo WP sempre que painel fica visível
       if (!document.hidden && wasmReady && saved.authorized && saved.minerAddress && !mining) {
         // Só retoma auto-mine se tiver WP suficiente
-        if (saved.autoMine && getWP() >= WP_MINING_COST) {
+        if (getWP() >= WP_MINING_COST) {
           setTimeout(startMining, 500);
         } else if (!document.hidden && saved.authorized) {
           var _wpV = getWP();
