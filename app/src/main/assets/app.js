@@ -801,6 +801,7 @@ function setBottomTab(mode){
 }
 
 function openMarketTab(){
+    closeHive();
     openScreen("market");
     setBottomTab("market");
 }
@@ -839,6 +840,8 @@ function goNativeHome(){
 // Versão única de resetHome — com setBottomTab correto
 function resetHome(){
     openScreen("home");
+    var si = document.getElementById("urlInput") || document.querySelector(".url-input");
+    if(si) si.value = "";
 
     document.querySelectorAll(".badge").forEach(btn => btn.classList.remove("active"));
     const firstBadge = document.querySelector(".badge");
@@ -982,7 +985,7 @@ function renderHive(){
     });
 
     // Remover config salvo acidentalmente
-    list = list.filter(i => i.url !== "__config__");
+    list = list.filter(i => i.url !== "__config__" && i.url !== "__panel__");
 
     const runtimeList = [
         ...list,
@@ -991,7 +994,7 @@ function renderHive(){
     ];
 
     const unpinnedItems = runtimeList.filter(i =>
-        i.url !== "__config__" && i.url !== "__bee__"
+        i.url !== "__config__" && i.url !== "__panel__" && i.url !== "__bee__"
     );
 
     const now = Date.now();
@@ -1009,7 +1012,11 @@ function renderHive(){
         .filter(i => !topItems.includes(i))
         .sort((a,b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity:"base" }));
 
-    const finalList = [...topItems, ...remaining];
+    const finalList = [
+        { name:"Painel", url:"__panel__", uses:9999, lastUsed:Date.now() },
+        { name:"Config", url:"__config__", uses:9998, lastUsed:Date.now() },
+        ...topItems, ...remaining
+    ];
 
     grid.innerHTML = "";
 
@@ -1022,7 +1029,7 @@ function renderHive(){
 
     finalList.forEach((item, index) => {
 
-        if(index === 4){
+        if(index === topItems.length + 2 && topItems.length > 0){
             const divider = document.createElement("div");
             divider.className = "hive-divider";
             grid.appendChild(divider);
@@ -1034,7 +1041,7 @@ function renderHive(){
         if(item.url === "__config__"){
             div.className = "hive-item hive-config";
             div.innerHTML = '<img src="file:///android_asset/img/ic_settings_hive.svg" style="width:40px;height:40px;"><span>Config</span>';
-            div.onclick = function(){ if(window.Android && typeof Android.openSettings==="function") Android.openSettings(); else openSettings(); };
+            div.onclick = function(){ closeHive(); if(window.Android && typeof Android.openSettings==="function") Android.openSettings(); else openSettings(); };
             grid.appendChild(div);
             return;
         }
@@ -1043,7 +1050,7 @@ function renderHive(){
         if(item.url === "__panel__"){
             div.className = "hive-item hive-config";
             div.innerHTML = '<img src="file:///android_asset/img/ic_panel_hive.svg" style="width:40px;height:40px;"><span>Painel</span>';
-            div.onclick = function(){ if(window.Android && typeof Android.openPanel==="function") Android.openPanel(); };
+            div.onclick = function(){ closeHive(); if(window.Android && typeof Android.openPanel==="function") Android.openPanel(); };
             grid.appendChild(div);
             return;
         }
@@ -1549,7 +1556,11 @@ function clearBrowsingHistory(){
     if(!confirm("Limpar todo o histórico de navegação?")) return;
     localStorage.removeItem(HISTORY_KEY);
     renderRecents();
-    showToast("🗑️ Histórico apagado");
+    if(window.Android && typeof Android.clearBrowsingHistory==="function"){
+        Android.clearBrowsingHistory();
+    } else {
+        showToast("🗑️ Histórico apagado");
+    }
 }
 
 function clearCacheAndCookies(){
