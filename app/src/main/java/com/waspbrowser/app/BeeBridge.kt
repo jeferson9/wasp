@@ -128,4 +128,14 @@ class BeeBridge(
             context.onMiningStatusChanged(active, wallet)
         }
     }
+
+    @JavascriptInterface
+    fun clearBrowsingHistory() {
+        (context as? MainActivity)?.clearBrowsingHistory()
+    }
+
+    @JavascriptInterface
+    fun clearCacheAndCookies() {
+        (context as? MainActivity)?.clearCacheAndCookies()
+    }
 }

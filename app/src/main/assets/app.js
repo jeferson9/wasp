@@ -1012,11 +1012,7 @@ function renderHive(){
         .filter(i => !topItems.includes(i))
         .sort((a,b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity:"base" }));
 
-    const finalList = [
-        { name:"Painel", url:"__panel__", uses:9999, lastUsed:Date.now() },
-        { name:"Config", url:"__config__", uses:9998, lastUsed:Date.now() },
-        ...topItems, ...remaining
-    ];
+    const finalList = [...topItems, ...remaining];
 
     grid.innerHTML = "";
 
@@ -1029,7 +1025,7 @@ function renderHive(){
 
     finalList.forEach((item, index) => {
 
-        if(index === topItems.length + 2 && topItems.length > 0){
+        if(index === topItems.length && topItems.length > 0){
             const divider = document.createElement("div");
             divider.className = "hive-divider";
             grid.appendChild(divider);
