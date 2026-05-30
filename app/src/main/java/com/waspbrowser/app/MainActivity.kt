@@ -1444,12 +1444,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     @JavascriptInterface
-    fun openSettings() {
-        runOnUiThread {
-            webAppView.evaluateJavascript("openSettings()", null)
-        }
-    }
-
     @JavascriptInterface
     fun openSettings() {
         runOnUiThread {
