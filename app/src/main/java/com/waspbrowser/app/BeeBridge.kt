@@ -13,7 +13,12 @@ class BeeBridge(
 ) {
 
     @JavascriptInterface
-    fun openSettings(target: String? = null) {
+    fun openSettings() {
+        openSettings(null)
+    }
+
+    @JavascriptInterface
+    fun openSettings(target: String?) {
         try {
             val intent = Intent(context, SettingsActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -126,6 +131,13 @@ class BeeBridge(
     fun setMiningStatus(active: Boolean, wallet: String) {
         (context as? MainActivity)?.runOnUiThread {
             context.onMiningStatusChanged(active, wallet)
+        }
+    }
+
+    @JavascriptInterface
+    fun openPanel() {
+        (context as? MainActivity)?.runOnUiThread {
+            context.openBeePanel()
         }
     }
 
