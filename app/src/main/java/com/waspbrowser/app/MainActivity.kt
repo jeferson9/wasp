@@ -1470,21 +1470,27 @@ class MainActivity : AppCompatActivity() {
     fun startBee() { runOnUiThread { WaspToast.show(this, "Bee Engine Started", WaspToast.SUCCESS, false) } }
 
     @JavascriptInterface
+    fun clearBrowsingHistory() {
+        runOnUiThread {
+            // Limpa histórico do GeckoView
+            try { geckoSession.purgeHistory() } catch (_: Exception) {}
+            // Limpa histórico da WebView
+            webAppView.clearHistory()
+            WaspToast.show(this, "Histórico apagado", WaspToast.SUCCESS)
+        }
+    }
+
+    @JavascriptInterface
     fun clearCacheAndCookies() {
         runOnUiThread {
-            // Limpa WebView da home
             webAppView.clearCache(true)
             webAppView.clearHistory()
             android.webkit.WebStorage.getInstance().deleteAllData()
-            // Limpa cookies
             val cm = android.webkit.CookieManager.getInstance()
             cm.removeAllCookies(null)
             cm.flush()
-            // Limpa GeckoView se disponível
             try { geckoSession.purgeHistory() } catch (_: Exception) {}
-            runOnUiThread {
-                android.widget.Toast.makeText(this, "Cache e cookies apagados ✓", android.widget.Toast.LENGTH_SHORT).show()
-            }
+            WaspToast.show(this, "Cache e cookies apagados", WaspToast.SUCCESS)
         }
     }
 
