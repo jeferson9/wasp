@@ -1094,6 +1094,7 @@ function renderHive(){
                     real.lastUsed = Date.now();
                     saveHive(stored);
                 }
+                closeHive();
                 openNativeUrl(item.url);
                 renderHive();
             }
