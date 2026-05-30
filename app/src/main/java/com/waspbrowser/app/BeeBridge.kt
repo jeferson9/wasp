@@ -15,17 +15,14 @@ class BeeBridge(
     @JavascriptInterface
     fun openSettings() {
         (context as? MainActivity)?.runOnUiThread {
-            // Garante que a home está visível
-            context.webAppView.visibility = android.view.View.VISIBLE
-            context.webAppView.evaluateJavascript("closeHive(); openSettings();", null)
+            context.openSettingsPanel()
         }
     }
 
     @JavascriptInterface
     fun openSettings(target: String?) {
         (context as? MainActivity)?.runOnUiThread {
-            context.webAppView.visibility = android.view.View.VISIBLE
-            context.webAppView.evaluateJavascript("closeHive(); openSettings();", null)
+            context.openSettingsPanel()
         }
     }
 

@@ -1451,6 +1451,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     @JavascriptInterface
+    fun openSettings() {
+        runOnUiThread {
+            webAppView.evaluateJavascript("openSettings()", null)
+        }
+    }
+
+    fun openSettingsPanel() {
+        webAppView.visibility = android.view.View.VISIBLE
+        webAppView.evaluateJavascript("closeHive(); openSettings();", null)
+    }
+
+    @JavascriptInterface
     fun openCentral() {
         runOnUiThread {
             val intent = android.content.Intent(this@MainActivity, CentralActivity::class.java)
