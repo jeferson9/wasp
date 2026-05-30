@@ -3,8 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val geckoviewVersion = "136.0.20250227124745"
-
 android {
     namespace = "com.waspbrowser.app"
     compileSdk = 36
@@ -89,18 +87,14 @@ androidComponents {
 }
 
 dependencies {
-    // Versão estável do AdMob
-    // anuncios de video: a implementar futuramente
-
-    implementation("androidx.webkit:webkit:1.10.0")
-    implementation("androidx.browser:browser:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-
+    implementation(libs.androidx.webkit)
+    implementation(libs.androidx.browser)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -108,11 +102,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.material)
     implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
 
-    implementation("org.mozilla.geckoview:geckoview:$geckoviewVersion")
+    implementation(libs.geckoview)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
