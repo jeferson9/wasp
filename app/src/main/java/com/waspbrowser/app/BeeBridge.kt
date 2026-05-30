@@ -14,21 +14,18 @@ class BeeBridge(
 
     @JavascriptInterface
     fun openSettings() {
-        openSettings(null)
+        (context as? MainActivity)?.runOnUiThread {
+            // Garante que a home está visível
+            context.webAppView.visibility = android.view.View.VISIBLE
+            context.webAppView.evaluateJavascript("closeHive(); openSettings();", null)
+        }
     }
 
     @JavascriptInterface
     fun openSettings(target: String?) {
-        try {
-            val intent = Intent(context, SettingsActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                if (target == "language") {
-                    putExtra("show_language_picker", true)
-                }
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Log.e("BeeBridge", "openSettings: ${e.message}")
+        (context as? MainActivity)?.runOnUiThread {
+            context.webAppView.visibility = android.view.View.VISIBLE
+            context.webAppView.evaluateJavascript("closeHive(); openSettings();", null)
         }
     }
 
