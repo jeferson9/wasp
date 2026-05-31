@@ -138,9 +138,16 @@
 
   function pad2(n) { return String(n).padStart(2, "0"); }
 
+  function getEpochsPaid() {
+    try { return parseInt(localStorage.getItem("wasp_bee_epochs_paid") || "0", 10) || 0; }
+    catch(_) { return 0; }
+  }
+
   function updateMetrics() {
     if (mEngine) mEngine.textContent = mining ? "Rodando ⚡" : (wasmReady ? "Pronta" : "Iniciando...");
-    if (mCycles) mCycles.textContent = String(cycles);
+    // "Ciclos" agora reflete épocas com reward efetivamente pago (métrica real),
+    // não eventos de rede. Resolve a confusão entre o painel e o que cai na wallet.
+    if (mCycles) mCycles.textContent = String(getEpochsPaid());
     if (mWallet) mWallet.textContent = saved.walletName || "—";
     if (mUptime) {
       if (sessionStart) {
@@ -813,7 +820,14 @@
           claimMiner.get_reward().then(function() {
             log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
             log("💎 Verifique sua AN Wallet — saldo NACKL atualizado em breve.", "lok");
+            // Contador real de épocas pagas (persistido) — distingue de "cycles"
+            // (eventos de rede) e de "epochCount" (épocas iniciadas).
+            try {
+              var paid = parseInt(localStorage.getItem("wasp_bee_epochs_paid") || "0", 10) || 0;
+              localStorage.setItem("wasp_bee_epochs_paid", String(paid + 1));
+            } catch(_) {}
             var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
+            updateMetrics();
             toast("Reward NACKL enviado! ✅");
             try { claimMiner.stop(); } catch(_) {}
             claiming = false;
@@ -1187,7 +1201,14 @@
   // Chama o callback ao terminar (com ou sem reward)
   async function tryClaimPendingReward(callback) {
     if (!wasmReady || !saved.minerAddress) { if (callback) callback(); return; }
+    // FIX: não colidir com um claim já em andamento (guard claiming).
+    if (claiming) {
+      log("Claim já em andamento — pulando verificação de reward pendente.", "linf");
+      if (callback) callback();
+      return;
+    }
     var tmpMiner = null;
+    claiming = true;
     try {
       // FIX: Miner.new() e async -- precisa de await ou tmpMiner sera uma Promise
       tmpMiner = await window.BeeSDK.Miner.new(
@@ -1203,6 +1224,7 @@
       log("Sem reward pendente: " + (e&&e.message?e.message.substring(0,80):String(e)), "linf");
     } finally {
       try { if (tmpMiner) tmpMiner.stop(); } catch(_) {}
+      claiming = false;
       if (callback) callback();
     }
   }
@@ -1252,16 +1274,16 @@
     }
     document.addEventListener("visibilitychange", function() {
       updateWpDisplay(); // Atualiza saldo WP sempre que painel fica visível
-      if (!document.hidden && wasmReady && saved.authorized && saved.minerAddress && !mining) {
-        // Só retoma auto-mine se tiver WP suficiente
-        if (getWP() >= WP_MINING_COST) {
-          setTimeout(startMining, 500);
-        } else if (!document.hidden && saved.authorized) {
-          var _wpV = getWP();
-          if (switchSub) switchSub.textContent = _wpV >= WP_MINING_COST
-            ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
-            : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpV + ")";
-        }
+      // FIX: NÃO iniciar mineração automaticamente ao abrir o painel.
+      // Antes, isso disparava startMining() (gastando WP) mesmo quando o
+      // usuário havia desligado o switch de propósito. A mineração agora
+      // só inicia por ação explícita no switch. Aqui apenas atualizamos
+      // o texto de status para refletir o saldo atual.
+      if (!document.hidden && saved.authorized && !mining) {
+        var _wpV = getWP();
+        if (switchSub) switchSub.textContent = _wpV >= WP_MINING_COST
+          ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
+          : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpV + ")";
       }
     });
   }
@@ -1285,7 +1307,8 @@
       wallet: (saved && saved.walletName) ? saved.walletName : "",
       tapCount: window._tapCount || 0,
       tapTotal: 100,
-      epochCount: window._epochCount || 0
+      epochCount: window._epochCount || 0,
+      epochsPaid: getEpochsPaid()
     };
   };
 
