@@ -159,6 +159,64 @@
     notifyMiningStatus();
   }
 
+  // ─── SALDO NACKL (on-chain) ──────────────────────────────────────────────
+  // Consulta o saldo real da conta na blockchain via GraphQL público.
+  // Usa o endereço que o app já resolve do nome da wallet (saved.minerAddress),
+  // então funciona para qualquer usuário automaticamente — sem digitar endereço.
+  // NACKL usa 9 casas decimais (padrão TVM/nanotokens).
+  var _balanceLoading = false;
+
+  function formatNackl(raw) {
+    // raw vem em nanotokens (string decimal). Converte para NACKL legível.
+    try {
+      var s = String(raw).replace(/[^0-9]/g, "");
+      if (!s) return "0";
+      while (s.length < 10) s = "0" + s;          // garante parte inteira
+      var intPart = s.slice(0, s.length - 9).replace(/^0+(?=\d)/, "");
+      var frac = s.slice(s.length - 9).replace(/0+$/, "");
+      // separador de milhar na parte inteira
+      intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      return frac ? (intPart + "," + frac.slice(0, 4)) : intPart;
+    } catch(_) { return "0"; }
+  }
+
+  async function fetchNacklBalance() {
+    var elBal = byId("mBalance");
+    if (!saved.minerAddress) {
+      if (elBal) elBal.textContent = "—";
+      return;
+    }
+    if (_balanceLoading) return;
+    _balanceLoading = true;
+    if (elBal) elBal.textContent = "...";
+    try {
+      var endpoint = (ENDPOINTS && ENDPOINTS[0] ? ENDPOINTS[0] : "https://mainnet-cf.ackinacki.org").replace(/\/+$/, "") + "/graphql";
+      var query = "query($addr:String!){ blockchain{ account(address:$addr){ info{ balance } } } }";
+      var resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query, variables: { addr: saved.minerAddress } })
+      });
+      var json = await resp.json();
+      var bal = json && json.data && json.data.blockchain && json.data.blockchain.account
+        && json.data.blockchain.account.info ? json.data.blockchain.account.info.balance : null;
+      if (bal === null || typeof bal === "undefined") {
+        if (elBal) elBal.textContent = "—";
+        log("Saldo: conta ainda não encontrada na rede (pode levar tempo até o 1º reward).", "linf");
+      } else {
+        var formatted = formatNackl(bal);
+        if (elBal) elBal.textContent = formatted + " NACKL";
+        log("💰 Saldo on-chain: " + formatted + " NACKL", "lok");
+      }
+    } catch (e) {
+      if (elBal) elBal.textContent = "—";
+      log("Não foi possível consultar o saldo: " + (e && e.message ? e.message.substring(0,80) : String(e)), "lwrn");
+    } finally {
+      _balanceLoading = false;
+    }
+  }
+  window.fetchNacklBalance = fetchNacklBalance;
+
   // ─── PERSISTÊNCIA ────────────────────────────────────────────────────────
   function loadSaved() {
     try {
@@ -381,6 +439,7 @@
       updateWpDisplay();
       setStep(5);
       log("Sessão restaurada: " + saved.walletName, "lok");
+      fetchNacklBalance(); // mostra saldo on-chain logo ao abrir
       // Mostrar aviso Mambaboard se não foi dismissado (rewards requerem ativação)
       try {
         var mambaDismissed = localStorage.getItem("wasp_mamba_dismissed");
@@ -870,6 +929,9 @@
             } catch(_) {}
             var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
             updateMetrics();
+            // Atualiza o saldo on-chain alguns segundos depois (a rede leva
+            // um instante para refletir o crédito do reward).
+            setTimeout(function(){ try { fetchNacklBalance(); } catch(_){} }, 8000);
             toast("Reward NACKL enviado! ✅");
             try { claimMiner.stop(); } catch(_) {}
             claiming = false;
@@ -1308,6 +1370,8 @@
     if (btnTap)       btnTap.addEventListener("click", sendTap);
     var ftb = byId("btnFirstTap");
     if (ftb) ftb.addEventListener("click", doFirstTap);
+    var balRefresh = byId("mBalanceRefresh");
+    if (balRefresh) balRefresh.addEventListener("click", fetchNacklBalance);
     if (btnOpenAgain) {
       btnOpenAgain.addEventListener("click", function() {
         if (!rawDeepLink) return;
@@ -1316,6 +1380,7 @@
     }
     document.addEventListener("visibilitychange", function() {
       updateWpDisplay(); // Atualiza saldo WP sempre que painel fica visível
+      if (!document.hidden && saved.minerAddress) fetchNacklBalance(); // saldo on-chain
       // FIX: NÃO iniciar mineração automaticamente ao abrir o painel.
       // Antes, isso disparava startMining() (gastando WP) mesmo quando o
       // usuário havia desligado o switch de propósito. A mineração agora
