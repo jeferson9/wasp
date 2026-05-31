@@ -613,6 +613,7 @@
   // mineração realmente inicia (doStartMiner). Se a sessão abortar antes
   // disso, o WP é reembolsado para não queimar saldo à toa.
   var _wpDebited = false;
+  var _awaitingPropagation = false;
 
   function refundSessionWP(reason) {
     if (!_wpDebited) return;
@@ -641,6 +642,47 @@
         if (miningSwitch && miningSwitch.checked) startMining();
       }, 10000);
       return;
+    }
+
+    // ── FIX "primeira sessão não cai": se as chaves ainda não foram
+    //    propagadas na blockchain, aguardar a confirmação ANTES de
+    //    descontar WP e iniciar. Antes, a 1ª epoch após definir as chaves
+    //    rodava com a propagação ainda pendente, o claim falhava e o reward
+    //    não caía — só caía ao desligar/religar (quando já havia propagado).
+    if (!saved.propagated && saved.minerAddress && saved.publicKey) {
+      if (_awaitingPropagation) {
+        log("⏳ Já aguardando propagação das chaves — aguarde...", "linf");
+        return;
+      }
+      _awaitingPropagation = true;
+      log("🔑 Primeira mineração: confirmando registro das chaves na rede antes de iniciar...", "lwrn");
+      setStatus("warn", "Registrando chaves...", "Aguardando a rede confirmar (pode levar ~1 min)");
+      if (switchSub) switchSub.textContent = "Registrando chaves na rede...";
+      if (miningSwitch) miningSwitch.checked = true; // mantém intenção do usuário
+      try {
+        await window.BeeSDK.ensure_mining_keys_propagated({
+          client_config: { network: { endpoints: ENDPOINTS } },
+          miner_address: saved.minerAddress,
+          app_id: APP_ID,
+          expected_owner_public: saved.publicKey,
+          max_attempts: 60,
+          interval_ms: 2000
+        });
+        saved.propagated = true; saveSaved();
+        log("✅ Chaves confirmadas na rede! Iniciando mineração — o reward desta epoch já vai cair.", "lok");
+        var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmada";
+      } catch (e) {
+        log("⚠️ Propagação ainda não confirmou após ~2 min. Iniciando mesmo assim; se o reward não cair, toque em Reautorizar chaves.", "lwrn");
+        showReauthPrompt();
+      }
+      _awaitingPropagation = false;
+      // Se o usuário desligou enquanto aguardava, não inicia.
+      if (miningSwitch && !miningSwitch.checked) {
+        setStatus("on", "Bee pronta", "Mineração pausada");
+        if (switchSub) switchSub.textContent = "Ligue para minerar";
+        return;
+      }
+      // Cai através para o fluxo normal de início abaixo.
     }
 
     // ── Verifica e desconta WP ─────────────────────────────────────────────
