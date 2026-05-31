@@ -457,9 +457,18 @@
       setStatus("warn", "Gerando chaves...", "Criando identidade de mineração");
       log("Chamando gen_mining_keys...", "linf");
 
+      // FIX: walletName precisa ser definido ANTES de gen_mining_keys.
+      // Antes, gen_mining_keys recebia saved.walletName ainda vazio na 1ª
+      // configuração, gerando chaves dessincronizadas do miner address —
+      // o que fazia a wallet pedir "definir chaves de mineração novamente".
+      saved.walletName = walletName;
+      // Setup novo → propagação tem de ser reconfirmada do zero.
+      saved.propagated = false;
+      saved.minerAddress = "";
+      saveSaved();
+
       // SDK novo: gen_mining_keys(app_id, username)
       var result = await window.BeeSDK.gen_mining_keys(APP_ID, saved.walletName);
-      saved.walletName = walletName;
       saved.publicKey  = result.public;
       saved.secretKey  = result.secret;
       saveSaved();
@@ -593,8 +602,39 @@
   }
 
   // ─── MINERAÇÃO ───────────────────────────────────────────────────────────
+  // Controle de WP da sessão atual: o débito só é "confirmado" quando a
+  // mineração realmente inicia (doStartMiner). Se a sessão abortar antes
+  // disso, o WP é reembolsado para não queimar saldo à toa.
+  var _wpDebited = false;
+
+  function refundSessionWP(reason) {
+    if (!_wpDebited) return;
+    _wpDebited = false;
+    try {
+      var cur = getWP();
+      localStorage.setItem(KEY_WP, String(cur + WP_MINING_COST));
+      var hist = [];
+      try { hist = JSON.parse(localStorage.getItem(KEY_WP_HISTORY) || "[]"); } catch(_) {}
+      hist.unshift("[" + new Date().toLocaleString("pt-BR") + "] +" + WP_MINING_COST + " WP • Reembolso (" + (reason || "sessão abortada") + ")");
+      localStorage.setItem(KEY_WP_HISTORY, JSON.stringify(hist.slice(0, 100)));
+    } catch(_) {}
+    log("↩️ " + WP_MINING_COST + " WP reembolsados (" + (reason || "sessão abortada") + "). Saldo: " + getWP() + " WP", "lwrn");
+    updateWpDisplay();
+  }
+
   async function startMining() {
-    if (!wasmReady || !saved.authorized || mining || claiming) return;
+    if (!wasmReady || !saved.authorized || mining) return;
+
+    // ── FIX corrida claim×restart: se ainda há um claim em andamento, NÃO
+    //    abortar silenciosamente (isso perdia a epoch). Reagenda e tenta
+    //    de novo quando o claim terminar.
+    if (claiming) {
+      log("⏳ Claim do reward anterior ainda em andamento — reagendando início em 10s...", "lwrn");
+      setTimeout(function() {
+        if (miningSwitch && miningSwitch.checked) startMining();
+      }, 10000);
+      return;
+    }
 
     // ── Verifica e desconta WP ─────────────────────────────────────────────
     var wp = getWP();
@@ -608,13 +648,14 @@
       return;
     }
 
-    // Desconta WP da sessão
+    // Desconta WP da sessão (provisório — confirmado só em doStartMiner)
     var ok = spendWP(WP_MINING_COST, "Sessão de mineração NACKL");
     if (!ok) {
       if (miningSwitch) miningSwitch.checked = false;
       if (switchSub) switchSub.textContent = "Erro ao debitar WP";
       return;
     }
+    _wpDebited = true;
     log("✅ " + WP_MINING_COST + " WP debitados. Saldo restante: " + getWP() + " WP", "lok");
     updateWpDisplay();
 
@@ -664,6 +705,7 @@
         if (miningSwitch) miningSwitch.checked = true;
 
         var epochWait = 0;
+        if (window._epochCheckTimer) { clearInterval(window._epochCheckTimer); }
         var epochCheck = setInterval(async function() {
           epochWait += 15;
           try {
@@ -673,24 +715,26 @@
             var cs = tmpMiner.can_start();
             log("Aguardando epoch... " + epochWait + "s | can_start()=" + cs, "linf");
             if (cs) {
-              clearInterval(epochCheck);
+              clearInterval(epochCheck); window._epochCheckTimer = null;
               miner = tmpMiner;
               log("✅ Novo epoch! Iniciando mineração...", "lok");
               doStartMiner();
             } else {
               try { tmpMiner.stop(); } catch(_) {}
               if (epochWait >= 360) {
-                clearInterval(epochCheck);
+                clearInterval(epochCheck); window._epochCheckTimer = null;
                 log("❌ Epoch não iniciou em 6 minutos. Tente resetar.", "lerr");
                 setStatus("err", "Timeout de epoch", "Tente resetar a configuração");
                 if (miningSwitch) miningSwitch.checked = false;
                 miner = null;
+                refundSessionWP("epoch não iniciou");
               }
             }
           } catch(e) {
             log("Erro ao checar epoch: " + e.message, "lwrn");
           }
         }, 15000);
+        window._epochCheckTimer = epochCheck;
         return;
       }
 
@@ -700,18 +744,20 @@
       var em = e && e.message ? e.message : String(e);
       var isFetch = em.indexOf("205") !== -1 || em.indexOf("Failed to fetch") !== -1 || em.indexOf("fetch") !== -1;
       if (isFetch) {
-        // Nó instável — tentar novamente em 60s sem desistir
+        // Nó instável — reembolsa WP e tenta novamente em 60s sem desistir
         log("⚠️ Nó instável (fetch error) — tentando novamente em 60s...", "lwrn");
         setStatus("warn", "Nó instável — reconectando...", "Próxima tentativa em 60s");
         miner = null;
+        refundSessionWP("nó instável");
         setTimeout(function() {
-          // autoMine removido
+          if (miningSwitch && miningSwitch.checked) startMining();
         }, 60000);
       } else {
         log("Erro ao iniciar mineração: " + em, "lerr");
         setStatus("err", "Erro ao iniciar", em.substring(0,100));
         if (miningSwitch) miningSwitch.checked = false;
         miner = null;
+        refundSessionWP("erro ao iniciar");
       }
     }
   }
@@ -780,7 +826,13 @@
               log("🔄 Tentando novamente em " + (delay/1000) + "s...", "lwrn");
               setTimeout(function() { doGetReward(attempt + 1); }, delay);
             } else {
-              log("❌ get_reward() falhou após 3 tentativas. Causas: Mambaboard inativo, rede instavel.", "lerr");
+              log("❌ get_reward() falhou após 3 tentativas. Causas: chaves de mineração não propagadas, Mambaboard inativo, ou rede instável.", "lerr");
+              if (!saved.propagated) {
+                log("⚠️ AÇÃO NECESSÁRIA: as chaves de mineração ainda não estão registradas na sua AN Wallet. Toque em \"Reautorizar chaves\" e confirme na wallet.", "lerr");
+                setStatus("err", "Reautorize na AN Wallet", "Chaves de mineração não propagadas — toque em Reautorizar");
+                showReauthPrompt();
+                toast("Reautorize as chaves de mineração na AN Wallet");
+              }
               try { claimMiner.stop(); } catch(_) {}
               claiming = false;
               resolve();
@@ -795,14 +847,16 @@
           return;
         }
 
-        // Não propagado: tenta propagar rapidamente antes do claim
+        // Não propagado: tenta propagar rapidamente antes do claim.
+        // Após reconexão/limpeza de dados a propagação demora mais, então
+        // usamos mais tentativas para dar tempo da rede registrar as chaves.
         log("🔄 Confirmando propagacao antes do get_reward()...", "linf");
         window.BeeSDK.ensure_mining_keys_propagated({
           client_config: { network: { endpoints: ENDPOINTS } },
           miner_address: saved.minerAddress,
           app_id: APP_ID,
           expected_owner_public: saved.publicKey,
-          max_attempts: 10,
+          max_attempts: 30,
           interval_ms: 2000
         }).then(function() {
           saved.propagated = true; saveSaved();
@@ -891,6 +945,8 @@
     });
 
     mining = true; sessionStart = Date.now(); startUptimeTimer();
+    // Sessão realmente iniciou — confirma o débito de WP (não reembolsa mais).
+    _wpDebited = false;
     if (tapSection) tapSection.classList.remove("hidden");
     if (switchSub)  switchSub.textContent = "Minerando NACKL ⚡";
     setStatus("on", "Minerando NACKL ⚡", "Wallet: " + saved.walletName);
@@ -937,7 +993,19 @@
 
   // ─── STOP ────────────────────────────────────────────────────────────────
   function stopMining() {
-    if (!mining) return;
+    // Caso o usuário desligue ainda na fase "aguardando epoch" (mining=false
+    // mas WP já debitado): reembolsa e limpa o estado intermediário.
+    if (!mining) {
+      if (_wpDebited) {
+        if (window._epochCheckTimer) { clearInterval(window._epochCheckTimer); window._epochCheckTimer = null; }
+        try { if (miner) miner.stop(); } catch(_) {}
+        miner = null;
+        refundSessionWP("desligado antes de iniciar");
+        if (switchSub) switchSub.textContent = "Ligue para retomar";
+        setStatus("on", "Bee pronta", "Mineração pausada");
+      }
+      return;
+    }
     if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
     if (window._autoTapTimer)  { clearInterval(window._autoTapTimer);  window._autoTapTimer  = null; }
     try { if (miner) miner.stop(); } catch(_) {}
@@ -976,6 +1044,54 @@
       log("✅ Protocolo iniciado!", "lok");
       await startMining();
     } catch(e) { log("Erro no primeiro tap: " + e.message, "lerr"); }
+  }
+
+  // ─── REAUTORIZAÇÃO DE CHAVES ─────────────────────────────────────────────
+  // Reabre o deep link set-mining-keys para o usuário confirmar na AN Wallet,
+  // sem apagar a sessão. Resolve o caso "rewards não caem após reconectar":
+  // as chaves locais existem mas não estão propagadas na blockchain/wallet.
+  async function reauthorizeKeys() {
+    if (!wasmReady) { toast("Aguarde o SDK carregar..."); return; }
+    if (!saved.walletName || !saved.publicKey || !saved.secretKey) {
+      log("Sem chaves locais para reautorizar — faça a configuração completa.", "lerr");
+      doReset();
+      return;
+    }
+    try {
+      log("🔁 Reabrindo set-mining-keys na AN Wallet...", "linf");
+      var link = await buildManualDeepLink({
+        appId: APP_ID,
+        publicKey: saved.publicKey,
+        secretKey: saved.secretKey,
+        walletName: saved.walletName
+      });
+      openDeepLink(link);
+      toast("Confirme as chaves de mineração na AN Wallet");
+      // Após reautorizar, tenta reconfirmar a propagação em background.
+      saved.propagated = false; saveSaved();
+      _propagateAttempts = 0;
+      setTimeout(tryPropagateBackground, 5000);
+    } catch (e) {
+      log("Erro ao reautorizar: " + (e.message || String(e)), "lerr");
+    }
+  }
+  window.reauthorizeKeys = reauthorizeKeys;
+
+  function showReauthPrompt() {
+    var btn = byId("btnReauth");
+    if (btn) { btn.classList.remove("hidden"); return; }
+    // Cria botão dinamicamente se o HTML não tiver um
+    try {
+      var host = byId("setupCard") && !byId("setupCard").classList.contains("hidden")
+        ? byId("setupCard")
+        : (logBox ? logBox.parentNode : document.body);
+      btn = document.createElement("button");
+      btn.id = "btnReauth";
+      btn.className = "btn";
+      btn.textContent = "🔁 Reautorizar chaves na AN Wallet";
+      btn.onclick = reauthorizeKeys;
+      if (host) host.appendChild(btn);
+    } catch(_) {}
   }
 
   // ─── RESET ───────────────────────────────────────────────────────────────
