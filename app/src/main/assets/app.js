@@ -1132,7 +1132,12 @@ function bindHiveGrid(){
         _hiveLongTimer = setTimeout(function(){
             _hiveLongFired = true;
             hiveLog("long-press id=" + _hiveDownId);
-            openRemoveDialog(_hiveDownId);
+            const idToRemove = _hiveDownId;
+            // Limpa o estado da grade JÁ (não espera o touchend, que pode ser
+            // capturado pelo diálogo). Abre o diálogo no próximo tick para o
+            // touchend deste gesto não cair sobre os botões recém-exibidos.
+            _hiveDownId = null;
+            setTimeout(function(){ openRemoveDialog(idToRemove); }, 120);
         }, 550);
     }, { passive:true });
 
@@ -1176,35 +1181,45 @@ function bindHiveDialogButtons(){
     const rd = $("removeDialog");
     if(rd){
         let lastTouch = 0;
-        function handleRemove(e, fromTouch){
-            const t = e.target;
-            if(fromTouch){ lastTouch = Date.now(); }
-            else if(Date.now() - lastTouch < 600){ return; } // touch já tratou
-            hiveLog((fromTouch?"touch":"click") + " btn=" + (t.className||"?"));
+        function doRemoveAction(t){
+            hiveLog("acao btn=" + (t.className||"?"));
             if(t.classList.contains("remove-cancel")) { closeRemoveDialog(); return; }
             if(t.classList.contains("remove-danger")) { confirmRemove(); return; }
             if(t === rd) { closeRemoveDialog(); }
         }
         rd.addEventListener("touchend", function(e){
-            if(e.target.tagName === "BUTTON" || e.target === rd){ e.preventDefault(); handleRemove(e, true); }
+            const t = e.target;
+            if(t.tagName === "BUTTON"){
+                e.preventDefault();
+                lastTouch = Date.now();
+                doRemoveAction(t);
+            }
         }, { passive:false });
-        rd.addEventListener("click", function(e){ handleRemove(e, false); });
+        rd.addEventListener("click", function(e){
+            if(Date.now() - lastTouch < 600) return; // touch já tratou
+            doRemoveAction(e.target);
+        });
     }
     const ad = $("addDialog");
     if(ad){
         let lastTouchA = 0;
-        function handleAdd(e, fromTouch){
-            const t = e.target;
-            if(fromTouch){ lastTouchA = Date.now(); }
-            else if(Date.now() - lastTouchA < 600){ return; }
+        function doAddAction(t){
             if(t.classList.contains("remove-cancel")) { closeAddDialog(); return; }
             if(t.classList.contains("remove-danger")) { confirmAddSite(); return; }
             if(t === ad) { closeAddDialog(); }
         }
         ad.addEventListener("touchend", function(e){
-            if(e.target.tagName === "BUTTON" || e.target === ad){ e.preventDefault(); handleAdd(e, true); }
+            const t = e.target;
+            if(t.tagName === "BUTTON"){
+                e.preventDefault();
+                lastTouchA = Date.now();
+                doAddAction(t);
+            }
         }, { passive:false });
-        ad.addEventListener("click", function(e){ handleAdd(e, false); });
+        ad.addEventListener("click", function(e){
+            if(Date.now() - lastTouchA < 600) return;
+            doAddAction(e.target);
+        });
     }
 }
 
