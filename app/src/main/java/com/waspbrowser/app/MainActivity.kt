@@ -1450,6 +1450,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == HiveManagerActivity.REQUEST_CODE && resultCode == RESULT_OK) {
+            val removeId = data?.getStringExtra(HiveManagerActivity.EXTRA_REMOVE_ID) ?: return
+            webAppView.evaluateJavascript("hiveRemoveById('$removeId'); renderHive();", null)
+        }
+    }
+
     fun openSettingsPanel() {
         webAppView.visibility = android.view.View.VISIBLE
         webAppView.evaluateJavascript("closeHive(); openSettings();", null)

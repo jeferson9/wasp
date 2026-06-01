@@ -129,6 +129,15 @@ class BeeBridge(
     }
 
     @JavascriptInterface
+    fun openHiveManager(sitesJson: String) {
+        (context as? MainActivity)?.runOnUiThread {
+            val intent = android.content.Intent(context, HiveManagerActivity::class.java)
+            intent.putExtra(HiveManagerActivity.EXTRA_SITES, sitesJson)
+            (context as? MainActivity)?.startActivityForResult(intent, HiveManagerActivity.REQUEST_CODE)
+        }
+    }
+
+    @JavascriptInterface
     fun openPanel() {
         (context as? MainActivity)?.runOnUiThread {
             context.openBeePanel()

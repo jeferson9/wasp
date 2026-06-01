@@ -935,24 +935,14 @@ function saveHive(list){
 
 
 
-var hiveEditing = false;
-
-function hiveToggleEdit(){
-    hiveEditing = !hiveEditing;
-    var btn = document.getElementById('hiveEditBtn');
-    if(btn) btn.textContent = hiveEditing ? 'FEITO' : 'EDITAR';
-    renderHive();
-}
-
-function hiveRemoveById(id){
-    var list = loadHive().filter(function(i){ return i.id !== id; });
-    saveHive(list);
-    renderHive();
-}
 
 /* =========================
    HIVE — RENDER
 ========================= */
+function hiveRemoveById(id){
+    var list = loadHive().filter(function(i){ return i.id !== id; });
+    saveHive(list);
+}
 function renderHive(){
     const grid = $("hiveGrid");
     if(!grid) return;
@@ -1058,36 +1048,6 @@ function renderHive(){
     alpha.forEach(item => grid.appendChild(cell(item)));
     PINNED.forEach(item => grid.appendChild(cell(item)));
 
-    // Modo edição: lista simples com botões de remover
-    var editList = document.getElementById('hiveEditList');
-    if(!editList){
-        editList = document.createElement('div');
-        editList.id = 'hiveEditList';
-        editList.style.cssText = 'width:100%;padding:8px 16px 80px;';
-        grid.parentNode.insertBefore(editList, grid.nextSibling);
-    }
-    editList.innerHTML = '';
-    if(hiveEditing){
-        editList.style.display = 'block';
-        var allItems = loadHive();
-        allItems.forEach(function(item){
-            var row = document.createElement('div');
-            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.07);';
-            row.innerHTML = '<span style="color:#e8e8e8;font-size:14px;">' + (item.name||'') + '</span>';
-            var btn = document.createElement('button');
-            btn.textContent = 'Remover';
-            btn.style.cssText = 'background:#ff3b30;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;';
-            (function(id){ btn.onclick = function(){ hiveRemoveById(id); }; })(item.id);
-            row.appendChild(btn);
-            editList.appendChild(row);
-        });
-        grid.style.opacity = '0.4';
-        grid.style.pointerEvents = 'none';
-    } else {
-        editList.style.display = 'none';
-        grid.style.opacity = '';
-        grid.style.pointerEvents = '';
-    }
 
     // Trata fallback de favicon que não carrega
     grid.querySelectorAll('img[data-fallback="1"]').forEach(img => {
