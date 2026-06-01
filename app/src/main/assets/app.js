@@ -938,11 +938,11 @@ function renderHive(){
     const grid = $("hiveGrid");
     if(!grid) return;
 
+    // ── 1. Carrega lista do usuário e garante ID único em cada item ───────────
     let list = loadHive();
     if(!Array.isArray(list)) list = [];
 
-    // Sites completos do Wasp
-    const WASP_DEFAULT_SITES = [
+    const SEED_SITES = [
         { name:"Google",        url:"https://google.com" },
         { name:"YouTube",       url:"https://youtube.com" },
         { name:"Instagram",     url:"https://instagram.com" },
@@ -959,279 +959,225 @@ function renderHive(){
         { name:"Wikipedia",     url:"https://wikipedia.org" },
     ];
 
-    // Seed inicial (primeira vez)
-    if(list.length === 0 && !localStorage.getItem("waspHiveInitialized")){
-        list = WASP_DEFAULT_SITES.map(s => ({ ...s, uses:0, lastUsed:0 }));
-        saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "6");
+    // Primeira vez (Hive nunca foi semeado): não deixar vazio
+    if(list.length === 0 && !localStorage.getItem("waspHiveSeeded")){
+        list = SEED_SITES.map(s => ({ ...s, uses:0, lastUsed:0 }));
+        localStorage.setItem("waspHiveSeeded", "1");
     }
 
-    // Migração: versões anteriores tinham poucos sites — adicionar os que faltam
-    if(localStorage.getItem("waspHiveInitialized") !== "6"){
-        const existingUrls = new Set(list.map(i => i.url));
-        WASP_DEFAULT_SITES.forEach(s => {
-            if(!existingUrls.has(s.url)){
-                list.push({ ...s, uses:0, lastUsed:0 });
-            }
-        });
-        saveHive(list);
-        localStorage.setItem("waspHiveInitialized", "6");
-    }
-
-    // Garantir campos + ID único estável (resolve a inconsistência de
-    // remover: itens eram identificados por URL, então URLs duplicadas/vazias
-    // removiam vários ou nenhum de forma imprevisível).
-    let needsSave = false;
+    let changed = false;
+    list = list.filter(i => i && i.url && i.url !== "__config__" && i.url !== "__panel__");
     list.forEach(item => {
-        if(typeof item.uses !== "number") item.uses = 0;
-        if(!item.lastUsed) item.lastUsed = 0;
+        if(typeof item.uses !== "number"){ item.uses = 0; changed = true; }
+        if(!item.lastUsed){ item.lastUsed = 0; changed = true; }
         if(!item.id){
-            item.id = "site_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
-            needsSave = true;
+            item.id = "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+            changed = true;
         }
     });
-    if(needsSave) saveHive(list);
+    if(changed || !localStorage.getItem("waspHiveSeeded")){
+        saveHive(list);
+        localStorage.setItem("waspHiveSeeded", "1");
+    }
 
-    // Remover config salvo acidentalmente
-    list = list.filter(i => i.url !== "__config__" && i.url !== "__panel__");
-
-    const runtimeList = [
-        ...list,
-        { name:"Painel",       url:"__panel__",  id:"__panel__",  uses:9999, lastUsed:Date.now() },
-        { name:"Config",       url:"__config__", id:"__config__", uses:9998, lastUsed:Date.now() }
+    // ── 2. Atalhos fixos do sistema (Painel e Config) ─────────────────────────
+    const PINNED = [
+        { id:"__panel__",  name:"Painel", pinned:true, icon:"file:///android_asset/img/ic_panel_hive.svg" },
+        { id:"__config__", name:"Config", pinned:true, icon:"file:///android_asset/img/ic_settings_hive.svg" },
     ];
 
-    const unpinnedItems = runtimeList.filter(i =>
-        i.url !== "__config__" && i.url !== "__panel__" && i.url !== "__bee__"
+    // ── 3. "Mais usados": top 4 por uso/recência (atalhos fixos não contam) ────
+    const now = Date.now();
+    const ranked = [...list].sort((a,b) => {
+        const sa = (a.uses||0)*2 - (now-(a.lastUsed||0))/86400000;
+        const sb = (b.uses||0)*2 - (now-(b.lastUsed||0))/86400000;
+        return sb - sa;
+    });
+    const top = ranked.filter(i => (i.uses||0) > 0).slice(0, 4);
+
+    // ── 4. Lista completa em ordem alfabética (todos os sites + fixos) ─────────
+    const alpha = [...list].sort((a,b) =>
+        a.name.localeCompare(b.name, "pt-BR", { sensitivity:"base" })
     );
 
-    const now = Date.now();
-    const intelligence = [...unpinnedItems].sort((a,b) => {
-        const recencyA = (now - (a.lastUsed || 0)) / 86400000;
-        const recencyB = (now - (b.lastUsed || 0)) / 86400000;
-        const scoreA = (a.uses || 0) * 2 - recencyA;
-        const scoreB = (b.uses || 0) * 2 - recencyB;
-        return scoreB - scoreA;
-    });
-
-    const topItems = intelligence.slice(0, 4);
-
-    const remaining = runtimeList
-        .filter(i => !topItems.includes(i))
-        .sort((a,b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity:"base" }));
-
-    const finalList = [...topItems, ...remaining];
-
+    // ── 5. Renderiza ──────────────────────────────────────────────────────────
     grid.innerHTML = "";
 
-    if(topItems.length > 0){
+    function iconHTML(item){
+        if(item.pinned){
+            return '<img class="hive-icon" src="' + item.icon + '">';
+        }
+        let domain = "";
+        try { domain = new URL(item.url).hostname; } catch { domain = item.url; }
+        return '<img class="hive-icon" data-fallback="1" ' +
+               'src="https://www.google.com/s2/favicons?domain=' + domain + '&sz=64">';
+    }
+
+    function cell(item, fromTop){
+        const div = document.createElement("div");
+        div.className = "hive-item" + (item.pinned ? " hive-config" : "");
+        div.setAttribute("data-id", item.id);
+        if(item.pinned) div.setAttribute("data-pinned", "1");
+        if(fromTop) div.setAttribute("data-fromtop", "1");
+        div.innerHTML = iconHTML(item) + '<span>' + item.name + '</span>';
+        return div;
+    }
+
+    // Seção "MAIS USADOS" (aparece no topo; os mesmos ícones continuam embaixo)
+    if(top.length > 0){
         const title = document.createElement("div");
         title.className = "hive-title";
         title.textContent = "MAIS USADOS";
         grid.appendChild(title);
+        top.forEach(item => grid.appendChild(cell(item, true)));
+
+        const divider = document.createElement("div");
+        divider.className = "hive-divider";
+        grid.appendChild(divider);
     }
 
-    finalList.forEach((item, index) => {
+    // Lista completa (todos os sites em ordem alfabética) + atalhos fixos no fim
+    alpha.forEach(item => grid.appendChild(cell(item, false)));
+    PINNED.forEach(item => grid.appendChild(cell(item, false)));
 
-        if(index === topItems.length && topItems.length > 0){
-            const divider = document.createElement("div");
-            divider.className = "hive-divider";
-            grid.appendChild(divider);
-        }
-
-        const div = document.createElement("div");
-
-// Config
-        if(item.url === "__config__"){
-            div.className = "hive-item hive-config";
-            div.innerHTML = '<img src="file:///android_asset/img/ic_settings_hive.svg" style="width:40px;height:40px;"><span>Config</span>';
-            div.onclick = function(){ closeHive(); if(window.Android && typeof Android.openSettings==="function") Android.openSettings(); else openSettings(); };
-            grid.appendChild(div);
-            return;
-        }
-
-        // Painel Bee
-        if(item.url === "__panel__"){
-            div.className = "hive-item hive-config";
-            div.innerHTML = '<img src="file:///android_asset/img/ic_panel_hive.svg" style="width:40px;height:40px;"><span>Painel</span>';
-            div.onclick = function(){ closeHive(); if(window.Android && typeof Android.openPanel==="function") Android.openPanel(); };
-            grid.appendChild(div);
-            return;
-        }
-
-        // Item normal
-        let domain = "";
-        try { domain = new URL(item.url).hostname; } catch { domain = item.url; }
-
-        div.className = "hive-item";
-        div.innerHTML =
-            '<img class="hive-icon" src="https://www.google.com/s2/favicons?domain=' +
-            domain + '&sz=64"><span>' + item.name + '</span>';
-
-        const img = div.querySelector("img");
+    // Trata fallback de favicon que não carrega
+    grid.querySelectorAll('img[data-fallback="1"]').forEach(img => {
         img.onload  = function(){ if(img.naturalWidth < 32) img.src = "file:///android_asset/img/globe.webp"; };
         img.onerror = function(){ img.src = "file:///android_asset/img/globe.webp"; };
-
-        // ── Tap (abrir) e long-press (remover) ────────────────────────────
-        // Identidade SEMPRE por item.id (URL podia ser duplicada/vazia, o que
-        // tornava remover/abrir imprevisível). Guarda anti-duplo evita que
-        // touchend e o click sintético do WebView disparem a ação duas vezes.
-        let timer = null;
-        let longPress = false;
-        let startX = 0, startY = 0;
-        let handled = false;
-
-        function openThisSite(){
-            if(handled) return;
-            // Não abrir site se um diálogo do Hive está visível (o long-press
-            // acabou de abrir o diálogo de remover — o click sintético do
-            // WebView não deve navegar nem fechar o Hive).
-            const rd = $("removeDialog"), ad = $("addDialog");
-            if((rd && rd.style.display === "flex") || (ad && ad.style.display === "flex")) return;
-            handled = true;
-            setTimeout(function(){ handled = false; }, 500);
-            let stored = loadHive();
-            const real = stored.find(i => i.id === item.id) || stored.find(i => i.url === item.url);
-            if(real){
-                real.uses = (real.uses || 0) + 1;
-                real.lastUsed = Date.now();
-                saveHive(stored);
-            }
-            closeHive();
-            openNativeUrl(item.url);
-            renderHive();
-        }
-
-        div.addEventListener("touchstart", (e) => {
-            longPress = false;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            if(timer){ clearTimeout(timer); }
-            timer = setTimeout(() => {
-                longPress = true;
-                openRemoveDialog(item);
-            }, 600);
-        }, { passive:true });
-
-        div.addEventListener("touchmove", (e) => {
-            const t = e.touches[0];
-            if(Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10){
-                if(timer){ clearTimeout(timer); timer = null; }
-            }
-        }, { passive:true });
-
-        div.addEventListener("touchend", (e) => {
-            if(timer){ clearTimeout(timer); timer = null; }
-            const endX = e.changedTouches[0].clientX;
-            const endY = e.changedTouches[0].clientY;
-            const moved = Math.abs(endX - startX) > 10 || Math.abs(endY - startY) > 10;
-            if(!longPress && !moved){
-                e.preventDefault();
-                openThisSite();
-            }
-        }, { passive:false });
-
-        // Fallback para WebViews que emitem 'click' em vez de touchend confiável
-        div.addEventListener("click", () => {
-            if(!longPress) openThisSite();
-        });
-
-        grid.appendChild(div);
     });
 }
 
 /* =========================
-   HIVE — HINTS E DEMO
-   (removidos — Hive abre só pelo botão da nav)
-========================= */
-function showHiveHint(){ /* desativado */ }
-function demoHiveFirstTime(){ /* desativado */ }
-
-/* =========================
-   SETTINGS
-========================= */
-function openSettings(){
-    const panel = $("settingsPanel");
-    if(panel) panel.classList.add("active");
-
-    // Carregar nome salvo no input
-    const input = $("userNameInput");
-    if(input){
-        const saved = localStorage.getItem(USER_NAME_KEY) || "";
-        input.value = saved;
-    }
-}
-
-function closeSettings(){
-    const panel = $("settingsPanel");
-    if(panel) panel.classList.remove("active");
-    restoreHiveHandleLater();
-    // Se foi aberto pelo browser nativo, notifica para voltar
-    if(window.Android && typeof Android.onSettingsClosed === "function"){
-        Android.onSettingsClosed();
-    }
-}
-
-/* =========================
-   MENU HAMBURGUER
-   (redireciona para settings — não há #menu no HTML)
-========================= */
-function toggleMenu(){
-    openSettings();
-}
-
-function closeMenu(){
-    closeSettings();
-}
-
-/* =========================
-   BEE DEMO
-========================= */
-function toggleBeeDemo(){
-  const el = $("beeStatus");
-  if(!el) return;
-  el.textContent = el.textContent === "ON" ? "OFF" : "ON";
-}
-
-/* =========================
-   DIALOGS — HIVE
+   HIVE — INTERAÇÃO (event delegation)
+   Um único conjunto de listeners no container da grade, ligado UMA vez.
+   Como nunca recriamos listeners, não há estado residual — tap e long-press
+   funcionam de forma idêntica na 1ª e na enésima vez.
 ========================= */
 let hiveRemoveTarget = null;
+let _hiveGridBound = false;
+let _hiveLongTimer = null;
+let _hiveLongFired = false;
+let _hiveStartX = 0, _hiveStartY = 0;
+let _hiveDownId = null;
 
-// Liga uma ação a um botão de forma idempotente: clona o botão para
-// descartar QUALQUER listener antigo e adiciona um único 'click' limpo.
-// Isso elimina o bug "só funciona na primeira vez", que vinha de estado
-// residual (guards que não resetavam) acumulado entre aberturas.
-function setHiveBtn(selector, parent, fn){
-    if(!parent) return;
-    const old = parent.querySelector(selector);
-    if(!old) return;
-    const btn = old.cloneNode(true);
-    old.parentNode.replaceChild(btn, old);
-    btn.addEventListener("click", function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        fn();
-    });
+function hiveFindItemById(id){
+    if(id === "__panel__" || id === "__config__"){
+        return { id:id, pinned:true, name: id === "__panel__" ? "Painel" : "Config" };
+    }
+    const list = loadHive();
+    return list.find(i => i.id === id) || null;
 }
+
+function hiveOpenItem(id){
+    if(id === "__config__"){
+        closeHive();
+        if(window.Android && typeof Android.openSettings === "function") Android.openSettings();
+        else openSettings();
+        return;
+    }
+    if(id === "__panel__"){
+        closeHive();
+        if(window.Android && typeof Android.openPanel === "function") Android.openPanel();
+        return;
+    }
+    const list = loadHive();
+    const item = list.find(i => i.id === id);
+    if(!item) return;
+    item.uses = (item.uses || 0) + 1;
+    item.lastUsed = Date.now();
+    saveHive(list);
+    closeHive();
+    openNativeUrl(item.url);
+}
+
+function bindHiveGrid(){
+    if(_hiveGridBound) return;
+    const grid = $("hiveGrid");
+    if(!grid) return;
+    _hiveGridBound = true;
+
+    function cellFrom(target){
+        return target && target.closest ? target.closest(".hive-item") : null;
+    }
+
+    grid.addEventListener("touchstart", function(e){
+        const cell = cellFrom(e.target);
+        if(!cell) return;
+        _hiveDownId = cell.getAttribute("data-id");
+        _hiveLongFired = false;
+        _hiveStartX = e.touches[0].clientX;
+        _hiveStartY = e.touches[0].clientY;
+        if(_hiveLongTimer) clearTimeout(_hiveLongTimer);
+        _hiveLongTimer = setTimeout(function(){
+            _hiveLongFired = true;
+            openRemoveDialog(_hiveDownId);
+        }, 550);
+    }, { passive:true });
+
+    grid.addEventListener("touchmove", function(e){
+        if(!_hiveDownId) return;
+        const dx = Math.abs(e.touches[0].clientX - _hiveStartX);
+        const dy = Math.abs(e.touches[0].clientY - _hiveStartY);
+        if(dx > 12 || dy > 12){
+            if(_hiveLongTimer){ clearTimeout(_hiveLongTimer); _hiveLongTimer = null; }
+            _hiveDownId = null; // virou scroll, cancela tap/long
+        }
+    }, { passive:true });
+
+    grid.addEventListener("touchend", function(e){
+        if(_hiveLongTimer){ clearTimeout(_hiveLongTimer); _hiveLongTimer = null; }
+        if(!_hiveDownId) return;
+        const id = _hiveDownId;
+        _hiveDownId = null;
+        if(_hiveLongFired){ _hiveLongFired = false; return; } // long-press já abriu remover
+        e.preventDefault();
+        hiveOpenItem(id);
+    }, { passive:false });
+
+    grid.addEventListener("touchcancel", function(){
+        if(_hiveLongTimer){ clearTimeout(_hiveLongTimer); _hiveLongTimer = null; }
+        _hiveDownId = null;
+    }, { passive:true });
+}
+
+/* =========================
+   HIVE — DIÁLOGOS (delegação global, ligada uma vez)
+========================= */
+let _hiveDialogsBound = false;
 
 function bindHiveDialogButtons(){
-    // mantido por compatibilidade com a chamada no DOMContentLoaded;
-    // o bind real acontece a cada abertura (openRemoveDialog/openAddDialog).
+    bindHiveGrid();
+    if(_hiveDialogsBound) return;
+    _hiveDialogsBound = true;
+
+    const rd = $("removeDialog");
+    if(rd){
+        rd.addEventListener("click", function(e){
+            if(e.target.classList.contains("remove-cancel")) { closeRemoveDialog(); return; }
+            if(e.target.classList.contains("remove-danger")) { confirmRemove(); return; }
+            if(e.target === rd) { closeRemoveDialog(); } // fundo escuro
+        });
+    }
+    const ad = $("addDialog");
+    if(ad){
+        ad.addEventListener("click", function(e){
+            if(e.target.classList.contains("remove-cancel")) { closeAddDialog(); return; }
+            if(e.target.classList.contains("remove-danger")) { confirmAddSite(); return; }
+            if(e.target === ad) { closeAddDialog(); }
+        });
+    }
 }
 
-function openRemoveDialog(item){
-    // Nunca permitir remover os atalhos fixos do sistema
-    if(item.url === "__config__" || item.url === "__panel__" ||
-       item.id === "__config__" || item.id === "__panel__") return;
+function openRemoveDialog(id){
+    // Painel e Config são acesso essencial — não podem ser removidos
+    if(id === "__panel__" || id === "__config__") return;
+    const item = hiveFindItemById(id);
+    if(!item) return;
     hiveRemoveTarget = item;
+    const txt = document.querySelector("#removeDialog .remove-text");
+    if(txt) txt.textContent = 'Remover "' + (item.name || "este site") + '" do Hive?';
     const dialog = $("removeDialog");
-    if(!dialog) return;
-    // Rebind limpo dos botões a cada abertura (sem estado residual)
-    setHiveBtn(".remove-cancel", dialog, closeRemoveDialog);
-    setHiveBtn(".remove-danger", dialog, confirmRemove);
-    // Mostra só no próximo frame, depois que o dedo do long-press saiu
-    setTimeout(function(){ dialog.style.display = "flex"; }, 80);
+    if(dialog) dialog.style.display = "flex";
 }
 
 function closeRemoveDialog(){
@@ -1243,14 +1189,11 @@ function closeRemoveDialog(){
 
 function openAddDialog(){
     const dialog = $("addDialog");
-    if(!dialog) return;
-    setHiveBtn(".remove-cancel", dialog, closeAddDialog);
-    setHiveBtn(".remove-danger", dialog, confirmAddSite);
     const nameInput = $("addName");
     const urlInput  = $("addUrl");
     if(nameInput) nameInput.value = "";
     if(urlInput)  urlInput.value  = "";
-    dialog.style.display = "flex";
+    if(dialog) dialog.style.display = "flex";
 }
 
 function closeAddDialog(){
@@ -1261,57 +1204,31 @@ function closeAddDialog(){
 function confirmAddSite(){
     const nameInput = $("addName");
     const urlInput  = $("addUrl");
-
     const name = nameInput ? nameInput.value.trim() : "";
     let url = urlInput ? urlInput.value.trim() : "";
-
-    if(!name || !url){ alert("Preencha nome e URL"); return; }
-
-    if(!url.startsWith("http://") && !url.startsWith("https://")){
-        url = "https://" + url;
-    }
+    if(!name || !url){ if(typeof toast==="function") toast("Preencha nome e URL"); else alert("Preencha nome e URL"); return; }
+    if(!url.startsWith("http://") && !url.startsWith("https://")) url = "https://" + url;
 
     let list = loadHive();
     if(!Array.isArray(list)) list = [];
-
     list.push({
-        id: "site_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8),
-        name, url, uses: 0, lastUsed: 0
+        id: "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+        name, url, uses:0, lastUsed:0
     });
     saveHive(list);
-    renderHive();
     closeAddDialog();
+    renderHive();
 }
 
 function confirmRemove(){
-    if(!hiveRemoveTarget) return;
-    // Proteção extra: nunca remover Painel/Config
-    if(hiveRemoveTarget.url === "__config__" || hiveRemoveTarget.url === "__panel__" ||
-       hiveRemoveTarget.id === "__config__" || hiveRemoveTarget.id === "__panel__"){
-        closeRemoveDialog();
-        return;
-    }
-
-    let stored = loadHive();
+    if(!hiveRemoveTarget){ closeRemoveDialog(); return; }
     const target = hiveRemoveTarget;
-    // Remove por ID único (preciso). Só cai para URL se o item for antigo e
-    // ainda não tiver ganho um id.
-    if(target.id){
-        stored = stored.filter(i => i.id !== target.id);
-    } else {
-        let removedOne = false;
-        stored = stored.filter(i => {
-            if(!removedOne && i.url === target.url){ removedOne = true; return false; }
-            return true;
-        });
-    }
-    saveHive(stored);
+    if(target.pinned){ closeRemoveDialog(); return; } // proteção extra
+    let list = loadHive();
+    list = list.filter(i => i.id !== target.id);
+    saveHive(list);
     closeRemoveDialog();
     renderHive();
-
-    const panel = $("hivePanel");
-    if(panel) panel.classList.add("active");
-    hideHiveHandle();
 }
 
 function addHiveSite(){
