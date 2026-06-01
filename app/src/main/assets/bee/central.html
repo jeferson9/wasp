@@ -614,7 +614,7 @@
     </div>
 
     <!-- ANÚNCIO -->
-    <div class="c-game-card card-ad" id="cardAd" onclick="doWatchAd()">
+    <div class="c-game-card card-ad" id="cardAd">
         <div class="cgc-emoji">📺</div>
         <div class="cgc-name">Ver Anúncio</div>
         <div class="cgc-reward">+30 WP</div>
@@ -984,6 +984,9 @@
        AD
     ══════════════════════════════════════════ */
     function doWatchAd() {
+      // Diagnóstico: usa o toast NATIVO (mais confiável que o toast da página)
+      try { if(window.AndroidBee && window.AndroidBee.toast) window.AndroidBee.toast("doWatchAd ok"); } catch(_){}
+
       const rem = remMs(K.adLast, CFG.adCooldown);
       if (rem > 0) { toast(`Anúncio disponível em ${fmtTime(rem)}`); return; }
 
@@ -1192,6 +1195,15 @@
       renderAll();
       // Atualiza cooldowns a cada segundo
       setInterval(() => renderAll(), 1000);
+
+      // Liga o anúncio por addEventListener (além do onclick inline) — em
+      // alguns WebViews o onclick inline no card não dispara de forma
+      // confiável. Liga tanto no card quanto no botão "Assistir".
+      const card = document.getElementById("cardAd");
+      const btn  = document.getElementById("adBtn");
+      function fireAd(e){ if(e){ e.preventDefault(); e.stopPropagation(); } doWatchAd(); }
+      if(card){ card.addEventListener("click", fireAd); card.onclick = null; }
+      if(btn){ btn.addEventListener("click", fireAd); }
     });
 </script>
 </body>
