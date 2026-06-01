@@ -931,6 +931,24 @@ function saveHive(list){
     localStorage.setItem(HIVE_KEY, JSON.stringify(list));
 }
 
+
+// ── Hive Edit Mode ──────────────────────────────────────────────────────────
+var hiveEditing = false;
+
+function hiveToggleEdit(){
+    hiveEditing = !hiveEditing;
+    var btn = document.getElementById('hiveEditBtn');
+    if(btn) btn.textContent = hiveEditing ? 'FEITO' : 'EDITAR';
+    renderHive();
+}
+
+function hiveRemoveById(id){
+    var list = loadHive();
+    list = list.filter(function(i){ return i.id !== id; });
+    saveHive(list);
+    renderHive();
+}
+
 /* =========================
    HIVE — RENDER
 ========================= */
@@ -1018,36 +1036,28 @@ function renderHive(){
         const div = document.createElement("div");
         div.className = "hive-item" + (item.pinned ? " hive-config" : "");
         div.dataset.id = item.id || "";
-        div.innerHTML = iconHTML(item) + '<span>' + item.name + '</span>';
 
-        let timer = null;
-        let longPress = false;
-        let startX = 0, startY = 0;
+        // Modo edição: mostra X de remover
+        if(hiveEditing && !item.pinned){
+            const xBtn = document.createElement("button");
+            xBtn.textContent = "✕";
+            xBtn.style.cssText = "position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#ff3b30;color:#fff;border:none;border-radius:50%;font-size:11px;font-weight:700;cursor:pointer;z-index:999;display:flex;align-items:center;justify-content:center;padding:0;";
+            xBtn.onclick = function(e){
+                e.stopPropagation();
+                hiveRemoveById(item.id);
+            };
+            div.style.position = "relative";
+            div.appendChild(xBtn);
+            div.style.animation = "hive-wiggle 0.4s ease infinite alternate";
+        }
 
-        div.addEventListener("touchstart", (e) => {
-            longPress = false;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            if(timer) clearTimeout(timer);
-            timer = setTimeout(() => {
-                longPress = true;
-                if(!item.pinned) hiveEnterDeleteMode();
-            }, 600);
-        });
-        div.addEventListener("touchmove", (e) => {
-            const mx = Math.abs(e.touches[0].clientX - startX);
-            const my = Math.abs(e.touches[0].clientY - startY);
-            if(mx > 8 || my > 8){ if(timer){ clearTimeout(timer); timer = null; } }
-        });
-        div.addEventListener("touchend", (e) => {
-            if(timer){ clearTimeout(timer); timer = null; }
-            const endX = e.changedTouches[0].clientX;
-            const endY = e.changedTouches[0].clientY;
-            const moved = Math.abs(endX - startX) > 10 || Math.abs(endY - startY) > 10;
-            if(!longPress && !moved){
+        div.innerHTML += iconHTML(item) + '<span>' + item.name + '</span>';
+
+        if(!hiveEditing){
+            div.addEventListener("click", function(){
                 hiveOpenItem(item.id);
-            }
-        });
+            });
+        }
 
         return div;
     }
@@ -1080,61 +1090,7 @@ function renderHive(){
    HIVE — INTERAÇÃO
    Listeners por item (criados em cell()), abordagem estável.
 ========================= */
-let hiveRemoveTarget = null;
-let hiveRemoveDiv = null;
-let hiveDeleteMode = false;
 
-function hiveEnterDeleteMode(){
-    if(hiveDeleteMode) return;
-    hiveDeleteMode = true;
-    // Mostra badge X em todos os items não fixos
-    const grid = $("hiveGrid");
-    if(!grid) return;
-    grid.querySelectorAll(".hive-item:not(.hive-config)").forEach(div => {
-        const badge = document.createElement("div");
-        badge.className = "hive-delete-badge";
-        badge.textContent = "✕";
-        const itemId = div.dataset.id;
-        badge.addEventListener("click", function(e){
-            e.stopPropagation();
-            e.preventDefault();
-            hiveRemoveById(itemId);
-        });
-        badge.style.pointerEvents = "auto";
-        div.appendChild(badge);
-        div.classList.add("hive-delete-mode");
-    });
-    // Botão Feito
-    let doneBtn = $("hiveDoneBtn");
-    if(!doneBtn){
-        doneBtn = document.createElement("button");
-        doneBtn.id = "hiveDoneBtn";
-        doneBtn.textContent = "Feito";
-        doneBtn.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#ffc107;color:#000;border:none;border-radius:20px;padding:10px 32px;font-weight:700;font-size:14px;z-index:999999;";
-        doneBtn.addEventListener("click", hiveExitDeleteMode);
-        document.body.appendChild(doneBtn);
-    }
-    doneBtn.style.display = "block";
-}
-
-function hiveExitDeleteMode(){
-    hiveDeleteMode = false;
-    const grid = $("hiveGrid");
-    if(grid){
-        grid.querySelectorAll(".hive-delete-badge").forEach(b => b.remove());
-        grid.querySelectorAll(".hive-delete-mode").forEach(d => d.classList.remove("hive-delete-mode"));
-    }
-    const btn = $("hiveDoneBtn");
-    if(btn) btn.style.display = "none";
-}
-
-function hiveRemoveById(id){
-    hiveExitDeleteMode();
-    let list = loadHive();
-    list = list.filter(i => i.id !== id);
-    saveHive(list);
-    renderHive();
-}
 
 function hiveFindItemById(id){
     if(id === "__panel__" || id === "__config__"){
