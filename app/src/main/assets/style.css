@@ -1441,11 +1441,12 @@ body[data-theme="light"] .settings-item {
 .remove-dialog {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.65);
+  background: rgba(0,0,0,.75);
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 99999;
+  z-index: 999999;
+  touch-action: none;
 }
 
 .remove-box {

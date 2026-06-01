@@ -1031,7 +1031,8 @@ function renderHive(){
             timer = setTimeout(() => {
                 longPress = true;
                 div.style.opacity = "0.6";
-                if(!item.pinned) openRemoveDialog(item.id); // pinned não remove
+                hiveRemoveDiv = div;
+                if(!item.pinned) openRemoveDialog(item.id);
             }, 600);
         });
 
@@ -1086,6 +1087,7 @@ function renderHive(){
    Listeners por item (criados em cell()), abordagem estável.
 ========================= */
 let hiveRemoveTarget = null;
+let hiveRemoveDiv = null;
 
 function hiveFindItemById(id){
     if(id === "__panel__" || id === "__config__"){
@@ -1154,6 +1156,7 @@ function closeRemoveDialog(){
         dialog.style.display = "none";
         dialog.style.pointerEvents = "";
     }
+    if(hiveRemoveDiv){ hiveRemoveDiv.style.opacity = ""; hiveRemoveDiv = null; }
     hiveRemoveTarget = null;
 }
 
