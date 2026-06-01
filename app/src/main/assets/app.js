@@ -1122,15 +1122,11 @@ function hiveExitDeleteMode(){
 }
 
 function hiveRemoveById(id){
+    hiveExitDeleteMode();
     let list = loadHive();
     list = list.filter(i => i.id !== id);
     saveHive(list);
     renderHive();
-    // Reativa delete mode nos novos elementos
-    if(hiveDeleteMode){
-        hiveDeleteMode = false;
-        hiveEnterDeleteMode();
-    }
 }
 
 function hiveFindItemById(id){
