@@ -1030,32 +1030,22 @@ function renderHive(){
             if(timer) clearTimeout(timer);
             timer = setTimeout(() => {
                 longPress = true;
-                if(!item.pinned){
-                    if(window.confirm('Remover "' + item.name + '" do Hive?')){
-                        let list = loadHive();
-                        list = list.filter(i => i.id !== item.id);
-                        saveHive(list);
-                        renderHive();
-                    }
-                }
+                if(!item.pinned) hiveEnterDeleteMode();
             }, 600);
         });
-
         div.addEventListener("touchmove", (e) => {
             const mx = Math.abs(e.touches[0].clientX - startX);
             const my = Math.abs(e.touches[0].clientY - startY);
-            if(mx > 8 || my > 8){
-                if(timer){ clearTimeout(timer); timer = null; }
-            }
+            if(mx > 8 || my > 8){ if(timer){ clearTimeout(timer); timer = null; } }
         });
-
         div.addEventListener("touchend", (e) => {
             if(timer){ clearTimeout(timer); timer = null; }
             const endX = e.changedTouches[0].clientX;
             const endY = e.changedTouches[0].clientY;
             const moved = Math.abs(endX - startX) > 10 || Math.abs(endY - startY) > 10;
             if(!longPress && !moved){
-                hiveOpenItem(item.id);
+                if(hiveDeleteMode){ hiveRemoveById(item.id); }
+                else { hiveOpenItem(item.id); }
             }
         });
 
@@ -1092,6 +1082,56 @@ function renderHive(){
 ========================= */
 let hiveRemoveTarget = null;
 let hiveRemoveDiv = null;
+let hiveDeleteMode = false;
+
+function hiveEnterDeleteMode(){
+    if(hiveDeleteMode) return;
+    hiveDeleteMode = true;
+    // Mostra badge X em todos os items não fixos
+    const grid = $("hiveGrid");
+    if(!grid) return;
+    grid.querySelectorAll(".hive-item:not(.hive-config)").forEach(div => {
+        const badge = document.createElement("div");
+        badge.className = "hive-delete-badge";
+        badge.textContent = "✕";
+        div.appendChild(badge);
+        div.classList.add("hive-delete-mode");
+    });
+    // Botão Feito
+    let doneBtn = $("hiveDoneBtn");
+    if(!doneBtn){
+        doneBtn = document.createElement("button");
+        doneBtn.id = "hiveDoneBtn";
+        doneBtn.textContent = "Feito";
+        doneBtn.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#ffc107;color:#000;border:none;border-radius:20px;padding:10px 32px;font-weight:700;font-size:14px;z-index:999999;";
+        doneBtn.addEventListener("click", hiveExitDeleteMode);
+        document.body.appendChild(doneBtn);
+    }
+    doneBtn.style.display = "block";
+}
+
+function hiveExitDeleteMode(){
+    hiveDeleteMode = false;
+    const grid = $("hiveGrid");
+    if(grid){
+        grid.querySelectorAll(".hive-delete-badge").forEach(b => b.remove());
+        grid.querySelectorAll(".hive-delete-mode").forEach(d => d.classList.remove("hive-delete-mode"));
+    }
+    const btn = $("hiveDoneBtn");
+    if(btn) btn.style.display = "none";
+}
+
+function hiveRemoveById(id){
+    let list = loadHive();
+    list = list.filter(i => i.id !== id);
+    saveHive(list);
+    renderHive();
+    // Reativa delete mode nos novos elementos
+    if(hiveDeleteMode){
+        hiveDeleteMode = false;
+        hiveEnterDeleteMode();
+    }
+}
 
 function hiveFindItemById(id){
     if(id === "__panel__" || id === "__config__"){

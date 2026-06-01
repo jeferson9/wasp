@@ -2869,3 +2869,24 @@ body[data-theme="light"]::after {
 }
 .wasp-toggle input:checked + .wasp-toggle-slider { background: #ffc107; }
 .wasp-toggle input:checked + .wasp-toggle-slider:before { transform: translateX(20px); }
+
+/* ── Hive Delete Mode ────────────────────────────────────────────── */
+.hive-item { position: relative; }
+.hive-delete-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 18px; height: 18px;
+  background: #ff3b30;
+  color: white;
+  border-radius: 50%;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; pointer-events: none;
+}
+.hive-delete-mode {
+  animation: hive-wiggle 0.4s ease infinite alternate;
+}
+@keyframes hive-wiggle {
+  from { transform: rotate(-2deg); }
+  to   { transform: rotate(2deg); }
+}
