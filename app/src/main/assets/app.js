@@ -1197,47 +1197,27 @@ function toggleBeeDemo(){
    DIALOGS — HIVE
 ========================= */
 let hiveRemoveTarget = null;
-// Timestamp de quando o diálogo abriu. Toques nos botões dentro de uma
-// curta janela após a abertura são ignorados — assim o gesto de long-press
-// que abriu o diálogo (dedo ainda na tela) não "vaza" sobre os botões,
-// que era a causa de Cancelar/Remover não responderem em certos sites.
-let hiveDialogOpenedAt = 0;
-const HIVE_DIALOG_GUARD_MS = 400;
+
+// Liga uma ação a um botão de forma idempotente: clona o botão para
+// descartar QUALQUER listener antigo e adiciona um único 'click' limpo.
+// Isso elimina o bug "só funciona na primeira vez", que vinha de estado
+// residual (guards que não resetavam) acumulado entre aberturas.
+function setHiveBtn(selector, parent, fn){
+    if(!parent) return;
+    const old = parent.querySelector(selector);
+    if(!old) return;
+    const btn = old.cloneNode(true);
+    old.parentNode.replaceChild(btn, old);
+    btn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        fn();
+    });
+}
 
 function bindHiveDialogButtons(){
-    function bindBtn(el, fn){
-        if(!el) return;
-        let fired = false;
-        function trigger(e){
-            // Ignora se ainda dentro da janela de guarda pós-abertura
-            if(Date.now() - hiveDialogOpenedAt < HIVE_DIALOG_GUARD_MS) return;
-            if(fired) return;
-            fired = true;
-            if(e){ e.preventDefault(); e.stopPropagation(); }
-            fn();
-            setTimeout(function(){ fired = false; }, 350);
-        }
-        // pointerup cobre toque e mouse de forma unificada em WebView moderno;
-        // click é o fallback universal.
-        el.addEventListener("pointerup", trigger, { passive:false });
-        el.addEventListener("click", function(e){
-            if(Date.now() - hiveDialogOpenedAt < HIVE_DIALOG_GUARD_MS){ e.stopPropagation(); return; }
-            trigger(e);
-        });
-    }
-    const rd = $("removeDialog");
-    if(rd){
-        bindBtn(rd.querySelector(".remove-cancel"), closeRemoveDialog);
-        bindBtn(rd.querySelector(".remove-danger"),  confirmRemove);
-        rd.addEventListener("click", function(e){
-            if(e.target === rd && Date.now() - hiveDialogOpenedAt >= HIVE_DIALOG_GUARD_MS) closeRemoveDialog();
-        });
-    }
-    const ad = $("addDialog");
-    if(ad){
-        bindBtn(ad.querySelector(".remove-cancel"), closeAddDialog);
-        bindBtn(ad.querySelector(".remove-danger"),  confirmAddSite);
-    }
+    // mantido por compatibilidade com a chamada no DOMContentLoaded;
+    // o bind real acontece a cada abertura (openRemoveDialog/openAddDialog).
 }
 
 function openRemoveDialog(item){
@@ -1246,10 +1226,12 @@ function openRemoveDialog(item){
        item.id === "__config__" || item.id === "__panel__") return;
     hiveRemoveTarget = item;
     const dialog = $("removeDialog");
-    if(dialog){
-        dialog.style.display = "flex";
-        hiveDialogOpenedAt = Date.now(); // inicia janela de guarda
-    }
+    if(!dialog) return;
+    // Rebind limpo dos botões a cada abertura (sem estado residual)
+    setHiveBtn(".remove-cancel", dialog, closeRemoveDialog);
+    setHiveBtn(".remove-danger", dialog, confirmRemove);
+    // Mostra só no próximo frame, depois que o dedo do long-press saiu
+    setTimeout(function(){ dialog.style.display = "flex"; }, 80);
 }
 
 function closeRemoveDialog(){
@@ -1261,14 +1243,14 @@ function closeRemoveDialog(){
 
 function openAddDialog(){
     const dialog = $("addDialog");
-    if(dialog){
-        dialog.style.display = "flex";
-        hiveDialogOpenedAt = Date.now();
-    }
+    if(!dialog) return;
+    setHiveBtn(".remove-cancel", dialog, closeAddDialog);
+    setHiveBtn(".remove-danger", dialog, confirmAddSite);
     const nameInput = $("addName");
     const urlInput  = $("addUrl");
     if(nameInput) nameInput.value = "";
     if(urlInput)  urlInput.value  = "";
+    dialog.style.display = "flex";
 }
 
 function closeAddDialog(){
