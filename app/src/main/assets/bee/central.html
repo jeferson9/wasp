@@ -987,14 +987,15 @@
       const rem = remMs(K.adLast, CFG.adCooldown);
       if (rem > 0) { toast(`Anúncio disponível em ${fmtTime(rem)}`); return; }
 
-      if (window.AndroidBee && typeof window.AndroidBee.openWpAd === "function") {
-        if(el("adBtn")) el("adBtn").disabled     = true;
-        if(el("adBtn")) el("adBtn").textContent  = "Abrindo...";
+      toast("Abrindo anúncio...");
+      if (window.AndroidBee) {
         window.AndroidBee.openWpAd();
         return;
       }
-
-      // Fora do app Android — avisa
+      if (window.Android) {
+        window.Android.openWpAd();
+        return;
+      }
       toast("Anúncios disponíveis apenas no app.");
     }
 
