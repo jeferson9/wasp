@@ -988,15 +988,19 @@
       if (rem > 0) { toast(`Anúncio disponível em ${fmtTime(rem)}`); return; }
 
       toast("Abrindo anúncio...");
-      if (window.AndroidBee) {
-        window.AndroidBee.openWpAd();
-        return;
+      try {
+        if (window.AndroidBee && window.AndroidBee.openWpAd) {
+          window.AndroidBee.openWpAd();
+          return;
+        }
+        if (window.Android && window.Android.openWpAd) {
+          window.Android.openWpAd();
+          return;
+        }
+        toast("Bridge não encontrado: " + JSON.stringify(Object.keys(window.AndroidBee || {})));
+      } catch(e) {
+        toast("Erro: " + e.message);
       }
-      if (window.Android) {
-        window.Android.openWpAd();
-        return;
-      }
-      toast("Anúncios disponíveis apenas no app.");
     }
 
     // ── Callbacks chamados pelo Android via onActivityResult ────────────
