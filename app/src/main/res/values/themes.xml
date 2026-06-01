@@ -60,4 +60,13 @@
         <item name="android:windowFullscreen">false</item>
     </style>
 
+    <!-- Anúncio (Start.io rewarded) — translúcido para o vídeo do SDK
+         renderizar por cima sem uma tela preta opaca atrás. -->
+    <style name="Theme.WaspBrowser.Ad" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
 </resources>

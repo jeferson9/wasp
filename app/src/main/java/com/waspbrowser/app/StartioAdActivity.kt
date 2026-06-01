@@ -50,22 +50,25 @@ class StartioAdActivity : Activity() {
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(p: Ad) {
                 diag("carregado, exibindo")
-                ad.showAd(object : AdDisplayListener {
-                    override fun adHidden(p0: Ad) {
-                        Log.d(TAG, "adHidden rewarded=$rewarded")
-                        if (rewarded) {
-                            // Crédito robusto: grava cooldown nativo + credita WP via JS
-                            CentralActivity.grantAdReward(applicationContext)
+                // Exibe após a Activity estar totalmente visível, evitando que
+                // o vídeo renderize antes da janela e fique preto.
+                handler.postDelayed({
+                    ad.showAd(object : AdDisplayListener {
+                        override fun adHidden(p0: Ad) {
+                            Log.d(TAG, "adHidden rewarded=$rewarded")
+                            if (rewarded) {
+                                CentralActivity.grantAdReward(applicationContext)
+                            }
+                            handler.postDelayed({ finish() }, 200)
                         }
-                        handler.postDelayed({ finish() }, 200)
-                    }
-                    override fun adDisplayed(p0: Ad) {}
-                    override fun adClicked(p0: Ad) {}
-                    override fun adNotDisplayed(p0: Ad) {
-                        diag("não exibido")
-                        handler.post { finish() }
-                    }
-                })
+                        override fun adDisplayed(p0: Ad) {}
+                        override fun adClicked(p0: Ad) {}
+                        override fun adNotDisplayed(p0: Ad) {
+                            diag("não exibido")
+                            handler.post { finish() }
+                        }
+                    })
+                }, 250)
             }
             override fun onFailedToReceiveAd(p: Ad?) {
                 diag("sem anúncio disponível")
