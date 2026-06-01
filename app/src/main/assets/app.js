@@ -1175,20 +1175,36 @@ function bindHiveDialogButtons(){
 
     const rd = $("removeDialog");
     if(rd){
-        rd.addEventListener("pointerdown", function(e){
-            hiveLog("pointerdown btn=" + (e.target.className||"?"));
-            if(e.target.classList.contains("remove-cancel")) { e.preventDefault(); closeRemoveDialog(); return; }
-            if(e.target.classList.contains("remove-danger")) { e.preventDefault(); confirmRemove(); return; }
-            if(e.target === rd) { e.preventDefault(); closeRemoveDialog(); } // fundo escuro
-        });
+        let lastTouch = 0;
+        function handleRemove(e, fromTouch){
+            const t = e.target;
+            if(fromTouch){ lastTouch = Date.now(); }
+            else if(Date.now() - lastTouch < 600){ return; } // touch já tratou
+            hiveLog((fromTouch?"touch":"click") + " btn=" + (t.className||"?"));
+            if(t.classList.contains("remove-cancel")) { closeRemoveDialog(); return; }
+            if(t.classList.contains("remove-danger")) { confirmRemove(); return; }
+            if(t === rd) { closeRemoveDialog(); }
+        }
+        rd.addEventListener("touchend", function(e){
+            if(e.target.tagName === "BUTTON" || e.target === rd){ e.preventDefault(); handleRemove(e, true); }
+        }, { passive:false });
+        rd.addEventListener("click", function(e){ handleRemove(e, false); });
     }
     const ad = $("addDialog");
     if(ad){
-        ad.addEventListener("pointerdown", function(e){
-            if(e.target.classList.contains("remove-cancel")) { e.preventDefault(); closeAddDialog(); return; }
-            if(e.target.classList.contains("remove-danger")) { e.preventDefault(); confirmAddSite(); return; }
-            if(e.target === ad) { e.preventDefault(); closeAddDialog(); }
-        });
+        let lastTouchA = 0;
+        function handleAdd(e, fromTouch){
+            const t = e.target;
+            if(fromTouch){ lastTouchA = Date.now(); }
+            else if(Date.now() - lastTouchA < 600){ return; }
+            if(t.classList.contains("remove-cancel")) { closeAddDialog(); return; }
+            if(t.classList.contains("remove-danger")) { confirmAddSite(); return; }
+            if(t === ad) { closeAddDialog(); }
+        }
+        ad.addEventListener("touchend", function(e){
+            if(e.target.tagName === "BUTTON" || e.target === ad){ e.preventDefault(); handleAdd(e, true); }
+        }, { passive:false });
+        ad.addEventListener("click", function(e){ handleAdd(e, false); });
     }
 }
 
