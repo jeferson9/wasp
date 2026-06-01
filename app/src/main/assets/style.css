@@ -2881,7 +2881,7 @@ body[data-theme="light"]::after {
   border-radius: 50%;
   font-size: 10px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
-  z-index: 10; pointer-events: none;
+  z-index: 10; pointer-events: auto;
 }
 .hive-delete-mode {
   animation: hive-wiggle 0.4s ease infinite alternate;

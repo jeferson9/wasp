@@ -1017,6 +1017,7 @@ function renderHive(){
     function cell(item){
         const div = document.createElement("div");
         div.className = "hive-item" + (item.pinned ? " hive-config" : "");
+        div.dataset.id = item.id || "";
         div.innerHTML = iconHTML(item) + '<span>' + item.name + '</span>';
 
         let timer = null;
@@ -1044,8 +1045,7 @@ function renderHive(){
             const endY = e.changedTouches[0].clientY;
             const moved = Math.abs(endX - startX) > 10 || Math.abs(endY - startY) > 10;
             if(!longPress && !moved){
-                if(hiveDeleteMode){ hiveRemoveById(item.id); }
-                else { hiveOpenItem(item.id); }
+                hiveOpenItem(item.id);
             }
         });
 
@@ -1094,6 +1094,13 @@ function hiveEnterDeleteMode(){
         const badge = document.createElement("div");
         badge.className = "hive-delete-badge";
         badge.textContent = "✕";
+        const itemId = div.dataset.id;
+        badge.addEventListener("click", function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            hiveRemoveById(itemId);
+        });
+        badge.style.pointerEvents = "auto";
         div.appendChild(badge);
         div.classList.add("hive-delete-mode");
     });
