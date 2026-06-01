@@ -27,6 +27,12 @@ class StartioAdActivity : Activity() {
         super.onCreate(savedInstanceState)
         val mode = intent.getStringExtra(EXTRA_MODE) ?: "wp"
 
+        fun diag(m: String) {
+            Log.d(TAG, m)
+            runCatching { android.widget.Toast.makeText(this, "Ad: $m", android.widget.Toast.LENGTH_SHORT).show() }
+        }
+
+        diag("init SDK")
         StartAppSDK.init(this, APP_ID, false)
         StartAppSDK.setTestAdsEnabled(true)
 
@@ -37,9 +43,10 @@ class StartioAdActivity : Activity() {
             Log.d(TAG, "✅ Video completado")
         })
 
+        diag("carregando video...")
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(p: Ad) {
-                Log.d(TAG, "Ad carregado")
+                diag("carregado, exibindo")
                 ad.showAd(object : AdDisplayListener {
                     override fun adHidden(p0: Ad) {
                         Log.d(TAG, "adHidden rewarded=$rewarded")
@@ -47,19 +54,19 @@ class StartioAdActivity : Activity() {
                             "if(window.onWpAdRewarded) window.onWpAdRewarded()"
                         else
                             "if(window.onWpAdClosed) window.onWpAdClosed()"
-                        handler.postDelayed({ BeeActivity.runJs(js); finish() }, 300)
+                        handler.postDelayed({ CentralActivity.runJs(js); finish() }, 300)
                     }
                     override fun adDisplayed(p0: Ad) {}
                     override fun adClicked(p0: Ad) {}
                     override fun adNotDisplayed(p0: Ad) {
-                        Log.e(TAG, "adNotDisplayed: ${p0.errorMessage}")
-                        handler.post { BeeActivity.runJs("if(window.onWpAdClosed) window.onWpAdClosed()"); finish() }
+                        diag("adNotDisplayed")
+                        handler.post { CentralActivity.runJs("if(window.onWpAdClosed) window.onWpAdClosed()"); finish() }
                     }
                 })
             }
             override fun onFailedToReceiveAd(p: Ad?) {
-                Log.e(TAG, "Falhou: ${p?.errorMessage}")
-                handler.post { BeeActivity.runJs("if(window.onWpAdClosed) window.onWpAdClosed()"); finish() }
+                diag("FALHOU ao carregar")
+                handler.post { CentralActivity.runJs("if(window.onWpAdClosed) window.onWpAdClosed()"); finish() }
             }
         })
     }

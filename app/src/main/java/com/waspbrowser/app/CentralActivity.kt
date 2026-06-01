@@ -16,7 +16,17 @@ import androidx.core.view.WindowCompat
 
 class CentralActivity : AppCompatActivity() {
 
-    companion object { private const val TAG = "CentralActivity" }
+    companion object {
+        private const val TAG = "CentralActivity"
+        // Referência à WebView ativa da Central, para callbacks de anúncio
+        // (a StartioAdActivity precisa devolver o reward para o central.html,
+        // que roda AQUI — não na BeeActivity).
+        var activeWebView: java.lang.ref.WeakReference<WebView>? = null
+        fun runJs(js: String) {
+            val wv = activeWebView?.get() ?: return
+            wv.post { runCatching { wv.evaluateJavascript(js, null) } }
+        }
+    }
 
     private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
@@ -55,7 +65,7 @@ class CentralActivity : AppCompatActivity() {
         webView.addJavascriptInterface(bridge, "AndroidBee")
         webView.addJavascriptInterface(bridge, "Android")
         webView.loadUrl("file:///android_asset/bee/central.html")
-
+        activeWebView = java.lang.ref.WeakReference(webView)
     }
 
     override fun onResume()  { super.onResume();  webView.onResume();  webView.resumeTimers() }
