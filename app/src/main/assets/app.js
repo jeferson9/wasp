@@ -932,7 +932,9 @@ function saveHive(list){
 }
 
 
-// ── Hive Edit Mode ──────────────────────────────────────────────────────────
+
+
+
 var hiveEditing = false;
 
 function hiveToggleEdit(){
@@ -943,8 +945,7 @@ function hiveToggleEdit(){
 }
 
 function hiveRemoveById(id){
-    var list = loadHive();
-    list = list.filter(function(i){ return i.id !== id; });
+    var list = loadHive().filter(function(i){ return i.id !== id; });
     saveHive(list);
     renderHive();
 }
@@ -1033,34 +1034,12 @@ function renderHive(){
     }
 
     function cell(item){
-        const div = document.createElement("div");
-        div.className = "hive-item" + (item.pinned ? " hive-config" : "");
-        div.dataset.id = item.id || "";
-
-        // Modo edição: mostra X de remover
-        if(hiveEditing && !item.pinned){
-            const xBtn = document.createElement("button");
-            xBtn.textContent = "✕";
-            xBtn.style.cssText = "position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#ff3b30;color:#fff;border:none;border-radius:50%;font-size:11px;font-weight:700;cursor:pointer;z-index:999;display:flex;align-items:center;justify-content:center;padding:0;";
-            xBtn.onclick = function(e){
-                e.stopPropagation();
-                hiveRemoveById(item.id);
-            };
-            div.style.position = "relative";
-            div.appendChild(xBtn);
-            div.style.animation = "hive-wiggle 0.4s ease infinite alternate";
-        }
-
-        div.innerHTML += iconHTML(item) + '<span>' + item.name + '</span>';
-
-        if(!hiveEditing){
-            div.addEventListener("click", function(){
-                hiveOpenItem(item.id);
-            });
-        }
-
-        return div;
-    }
+    const div = document.createElement('div');
+    div.className = 'hive-item' + (item.pinned ? ' hive-config' : '');
+    div.innerHTML = iconHTML(item) + '<span>' + item.name + '</span>';
+    div.onclick = function(){ hiveOpenItem(item.id); };
+    return div;
+}
 
     // Seção "MAIS USADOS" (aparece no topo; os mesmos ícones continuam embaixo)
     if(top.length > 0){
@@ -1078,6 +1057,37 @@ function renderHive(){
     // Lista completa (todos os sites em ordem alfabética) + atalhos fixos no fim
     alpha.forEach(item => grid.appendChild(cell(item)));
     PINNED.forEach(item => grid.appendChild(cell(item)));
+
+    // Modo edição: lista simples com botões de remover
+    var editList = document.getElementById('hiveEditList');
+    if(!editList){
+        editList = document.createElement('div');
+        editList.id = 'hiveEditList';
+        editList.style.cssText = 'width:100%;padding:8px 16px 80px;';
+        grid.parentNode.insertBefore(editList, grid.nextSibling);
+    }
+    editList.innerHTML = '';
+    if(hiveEditing){
+        editList.style.display = 'block';
+        var allItems = loadHive();
+        allItems.forEach(function(item){
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.07);';
+            row.innerHTML = '<span style="color:#e8e8e8;font-size:14px;">' + (item.name||'') + '</span>';
+            var btn = document.createElement('button');
+            btn.textContent = 'Remover';
+            btn.style.cssText = 'background:#ff3b30;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;';
+            (function(id){ btn.onclick = function(){ hiveRemoveById(id); }; })(item.id);
+            row.appendChild(btn);
+            editList.appendChild(row);
+        });
+        grid.style.opacity = '0.4';
+        grid.style.pointerEvents = 'none';
+    } else {
+        editList.style.display = 'none';
+        grid.style.opacity = '';
+        grid.style.pointerEvents = '';
+    }
 
     // Trata fallback de favicon que não carrega
     grid.querySelectorAll('img[data-fallback="1"]').forEach(img => {
