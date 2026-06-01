@@ -1152,12 +1152,9 @@ function closeRemoveDialog(){
     const dialog = $("removeDialog");
     if(dialog){
         dialog.style.display = "none";
-        dialog.style.pointerEvents = "none";   // garante que não capture toques
-        void dialog.offsetHeight;               // força reflow imediato
-        dialog.style.pointerEvents = "";        // restaura para a próxima abertura
+        dialog.style.pointerEvents = "";
     }
     hiveRemoveTarget = null;
-    restoreHiveHandleLater();
 }
 
 function openAddDialog(){
