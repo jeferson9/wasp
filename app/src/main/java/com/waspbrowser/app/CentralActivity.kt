@@ -78,10 +78,12 @@ class CentralActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun openWpAd() {
+            android.util.Log.d(TAG, "openWpAd chamado!")
             handler.post {
-                startActivity(android.content.Intent(this@CentralActivity, StartioAdActivity::class.java).apply {
-                    putExtra(StartioAdActivity.EXTRA_MODE, "wp")
-                })
+                val i = android.content.Intent(this@CentralActivity, StartioAdActivity::class.java)
+                i.putExtra(StartioAdActivity.EXTRA_MODE, "wp")
+                i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(i)
             }
         }
 
