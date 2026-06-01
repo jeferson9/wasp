@@ -36,7 +36,7 @@ class StartioAdActivity : Activity() {
         // SDK já inicializado no SplashActivity; init aqui é defensivo/idempotente.
         runCatching {
             StartAppSDK.init(this, APP_ID, false)
-            StartAppSDK.setTestAdsEnabled(true)
+            StartAppSDK.setTestAdsEnabled(false)
         }
 
         val ad = StartAppAd(this)

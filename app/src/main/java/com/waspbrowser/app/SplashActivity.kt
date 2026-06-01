@@ -47,7 +47,7 @@ class SplashActivity : AppCompatActivity() {
             com.startapp.sdk.adsbase.StartAppSDK.init(
                 applicationContext, "204731691", false
             )
-            com.startapp.sdk.adsbase.StartAppSDK.setTestAdsEnabled(true)
+            com.startapp.sdk.adsbase.StartAppSDK.setTestAdsEnabled(false)
         }
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
