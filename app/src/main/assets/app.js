@@ -978,19 +978,27 @@ function renderHive(){
         localStorage.setItem("waspHiveInitialized", "6");
     }
 
-    // Garantir campos
+    // Garantir campos + ID único estável (resolve a inconsistência de
+    // remover: itens eram identificados por URL, então URLs duplicadas/vazias
+    // removiam vários ou nenhum de forma imprevisível).
+    let needsSave = false;
     list.forEach(item => {
         if(typeof item.uses !== "number") item.uses = 0;
         if(!item.lastUsed) item.lastUsed = 0;
+        if(!item.id){
+            item.id = "site_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+            needsSave = true;
+        }
     });
+    if(needsSave) saveHive(list);
 
     // Remover config salvo acidentalmente
     list = list.filter(i => i.url !== "__config__" && i.url !== "__panel__");
 
     const runtimeList = [
         ...list,
-        { name:"Painel",       url:"__panel__",  uses:9999, lastUsed:Date.now() },
-        { name:"Config",       url:"__config__", uses:9998, lastUsed:Date.now() }
+        { name:"Painel",       url:"__panel__",  id:"__panel__",  uses:9999, lastUsed:Date.now() },
+        { name:"Config",       url:"__config__", id:"__config__", uses:9998, lastUsed:Date.now() }
     ];
 
     const unpinnedItems = runtimeList.filter(i =>
@@ -1064,44 +1072,63 @@ function renderHive(){
         img.onload  = function(){ if(img.naturalWidth < 32) img.src = "file:///android_asset/img/globe.webp"; };
         img.onerror = function(){ img.src = "file:///android_asset/img/globe.webp"; };
 
-        // Long press + tap
+        // ── Tap (abrir) e long-press (remover) ────────────────────────────
+        // Identidade SEMPRE por item.id (URL podia ser duplicada/vazia, o que
+        // tornava remover/abrir imprevisível). Guarda anti-duplo evita que
+        // touchend e o click sintético do WebView disparem a ação duas vezes.
         let timer = null;
         let longPress = false;
         let startX = 0, startY = 0;
+        let handled = false;
+
+        function openThisSite(){
+            if(handled) return;
+            handled = true;
+            setTimeout(function(){ handled = false; }, 500);
+            let stored = loadHive();
+            const real = stored.find(i => i.id === item.id) || stored.find(i => i.url === item.url);
+            if(real){
+                real.uses = (real.uses || 0) + 1;
+                real.lastUsed = Date.now();
+                saveHive(stored);
+            }
+            closeHive();
+            openNativeUrl(item.url);
+            renderHive();
+        }
 
         div.addEventListener("touchstart", (e) => {
             longPress = false;
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
+            if(timer){ clearTimeout(timer); }
             timer = setTimeout(() => {
                 longPress = true;
                 openRemoveDialog(item);
-            }, 800);
-        });
+            }, 600);
+        }, { passive:true });
+
+        div.addEventListener("touchmove", (e) => {
+            const t = e.touches[0];
+            if(Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10){
+                if(timer){ clearTimeout(timer); timer = null; }
+            }
+        }, { passive:true });
 
         div.addEventListener("touchend", (e) => {
             if(timer){ clearTimeout(timer); timer = null; }
-
             const endX = e.changedTouches[0].clientX;
             const endY = e.changedTouches[0].clientY;
             const moved = Math.abs(endX - startX) > 10 || Math.abs(endY - startY) > 10;
-
             if(!longPress && !moved){
-                let stored = loadHive();
-                const real = stored.find(i => i.url === item.url);
-                if(real){
-                    real.uses++;
-                    real.lastUsed = Date.now();
-                    saveHive(stored);
-                }
-                closeHive();
-                openNativeUrl(item.url);
-                renderHive();
+                e.preventDefault();
+                openThisSite();
             }
-        });
+        }, { passive:false });
 
-        div.addEventListener("touchmove", () => {
-            if(timer){ clearTimeout(timer); timer = null; }
+        // Fallback para WebViews que emitem 'click' em vez de touchend confiável
+        div.addEventListener("click", () => {
+            if(!longPress) openThisSite();
         });
 
         grid.appendChild(div);
@@ -1204,7 +1231,9 @@ function bindHiveDialogButtons(){
 }
 
 function openRemoveDialog(item){
-    if(item.url === "__config__" || item.url === "__panel__") return;
+    // Nunca permitir remover os atalhos fixos do sistema
+    if(item.url === "__config__" || item.url === "__panel__" ||
+       item.id === "__config__" || item.id === "__panel__") return;
     hiveRemoveTarget = item;
     // Abre o diálogo no próximo tick: evita que o touchend do long-press
     // (dedo ainda na tela) caia sobre um botão recém-renderizado.
@@ -1251,7 +1280,10 @@ function confirmAddSite(){
     let list = loadHive();
     if(!Array.isArray(list)) list = [];
 
-    list.push({ name, url, uses: 0, lastUsed: 0 });
+    list.push({
+        id: "site_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8),
+        name, url, uses: 0, lastUsed: 0
+    });
     saveHive(list);
     renderHive();
     closeAddDialog();
@@ -1259,9 +1291,26 @@ function confirmAddSite(){
 
 function confirmRemove(){
     if(!hiveRemoveTarget) return;
+    // Proteção extra: nunca remover Painel/Config
+    if(hiveRemoveTarget.url === "__config__" || hiveRemoveTarget.url === "__panel__" ||
+       hiveRemoveTarget.id === "__config__" || hiveRemoveTarget.id === "__panel__"){
+        closeRemoveDialog();
+        return;
+    }
 
     let stored = loadHive();
-    stored = stored.filter(i => i.url !== hiveRemoveTarget.url);
+    const target = hiveRemoveTarget;
+    // Remove por ID único (preciso). Só cai para URL se o item for antigo e
+    // ainda não tiver ganho um id.
+    if(target.id){
+        stored = stored.filter(i => i.id !== target.id);
+    } else {
+        let removedOne = false;
+        stored = stored.filter(i => {
+            if(!removedOne && i.url === target.url){ removedOne = true; return false; }
+            return true;
+        });
+    }
     saveHive(stored);
     closeRemoveDialog();
     renderHive();
