@@ -943,21 +943,22 @@ function renderHive(){
     if(!Array.isArray(list)) list = [];
 
     const SEED_SITES = [
-        { name:"Google",        url:"https://google.com" },
-        { name:"YouTube",       url:"https://youtube.com" },
-        { name:"Instagram",     url:"https://instagram.com" },
-        { name:"Facebook",      url:"https://facebook.com" },
-        { name:"X",             url:"https://twitter.com" },
-        { name:"TikTok",        url:"https://tiktok.com" },
-        { name:"GitHub",        url:"https://github.com" },
-        { name:"CoinMarketCap", url:"https://coinmarketcap.com" },
-        { name:"CoinGecko",     url:"https://coingecko.com" },
-        { name:"Uniswap",       url:"https://app.uniswap.org" },
-        { name:"OpenSea",       url:"https://opensea.io" },
-        { name:"Acki Nacki",    url:"https://ackinacki.com" },
-        { name:"Telegram",      url:"https://web.telegram.org" },
-        { name:"Wikipedia",     url:"https://wikipedia.org" },
+        { name:"Acki Nacki", url:"https://ackinacki.com" },
+        { name:"dex.do",     url:"https://dex.do" },
+        { name:"Google",     url:"https://google.com" },
     ];
+
+    // Versão do seed: ao subir o número, força recarregar a lista padrão
+    // (descarta os sites antigos pré-carregados). Sites que o USUÁRIO
+    // adicionou manualmente são preservados.
+    const SEED_VERSION = "v2_min";
+    if(localStorage.getItem("waspHiveSeedVer") !== SEED_VERSION){
+        const userAdded = list.filter(i => i && i.url && i._userAdded);
+        list = SEED_SITES.map(s => ({ ...s, uses:0, lastUsed:0 })).concat(userAdded);
+        localStorage.setItem("waspHiveSeeded", "1");
+        localStorage.setItem("waspHiveSeedVer", SEED_VERSION);
+        saveHive(list);
+    }
 
     // Primeira vez (Hive nunca foi semeado): não deixar vazio
     if(list.length === 0 && !localStorage.getItem("waspHiveSeeded")){
@@ -1013,13 +1014,40 @@ function renderHive(){
                'src="https://www.google.com/s2/favicons?domain=' + domain + '&sz=64">';
     }
 
-    function cell(item, fromTop){
+    function cell(item){
         const div = document.createElement("div");
         div.className = "hive-item" + (item.pinned ? " hive-config" : "");
-        div.setAttribute("data-id", item.id);
-        if(item.pinned) div.setAttribute("data-pinned", "1");
-        if(fromTop) div.setAttribute("data-fromtop", "1");
         div.innerHTML = iconHTML(item) + '<span>' + item.name + '</span>';
+
+        let timer = null;
+        let longPress = false;
+        let startX = 0, startY = 0;
+
+        div.addEventListener("touchstart", (e) => {
+            longPress = false;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            if(timer) clearTimeout(timer);
+            timer = setTimeout(() => {
+                longPress = true;
+                if(!item.pinned) openRemoveDialog(item.id); // pinned não remove
+            }, 800);
+        });
+
+        div.addEventListener("touchmove", () => {
+            if(timer){ clearTimeout(timer); timer = null; }
+        });
+
+        div.addEventListener("touchend", (e) => {
+            if(timer){ clearTimeout(timer); timer = null; }
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const moved = Math.abs(endX - startX) > 10 || Math.abs(endY - startY) > 10;
+            if(!longPress && !moved){
+                hiveOpenItem(item.id);
+            }
+        });
+
         return div;
     }
 
@@ -1029,7 +1057,7 @@ function renderHive(){
         title.className = "hive-title";
         title.textContent = "MAIS USADOS";
         grid.appendChild(title);
-        top.forEach(item => grid.appendChild(cell(item, true)));
+        top.forEach(item => grid.appendChild(cell(item)));
 
         const divider = document.createElement("div");
         divider.className = "hive-divider";
@@ -1037,8 +1065,8 @@ function renderHive(){
     }
 
     // Lista completa (todos os sites em ordem alfabética) + atalhos fixos no fim
-    alpha.forEach(item => grid.appendChild(cell(item, false)));
-    PINNED.forEach(item => grid.appendChild(cell(item, false)));
+    alpha.forEach(item => grid.appendChild(cell(item)));
+    PINNED.forEach(item => grid.appendChild(cell(item)));
 
     // Trata fallback de favicon que não carrega
     grid.querySelectorAll('img[data-fallback="1"]').forEach(img => {
@@ -1048,38 +1076,10 @@ function renderHive(){
 }
 
 /* =========================
-   HIVE — INTERAÇÃO (event delegation)
-   Um único conjunto de listeners no container da grade, ligado UMA vez.
-   Como nunca recriamos listeners, não há estado residual — tap e long-press
-   funcionam de forma idêntica na 1ª e na enésima vez.
+   HIVE — INTERAÇÃO
+   Listeners por item (criados em cell()), abordagem estável.
 ========================= */
 let hiveRemoveTarget = null;
-let _hiveGridBound = false;
-let _hiveLongTimer = null;
-let _hiveLongFired = false;
-let _hiveStartX = 0, _hiveStartY = 0;
-let _hiveDownId = null;
-
-// ── DIAGNÓSTICO TEMPORÁRIO ────────────────────────────────────────────────
-// Mostra os últimos eventos do Hive num cantinho da tela. Para tirar print
-// quando algo travar. Remover depois que o bug estiver resolvido.
-let _hiveDbg = [];
-function hiveLog(msg){
-    try {
-        _hiveDbg.unshift(new Date().toLocaleTimeString().slice(3) + " " + msg);
-        _hiveDbg = _hiveDbg.slice(0, 8);
-        let box = document.getElementById("hiveDbgBox");
-        if(!box){
-            box = document.createElement("div");
-            box.id = "hiveDbgBox";
-            box.style.cssText = "position:fixed;left:4px;bottom:4px;z-index:2147483647;"
-                + "background:rgba(0,0,0,.85);color:#0f0;font:10px monospace;padding:6px 8px;"
-                + "border-radius:6px;max-width:75vw;pointer-events:none;white-space:pre-line;line-height:1.4;";
-            document.body.appendChild(box);
-        }
-        box.textContent = _hiveDbg.join("\n");
-    } catch(_){}
-}
 
 function hiveFindItemById(id){
     if(id === "__panel__" || id === "__config__"){
@@ -1111,116 +1111,23 @@ function hiveOpenItem(id){
     openNativeUrl(item.url);
 }
 
-function bindHiveGrid(){
-    if(_hiveGridBound) return;
-    const grid = $("hiveGrid");
-    if(!grid) return;
-    _hiveGridBound = true;
-
-    function cellFrom(target){
-        return target && target.closest ? target.closest(".hive-item") : null;
-    }
-
-    grid.addEventListener("touchstart", function(e){
-        const cell = cellFrom(e.target);
-        if(!cell) return;
-        _hiveDownId = cell.getAttribute("data-id");
-        _hiveLongFired = false;
-        _hiveStartX = e.touches[0].clientX;
-        _hiveStartY = e.touches[0].clientY;
-        if(_hiveLongTimer) clearTimeout(_hiveLongTimer);
-        _hiveLongTimer = setTimeout(function(){
-            _hiveLongFired = true;
-            hiveLog("long-press id=" + _hiveDownId);
-            const idToRemove = _hiveDownId;
-            // Limpa o estado da grade JÁ (não espera o touchend, que pode ser
-            // capturado pelo diálogo). Abre o diálogo no próximo tick para o
-            // touchend deste gesto não cair sobre os botões recém-exibidos.
-            _hiveDownId = null;
-            setTimeout(function(){ openRemoveDialog(idToRemove); }, 120);
-        }, 550);
-    }, { passive:true });
-
-    grid.addEventListener("touchmove", function(e){
-        if(!_hiveDownId) return;
-        const dx = Math.abs(e.touches[0].clientX - _hiveStartX);
-        const dy = Math.abs(e.touches[0].clientY - _hiveStartY);
-        if(dx > 12 || dy > 12){
-            if(_hiveLongTimer){ clearTimeout(_hiveLongTimer); _hiveLongTimer = null; }
-            _hiveDownId = null; // virou scroll, cancela tap/long
-        }
-    }, { passive:true });
-
-    grid.addEventListener("touchend", function(e){
-        if(_hiveLongTimer){ clearTimeout(_hiveLongTimer); _hiveLongTimer = null; }
-        if(!_hiveDownId){ hiveLog("touchend grade (sem id)"); return; }
-        const id = _hiveDownId;
-        _hiveDownId = null;
-        if(_hiveLongFired){ _hiveLongFired = false; hiveLog("touchend grade pos-long"); return; }
-        e.preventDefault();
-        hiveLog("tap abrir " + id);
-        hiveOpenItem(id);
-    }, { passive:false });
-
-    grid.addEventListener("touchcancel", function(){
-        if(_hiveLongTimer){ clearTimeout(_hiveLongTimer); _hiveLongTimer = null; }
-        _hiveDownId = null;
-    }, { passive:true });
-}
+function bindHiveGrid(){ /* listeners são criados por item em cell() */ }
 
 /* =========================
-   HIVE — DIÁLOGOS (delegação global, ligada uma vez)
+   HIVE — DIÁLOGOS
 ========================= */
 let _hiveDialogsBound = false;
 
 function bindHiveDialogButtons(){
     bindHiveGrid();
+    // Botões dos diálogos usam onclick inline no HTML (abordagem estável).
+    // Aqui só garantimos o fechamento ao tocar no fundo escuro.
     if(_hiveDialogsBound) return;
     _hiveDialogsBound = true;
-
     const rd = $("removeDialog");
-    if(rd){
-        let lastTouch = 0;
-        function doRemoveAction(t){
-            hiveLog("acao btn=" + (t.className||"?"));
-            if(t.classList.contains("remove-cancel")) { closeRemoveDialog(); return; }
-            if(t.classList.contains("remove-danger")) { confirmRemove(); return; }
-            if(t === rd) { closeRemoveDialog(); }
-        }
-        rd.addEventListener("touchend", function(e){
-            const t = e.target;
-            if(t.tagName === "BUTTON"){
-                e.preventDefault();
-                lastTouch = Date.now();
-                doRemoveAction(t);
-            }
-        }, { passive:false });
-        rd.addEventListener("click", function(e){
-            if(Date.now() - lastTouch < 600) return; // touch já tratou
-            doRemoveAction(e.target);
-        });
-    }
+    if(rd) rd.addEventListener("click", function(e){ if(e.target === rd) closeRemoveDialog(); });
     const ad = $("addDialog");
-    if(ad){
-        let lastTouchA = 0;
-        function doAddAction(t){
-            if(t.classList.contains("remove-cancel")) { closeAddDialog(); return; }
-            if(t.classList.contains("remove-danger")) { confirmAddSite(); return; }
-            if(t === ad) { closeAddDialog(); }
-        }
-        ad.addEventListener("touchend", function(e){
-            const t = e.target;
-            if(t.tagName === "BUTTON"){
-                e.preventDefault();
-                lastTouchA = Date.now();
-                doAddAction(t);
-            }
-        }, { passive:false });
-        ad.addEventListener("click", function(e){
-            if(Date.now() - lastTouchA < 600) return;
-            doAddAction(e.target);
-        });
-    }
+    if(ad) ad.addEventListener("click", function(e){ if(e.target === ad) closeAddDialog(); });
 }
 
 function openRemoveDialog(id){
@@ -1228,14 +1135,7 @@ function openRemoveDialog(id){
     if(id === "__panel__" || id === "__config__") return;
     const item = hiveFindItemById(id);
     if(!item) return;
-    // O diálogo (z-index alto) vai capturar o touchend deste gesto, então a
-    // grade nunca recebe o touchend — resetamos o estado de toque aqui para
-    // não ficar preso e quebrar a próxima interação.
-    _hiveDownId = null;
-    _hiveLongFired = false;
-    if(_hiveLongTimer){ clearTimeout(_hiveLongTimer); _hiveLongTimer = null; }
     hiveRemoveTarget = item;
-    hiveLog("abriu dialogo: " + item.name);
     const txt = document.querySelector("#removeDialog .remove-text");
     if(txt) txt.textContent = 'Remover "' + (item.name || "este site") + '" do Hive?';
     const dialog = $("removeDialog");
@@ -1243,7 +1143,6 @@ function openRemoveDialog(id){
 }
 
 function closeRemoveDialog(){
-    hiveLog("fechou dialogo");
     const dialog = $("removeDialog");
     if(dialog){
         dialog.style.display = "none";
@@ -1281,7 +1180,7 @@ function confirmAddSite(){
     if(!Array.isArray(list)) list = [];
     list.push({
         id: "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7),
-        name, url, uses:0, lastUsed:0
+        name, url, uses:0, lastUsed:0, _userAdded:true
     });
     saveHive(list);
     closeAddDialog();
@@ -1289,7 +1188,6 @@ function confirmAddSite(){
 }
 
 function confirmRemove(){
-    hiveLog("confirmRemove tgt=" + (hiveRemoveTarget ? hiveRemoveTarget.name : "null"));
     if(!hiveRemoveTarget){ closeRemoveDialog(); return; }
     const target = hiveRemoveTarget;
     if(target.pinned){ closeRemoveDialog(); return; } // proteção extra
@@ -1405,9 +1303,14 @@ document.addEventListener("pointerdown", function(e){
 });
 
 // Swipe para fechar o Hive (só fecha, nunca abre por gesto)
+function _hiveDialogOpen(){
+    const rd = $("removeDialog"), ad = $("addDialog");
+    return (rd && rd.style.display === "flex") || (ad && ad.style.display === "flex");
+}
 document.addEventListener("touchstart", function(e){
     const panel = $("hivePanel");
     if(!panel || !panel.classList.contains("active")) return;
+    if(_hiveDialogOpen()){ window._hiveSwipeStartY = null; return; } // diálogo aberto: ignora swipe
     const grid = $("hiveGrid");
     if(grid && grid.contains(e.target)) return;
     window._hiveSwipeStartY = e.touches[0].clientY;
@@ -1415,6 +1318,7 @@ document.addEventListener("touchstart", function(e){
 
 document.addEventListener("touchend", function(e){
     if(window._hiveSwipeStartY == null) return;
+    if(_hiveDialogOpen()){ window._hiveSwipeStartY = null; return; }
     const panel = $("hivePanel");
     if(!panel || !panel.classList.contains("active")){
         window._hiveSwipeStartY = null;
