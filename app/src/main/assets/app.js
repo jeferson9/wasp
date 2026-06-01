@@ -1030,9 +1030,14 @@ function renderHive(){
             if(timer) clearTimeout(timer);
             timer = setTimeout(() => {
                 longPress = true;
-                div.style.opacity = "0.6";
-                hiveRemoveDiv = div;
-                if(!item.pinned) openRemoveDialog(item.id);
+                if(!item.pinned){
+                    if(window.confirm('Remover "' + item.name + '" do Hive?')){
+                        let list = loadHive();
+                        list = list.filter(i => i.id !== item.id);
+                        saveHive(list);
+                        renderHive();
+                    }
+                }
             }, 600);
         });
 
@@ -1045,7 +1050,6 @@ function renderHive(){
         });
 
         div.addEventListener("touchend", (e) => {
-            div.style.opacity = "";
             if(timer){ clearTimeout(timer); timer = null; }
             const endX = e.changedTouches[0].clientX;
             const endY = e.changedTouches[0].clientY;
