@@ -1166,11 +1166,52 @@ function toggleBeeDemo(){
 ========================= */
 let hiveRemoveTarget = null;
 
+// Vincula os botões dos diálogos do Hive a toque E clique. Necessário porque,
+// após um long-press na grade, o WebView Android às vezes não converte o toque
+// nos botões em 'click' (o gesto anterior deixa o estado de toque inconsistente),
+// fazendo os botões "não funcionarem". Ouvir touchend resolve.
+function bindHiveDialogButtons(){
+    function bindTap(el, fn){
+        if(!el) return;
+        let used = false;
+        el.addEventListener("touchend", function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            used = true;
+            fn();
+            setTimeout(function(){ used = false; }, 400);
+        }, { passive:false });
+        el.addEventListener("click", function(e){
+            if(used) return; // evita disparo duplo (touch já tratou)
+            e.stopPropagation();
+            fn();
+        });
+    }
+    const rd = $("removeDialog");
+    if(rd){
+        bindTap(rd.querySelector(".remove-cancel"), closeRemoveDialog);
+        bindTap(rd.querySelector(".remove-danger"),  confirmRemove);
+        // Toque no fundo escuro fecha o diálogo
+        rd.addEventListener("touchend", function(e){
+            if(e.target === rd){ e.preventDefault(); closeRemoveDialog(); }
+        }, { passive:false });
+    }
+    const ad = $("addDialog");
+    if(ad){
+        bindTap(ad.querySelector(".remove-cancel"), closeAddDialog);
+        bindTap(ad.querySelector(".remove-danger"),  confirmAddSite);
+    }
+}
+
 function openRemoveDialog(item){
     if(item.url === "__config__" || item.url === "__panel__") return;
     hiveRemoveTarget = item;
-    const dialog = $("removeDialog");
-    if(dialog) dialog.style.display = "flex";
+    // Abre o diálogo no próximo tick: evita que o touchend do long-press
+    // (dedo ainda na tela) caia sobre um botão recém-renderizado.
+    setTimeout(function(){
+        const dialog = $("removeDialog");
+        if(dialog) dialog.style.display = "flex";
+    }, 60);
 }
 
 function closeRemoveDialog(){
@@ -1604,6 +1645,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Inicializações
     initEngine();
     initEngineSettingsLabel();
+
+    // Corrige botões dos diálogos do Hive (remover/adicionar) que não
+    // respondiam ao toque após long-press em alguns WebViews
+    bindHiveDialogButtons();
 
     // Idioma atual do sistema
     (function(){
