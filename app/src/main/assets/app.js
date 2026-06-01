@@ -1030,15 +1030,21 @@ function renderHive(){
             if(timer) clearTimeout(timer);
             timer = setTimeout(() => {
                 longPress = true;
+                div.style.opacity = "0.6";
                 if(!item.pinned) openRemoveDialog(item.id); // pinned não remove
-            }, 800);
+            }, 600);
         });
 
-        div.addEventListener("touchmove", () => {
-            if(timer){ clearTimeout(timer); timer = null; }
+        div.addEventListener("touchmove", (e) => {
+            const mx = Math.abs(e.touches[0].clientX - startX);
+            const my = Math.abs(e.touches[0].clientY - startY);
+            if(mx > 8 || my > 8){
+                if(timer){ clearTimeout(timer); timer = null; }
+            }
         });
 
         div.addEventListener("touchend", (e) => {
+            div.style.opacity = "";
             if(timer){ clearTimeout(timer); timer = null; }
             const endX = e.changedTouches[0].clientX;
             const endY = e.changedTouches[0].clientY;
