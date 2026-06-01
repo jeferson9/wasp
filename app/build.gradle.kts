@@ -105,6 +105,7 @@ dependencies {
     implementation(libs.androidx.activity)
 
     implementation(libs.geckoview)
+    implementation("com.startapp:inapp-sdk:5.+")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

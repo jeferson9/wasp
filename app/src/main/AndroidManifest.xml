@@ -90,6 +90,7 @@
             android:windowSoftInputMode="adjustResize"/>
 
         <activity android:name=".HiveManagerActivity" android:exported="false" />
+        <activity android:name=".StartioAdActivity" android:exported="false" android:theme="@style/Theme.WaspBrowser" />
         <activity android:name=".FavoritesActivity" />
         <activity android:name=".DownloadsActivity" />
         <activity android:name=".HistoryActivity" />
