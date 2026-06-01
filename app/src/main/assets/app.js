@@ -1083,6 +1083,11 @@ function renderHive(){
 
         function openThisSite(){
             if(handled) return;
+            // Não abrir site se um diálogo do Hive está visível (o long-press
+            // acabou de abrir o diálogo de remover — o click sintético do
+            // WebView não deve navegar nem fechar o Hive).
+            const rd = $("removeDialog"), ad = $("addDialog");
+            if((rd && rd.style.display === "flex") || (ad && ad.style.display === "flex")) return;
             handled = true;
             setTimeout(function(){ handled = false; }, 500);
             let stored = loadHive();
@@ -1192,41 +1197,46 @@ function toggleBeeDemo(){
    DIALOGS — HIVE
 ========================= */
 let hiveRemoveTarget = null;
+// Timestamp de quando o diálogo abriu. Toques nos botões dentro de uma
+// curta janela após a abertura são ignorados — assim o gesto de long-press
+// que abriu o diálogo (dedo ainda na tela) não "vaza" sobre os botões,
+// que era a causa de Cancelar/Remover não responderem em certos sites.
+let hiveDialogOpenedAt = 0;
+const HIVE_DIALOG_GUARD_MS = 400;
 
-// Vincula os botões dos diálogos do Hive a toque E clique. Necessário porque,
-// após um long-press na grade, o WebView Android às vezes não converte o toque
-// nos botões em 'click' (o gesto anterior deixa o estado de toque inconsistente),
-// fazendo os botões "não funcionarem". Ouvir touchend resolve.
 function bindHiveDialogButtons(){
-    function bindTap(el, fn){
+    function bindBtn(el, fn){
         if(!el) return;
-        let used = false;
-        el.addEventListener("touchend", function(e){
-            e.preventDefault();
-            e.stopPropagation();
-            used = true;
+        let fired = false;
+        function trigger(e){
+            // Ignora se ainda dentro da janela de guarda pós-abertura
+            if(Date.now() - hiveDialogOpenedAt < HIVE_DIALOG_GUARD_MS) return;
+            if(fired) return;
+            fired = true;
+            if(e){ e.preventDefault(); e.stopPropagation(); }
             fn();
-            setTimeout(function(){ used = false; }, 400);
-        }, { passive:false });
+            setTimeout(function(){ fired = false; }, 350);
+        }
+        // pointerup cobre toque e mouse de forma unificada em WebView moderno;
+        // click é o fallback universal.
+        el.addEventListener("pointerup", trigger, { passive:false });
         el.addEventListener("click", function(e){
-            if(used) return; // evita disparo duplo (touch já tratou)
-            e.stopPropagation();
-            fn();
+            if(Date.now() - hiveDialogOpenedAt < HIVE_DIALOG_GUARD_MS){ e.stopPropagation(); return; }
+            trigger(e);
         });
     }
     const rd = $("removeDialog");
     if(rd){
-        bindTap(rd.querySelector(".remove-cancel"), closeRemoveDialog);
-        bindTap(rd.querySelector(".remove-danger"),  confirmRemove);
-        // Toque no fundo escuro fecha o diálogo
-        rd.addEventListener("touchend", function(e){
-            if(e.target === rd){ e.preventDefault(); closeRemoveDialog(); }
-        }, { passive:false });
+        bindBtn(rd.querySelector(".remove-cancel"), closeRemoveDialog);
+        bindBtn(rd.querySelector(".remove-danger"),  confirmRemove);
+        rd.addEventListener("click", function(e){
+            if(e.target === rd && Date.now() - hiveDialogOpenedAt >= HIVE_DIALOG_GUARD_MS) closeRemoveDialog();
+        });
     }
     const ad = $("addDialog");
     if(ad){
-        bindTap(ad.querySelector(".remove-cancel"), closeAddDialog);
-        bindTap(ad.querySelector(".remove-danger"),  confirmAddSite);
+        bindBtn(ad.querySelector(".remove-cancel"), closeAddDialog);
+        bindBtn(ad.querySelector(".remove-danger"),  confirmAddSite);
     }
 }
 
@@ -1235,12 +1245,11 @@ function openRemoveDialog(item){
     if(item.url === "__config__" || item.url === "__panel__" ||
        item.id === "__config__" || item.id === "__panel__") return;
     hiveRemoveTarget = item;
-    // Abre o diálogo no próximo tick: evita que o touchend do long-press
-    // (dedo ainda na tela) caia sobre um botão recém-renderizado.
-    setTimeout(function(){
-        const dialog = $("removeDialog");
-        if(dialog) dialog.style.display = "flex";
-    }, 60);
+    const dialog = $("removeDialog");
+    if(dialog){
+        dialog.style.display = "flex";
+        hiveDialogOpenedAt = Date.now(); // inicia janela de guarda
+    }
 }
 
 function closeRemoveDialog(){
@@ -1252,7 +1261,10 @@ function closeRemoveDialog(){
 
 function openAddDialog(){
     const dialog = $("addDialog");
-    if(dialog) dialog.style.display = "flex";
+    if(dialog){
+        dialog.style.display = "flex";
+        hiveDialogOpenedAt = Date.now();
+    }
     const nameInput = $("addName");
     const urlInput  = $("addUrl");
     if(nameInput) nameInput.value = "";
