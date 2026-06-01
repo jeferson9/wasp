@@ -614,12 +614,12 @@
     </div>
 
     <!-- ANÚNCIO -->
-    <div class="c-game-card card-ad" id="cardAd" style="opacity:0.55;pointer-events:none;filter:grayscale(0.7);">
+    <div class="c-game-card card-ad" id="cardAd" onclick="doWatchAd()">
         <div class="cgc-emoji">📺</div>
         <div class="cgc-name">Ver Anúncio</div>
         <div class="cgc-reward">+30 WP</div>
-        <div class="cgc-status">Em breve</div>
-        <button class="cgc-btn btn-blue" style="opacity:0.5;">Assistir</button>
+        <div class="cgc-status" id="adStatus">Disponível</div>
+        <button class="cgc-btn btn-blue" id="adBtn">Assistir</button>
     </div>
 
     <!-- BANK -->
