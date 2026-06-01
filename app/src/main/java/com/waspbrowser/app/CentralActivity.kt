@@ -18,6 +18,8 @@ class CentralActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CentralActivity"
+        const val AD_COOLDOWN_MS = 5 * 60 * 1000L  // 5 min entre anúncios
+        const val AD_REWARD_WP   = 30              // WP por vídeo assistido
         // Referência à WebView ativa da Central, para callbacks de anúncio
         // (a StartioAdActivity precisa devolver o reward para o central.html,
         // que roda AQUI — não na BeeActivity).
@@ -25,6 +27,14 @@ class CentralActivity : AppCompatActivity() {
         fun runJs(js: String) {
             val wv = activeWebView?.get() ?: return
             wv.post { runCatching { wv.evaluateJavascript(js, null) } }
+        }
+        // Credita o WP do anúncio (chamado pela StartioAdActivity) e grava o
+        // cooldown. Faz tudo no nativo e só usa o JS para escrever no
+        // localStorage do WebView, que é a única via possível para isso.
+        fun grantAdReward(ctx: android.content.Context) {
+            ctx.getSharedPreferences("wasp_ads", android.content.Context.MODE_PRIVATE)
+                .edit().putLong("wp_ad_last", System.currentTimeMillis()).apply()
+            runJs("if(window.waspAddWP) window.waspAddWP($AD_REWARD_WP, 'Anúncio assistido');")
         }
     }
 
@@ -90,9 +100,19 @@ class CentralActivity : AppCompatActivity() {
         fun openWpAd() {
             android.util.Log.d(TAG, "openWpAd chamado!")
             handler.post {
+                // Cooldown controlado no nativo (não no JS): mais confiável.
+                val prefs = getSharedPreferences("wasp_ads", MODE_PRIVATE)
+                val last  = prefs.getLong("wp_ad_last", 0L)
+                val now   = System.currentTimeMillis()
+                val remaining = AD_COOLDOWN_MS - (now - last)
+                if (remaining > 0) {
+                    val min = (remaining / 60000) + 1
+                    Toast.makeText(this@CentralActivity,
+                        "Próximo anúncio em ~$min min", Toast.LENGTH_SHORT).show()
+                    return@post
+                }
                 val i = android.content.Intent(this@CentralActivity, StartioAdActivity::class.java)
                 i.putExtra(StartioAdActivity.EXTRA_MODE, "wp")
-                i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(i)
             }
         }

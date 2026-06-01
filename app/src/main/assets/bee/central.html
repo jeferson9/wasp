@@ -984,27 +984,28 @@
        AD
     ══════════════════════════════════════════ */
     function doWatchAd() {
-      // Diagnóstico: usa o toast NATIVO (mais confiável que o toast da página)
-      try { if(window.AndroidBee && window.AndroidBee.toast) window.AndroidBee.toast("doWatchAd ok"); } catch(_){}
-
-      const rem = remMs(K.adLast, CFG.adCooldown);
-      if (rem > 0) { toast(`Anúncio disponível em ${fmtTime(rem)}`); return; }
-
-      toast("Abrindo anúncio...");
+      // Toda a lógica (cooldown, abrir vídeo, creditar) é resolvida no Kotlin.
+      // O JS apenas dispara. Isso evita a fragilidade de toque/callback do WebView.
       try {
-        if (window.AndroidBee && window.AndroidBee.openWpAd) {
-          window.AndroidBee.openWpAd();
-          return;
-        }
-        if (window.Android && window.Android.openWpAd) {
-          window.Android.openWpAd();
-          return;
-        }
-        toast("Bridge não encontrado: " + JSON.stringify(Object.keys(window.AndroidBee || {})));
-      } catch(e) {
-        toast("Erro: " + e.message);
-      }
+        if (window.AndroidBee && window.AndroidBee.openWpAd) { window.AndroidBee.openWpAd(); return; }
+        if (window.Android   && window.Android.openWpAd)   { window.Android.openWpAd();   return; }
+        toast("Recurso de anúncio indisponível");
+      } catch(e) { toast("Erro: " + e.message); }
     }
+
+    // Chamada pelo Kotlin (evaluateJavascript) quando o vídeo é assistido.
+    // É a ÚNICA via de crédito — robusta, sem depender de callbacks frágeis.
+    window.waspAddWP = function(n, label) {
+      try {
+        addWP(Number(n) || 0, label || "Anúncio assistido");
+        return true;
+      } catch(e) { return false; }
+    };
+
+    // Chamada pelo Kotlin para mostrar o tempo restante de cooldown (opcional).
+    window.waspAdCooldownMsg = function(msg) {
+      try { toast(msg); } catch(_){}
+    };
 
     // ── Callbacks chamados pelo Android via onActivityResult ────────────
     // A WebView nunca pausou, então evaluateJavascript funciona direto.

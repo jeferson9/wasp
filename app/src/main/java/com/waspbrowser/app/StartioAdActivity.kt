@@ -32,9 +32,12 @@ class StartioAdActivity : Activity() {
             runCatching { android.widget.Toast.makeText(this, "Ad: $m", android.widget.Toast.LENGTH_SHORT).show() }
         }
 
-        diag("init SDK")
-        StartAppSDK.init(this, APP_ID, false)
-        StartAppSDK.setTestAdsEnabled(true)
+        diag("preparando")
+        // SDK já inicializado no SplashActivity; init aqui é defensivo/idempotente.
+        runCatching {
+            StartAppSDK.init(this, APP_ID, false)
+            StartAppSDK.setTestAdsEnabled(true)
+        }
 
         val ad = StartAppAd(this)
 
@@ -50,23 +53,23 @@ class StartioAdActivity : Activity() {
                 ad.showAd(object : AdDisplayListener {
                     override fun adHidden(p0: Ad) {
                         Log.d(TAG, "adHidden rewarded=$rewarded")
-                        val js = if (rewarded)
-                            "if(window.onWpAdRewarded) window.onWpAdRewarded()"
-                        else
-                            "if(window.onWpAdClosed) window.onWpAdClosed()"
-                        handler.postDelayed({ CentralActivity.runJs(js); finish() }, 300)
+                        if (rewarded) {
+                            // Crédito robusto: grava cooldown nativo + credita WP via JS
+                            CentralActivity.grantAdReward(applicationContext)
+                        }
+                        handler.postDelayed({ finish() }, 200)
                     }
                     override fun adDisplayed(p0: Ad) {}
                     override fun adClicked(p0: Ad) {}
                     override fun adNotDisplayed(p0: Ad) {
-                        diag("adNotDisplayed")
-                        handler.post { CentralActivity.runJs("if(window.onWpAdClosed) window.onWpAdClosed()"); finish() }
+                        diag("não exibido")
+                        handler.post { finish() }
                     }
                 })
             }
             override fun onFailedToReceiveAd(p: Ad?) {
-                diag("FALHOU ao carregar")
-                handler.post { CentralActivity.runJs("if(window.onWpAdClosed) window.onWpAdClosed()"); finish() }
+                diag("sem anúncio disponível")
+                handler.post { finish() }
             }
         })
     }
