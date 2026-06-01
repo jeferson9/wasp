@@ -34,7 +34,19 @@ class CentralActivity : AppCompatActivity() {
         fun grantAdReward(ctx: android.content.Context) {
             ctx.getSharedPreferences("wasp_ads", android.content.Context.MODE_PRIVATE)
                 .edit().putLong("wp_ad_last", System.currentTimeMillis()).apply()
+            // Caso 1: Central como Activity dedicada (waspAddWP no documento).
             runJs("if(window.waspAddWP) window.waspAddWP($AD_REWARD_WP, 'Anúncio assistido');")
+            // Caso 2: Central como iframe na WebView principal — alcança o
+            // iframe e credita lá. O localStorage é compartilhado (origem file://),
+            // então o saldo aparece em qualquer contexto da Central.
+            BeeActivity.runJs(
+                "(function(){try{" +
+                "var f=document.getElementById('wasp-central-frame');" +
+                "if(f){var ifr=f.querySelector('iframe');" +
+                "if(ifr&&ifr.contentWindow&&ifr.contentWindow.waspAddWP){" +
+                "ifr.contentWindow.waspAddWP($AD_REWARD_WP,'Anúncio assistido');}}" +
+                "}catch(e){}})();"
+            )
         }
     }
 

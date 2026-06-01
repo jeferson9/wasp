@@ -985,10 +985,15 @@
     ══════════════════════════════════════════ */
     function doWatchAd() {
       // Toda a lógica (cooldown, abrir vídeo, creditar) é resolvida no Kotlin.
-      // O JS apenas dispara. Isso evita a fragilidade de toque/callback do WebView.
       try {
         if (window.AndroidBee && window.AndroidBee.openWpAd) { window.AndroidBee.openWpAd(); return; }
         if (window.Android   && window.Android.openWpAd)   { window.Android.openWpAd();   return; }
+        // Rodando dentro de iframe (sem bridge): pede ao documento pai,
+        // que tem a bridge nativa, para abrir o anúncio.
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "openWpAd" }, "*");
+          return;
+        }
         toast("Recurso de anúncio indisponível");
       } catch(e) { toast("Erro: " + e.message); }
     }

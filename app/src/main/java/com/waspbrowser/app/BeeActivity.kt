@@ -226,6 +226,11 @@ class BeeActivity : AppCompatActivity() {
                                             var overlay = document.getElementById('wasp-central-frame');
                                             if (overlay) overlay.style.display = 'none';
                                         }
+                                        // Iframe da Central não tem a bridge nativa; o pai a tem.
+                                        if (e.data && e.data.type === 'openWpAd') {
+                                            if (window.AndroidBee && window.AndroidBee.openWpAd) window.AndroidBee.openWpAd();
+                                            else if (window.Android && window.Android.openWpAd) window.Android.openWpAd();
+                                        }
                                     });
                                 }
                                 var existing = document.getElementById('wasp-central-frame');
@@ -260,6 +265,26 @@ class BeeActivity : AppCompatActivity() {
                 fun openCentralWP() {
                     // Alias de openCentral() — chamado pelo bee_engine.js quando falta WP
                     openCentral()
+                }
+                @android.webkit.JavascriptInterface
+                fun openWpAd() {
+                    // Chamado quando a Central roda como iframe nesta WebView.
+                    // Cooldown nativo + abre a Activity de vídeo recompensado.
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        val prefs = context.getSharedPreferences("wasp_ads", android.content.Context.MODE_PRIVATE)
+                        val last  = prefs.getLong("wp_ad_last", 0L)
+                        val now   = System.currentTimeMillis()
+                        val remaining = CentralActivity.AD_COOLDOWN_MS - (now - last)
+                        if (remaining > 0) {
+                            val min = (remaining / 60000) + 1
+                            android.widget.Toast.makeText(context, "Próximo anúncio em ~$min min", android.widget.Toast.LENGTH_SHORT).show()
+                            return@post
+                        }
+                        val i = Intent(context, StartioAdActivity::class.java)
+                        i.putExtra(StartioAdActivity.EXTRA_MODE, "wp")
+                        if (context !is android.app.Activity) i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(i)
+                    }
                 }
                 @android.webkit.JavascriptInterface
                 fun isEnergyReady(): Boolean {
