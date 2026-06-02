@@ -22,6 +22,7 @@ class StartioAdActivity : Activity() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var rewarded = false
+    private var ad2Ref: StartAppAd? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,16 +50,12 @@ class StartioAdActivity : Activity() {
         diag("carregando video...")
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(p: Ad) {
-                diag("carregado, exibindo")
-                // Exibe após a Activity estar totalmente visível, evitando que
-                // o vídeo renderize antes da janela e fique preto.
+                diag("vídeo carregado, exibindo")
                 handler.postDelayed({
                     ad.showAd(object : AdDisplayListener {
                         override fun adHidden(p0: Ad) {
                             Log.d(TAG, "adHidden rewarded=$rewarded")
-                            if (rewarded) {
-                                CentralActivity.grantAdReward(applicationContext)
-                            }
+                            if (rewarded) CentralActivity.grantAdReward(applicationContext)
                             handler.postDelayed({ finish() }, 200)
                         }
                         override fun adDisplayed(p0: Ad) {}
@@ -71,8 +68,34 @@ class StartioAdActivity : Activity() {
                 }, 250)
             }
             override fun onFailedToReceiveAd(p: Ad?) {
-                diag("sem anúncio disponível")
-                handler.post { finish() }
+                // Sem vídeo recompensado: tenta um anúncio comum (interstitial),
+                // que tem fill muito maior. Comprova a integração.
+                diag("sem vídeo, tentando anúncio comum...")
+                val ad2 = StartAppAd(this@StartioAdActivity)
+                ad2Ref = ad2
+                ad2.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
+                    override fun onReceiveAd(p: Ad) {
+                        diag("anúncio carregado, exibindo")
+                        handler.postDelayed({
+                            ad2.showAd(object : AdDisplayListener {
+                                override fun adHidden(p0: Ad) {
+                                    CentralActivity.grantAdReward(applicationContext)
+                                    handler.postDelayed({ finish() }, 200)
+                                }
+                                override fun adDisplayed(p0: Ad) {}
+                                override fun adClicked(p0: Ad) {}
+                                override fun adNotDisplayed(p0: Ad) {
+                                    diag("não exibido")
+                                    handler.post { finish() }
+                                }
+                            })
+                        }, 250)
+                    }
+                    override fun onFailedToReceiveAd(p: Ad?) {
+                        diag("sem anúncio disponível")
+                        handler.post { finish() }
+                    }
+                })
             }
         })
     }
