@@ -984,6 +984,10 @@
        AD
     ══════════════════════════════════════════ */
     function doWatchAd() {
+      // [WASP-ADS] Vídeo recompensado via Start.io. Estado completo documentado
+      // em StartioAdActivity.kt (ler o cabeçalho). Resumo: integração funciona;
+      // Start.io ainda não entrega criativo (fill) p/ este App ID até o app ser
+      // publicado. WP só é creditado quando o vídeo é REALMENTE assistido.
       // Toda a lógica (cooldown, abrir vídeo, creditar) é resolvida no Kotlin.
       try {
         if (window.AndroidBee && window.AndroidBee.openWpAd) { window.AndroidBee.openWpAd(); return; }
