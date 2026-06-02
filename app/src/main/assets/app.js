@@ -70,6 +70,33 @@ function safeText(value){
 }
 
 /* =========================
+   MENU / CONFIGURAÇÕES
+   O botão hambúrguer (☰) da home chama toggleMenu(), que abre o painel
+   de Configurações (#settingsPanel) via classe .active.
+========================= */
+function openSettings(){
+  const p = $("settingsPanel");
+  if(p) p.classList.add("active");
+}
+
+function closeSettings(){
+  const p = $("settingsPanel");
+  if(p) p.classList.remove("active");
+}
+
+function toggleMenu(){
+  const p = $("settingsPanel");
+  if(!p) return;
+  if(p.classList.contains("active")) p.classList.remove("active");
+  else p.classList.add("active");
+}
+
+// Expõe globalmente para os onclick inline do HTML
+window.toggleMenu    = toggleMenu;
+window.openSettings  = openSettings;
+window.closeSettings = closeSettings;
+
+/* =========================
    CORES PADRÃO WASP
 ========================= */
 const WASP_GREEN = "#00c853";
