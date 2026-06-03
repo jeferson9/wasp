@@ -267,6 +267,18 @@ class BeeActivity : AppCompatActivity() {
                     openCentral()
                 }
                 @android.webkit.JavascriptInterface
+                fun setPipEnabled(enabled: Boolean) {
+                    // Escolha do usuário: ligar/desligar a janela flutuante (PiP)
+                    // ao sair do app. Guardado em SharedPreferences.
+                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .edit().putBoolean("pip_user_enabled", enabled).apply()
+                }
+                @android.webkit.JavascriptInterface
+                fun isPipEnabled(): Boolean {
+                    return context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .getBoolean("pip_user_enabled", false)  // default: desligado (não invasivo)
+                }
+                @android.webkit.JavascriptInterface
                 fun openWpAd() {
                     // Chamado quando a Central roda como iframe nesta WebView.
                     // Cooldown nativo + abre a Activity de vídeo recompensado.

@@ -414,10 +414,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun enterPipIfPossible() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Só entra em PiP se a mineração estiver ativa
-            val miningActive = getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
-                .getBoolean("pip_allowed", false)
-            if (!miningActive) return
+            val prefs = getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+            // Só entra em PiP se a mineração estiver ativa E o usuário tiver
+            // escolhido ligar a janela flutuante (não é mais automático).
+            val miningActive = prefs.getBoolean("pip_allowed", false)
+            val userEnabled  = prefs.getBoolean("pip_user_enabled", false)
+            if (!miningActive || !userEnabled) return
 
             try {
                 val metrics = resources.displayMetrics
