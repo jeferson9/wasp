@@ -1481,15 +1481,15 @@ body[data-theme="light"] .settings-item {
 
 .remove-box {
   background: #1b1b1b;
-  padding: clamp(20px, 5vw, 28px);
+  padding: clamp(22px, 5vw, 26px);
   border-radius: 14px;
-  width: clamp(280px, 85vw, 320px);
+  width: clamp(280px, 85vw, 330px);
   text-align: center;
-  border: 1px solid var(--accent);
-  box-shadow: 0 0 10px rgba(255,193,7,0.25);
+  border: 1px solid rgba(255,193,7,0.35);
+  box-shadow: 0 0 16px rgba(255,193,7,0.12), 0 12px 40px rgba(0,0,0,0.5);
 }
 
-.remove-text { margin-bottom: 20px; font-size: clamp(15px, 3.5vw, 17px); }
+.remove-text { margin-bottom: 20px; font-size: clamp(15px, 3.6vw, 17px); font-weight: 700; color: #fff; }
 
 body[data-theme="light"] .remove-text { color: #fff; }
 
@@ -1498,16 +1498,19 @@ body[data-theme="light"] .remove-text { color: #fff; }
 .remove-actions button {
   flex: 1;
   border: none;
-  padding: 10px 16px;
+  padding: 11px 16px;
   border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: transform .15s ease;
 }
-
 .remove-actions button:active { transform: scale(.96); }
-.remove-cancel  { background: var(--accent); color: #000; font-weight: 600; }
-.remove-danger  { background: #d50000; color: #fff; }
+
+/* Cancelar neutro (padrão Wasp — vale para remover e adicionar) */
+.remove-actions button.remove-cancel  { background: transparent; border: 1px solid rgba(255,255,255,0.18); color: #c8d0e0; }
+/* Ação perigosa */
+.remove-actions button.remove-danger  { background: #e23b3b; color: #fff; }
 
 /* Diálogo de ADICIONAR — ação positiva: confirmar em amarelo, cancelar neutro */
 .add-title {
