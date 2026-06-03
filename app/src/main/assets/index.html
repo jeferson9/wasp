@@ -340,7 +340,7 @@
         <button class="hive-edit-btn" aria-label="Editar Hive" onclick="if(window.Android && Android.openHiveManager) Android.openHiveManager(JSON.stringify(loadHive()));"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
     </div>
     <div id="hiveGrid" class="hive-grid"></div>
-    <button class="hive-fab" onclick="addHiveSite()">+</button>
+    <button class="hive-fab" aria-label="Adicionar site" onclick="addHiveSite()"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
 </div>
 
 <!-- SETTINGS PANEL -->
@@ -413,12 +413,15 @@
 <!-- DIALOG ADICIONAR -->
 <div id="addDialog" class="remove-dialog">
     <div class="remove-box add-box">
-        <div class="remove-text">Adicionar site</div>
+        <div class="add-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+            Adicionar site
+        </div>
         <input id="addName" class="add-input" type="text" placeholder="Nome do site">
-        <input id="addUrl"  class="add-input" type="text" placeholder="https://site.com">
+        <input id="addUrl"  class="add-input" type="text" inputmode="url" autocapitalize="none" placeholder="https://site.com">
         <div class="remove-actions">
-            <button class="remove-cancel" onclick="closeAddDialog()">Cancelar</button>
-            <button class="remove-danger"  onclick="confirmAddSite()">Adicionar</button>
+            <button class="add-cancel" onclick="closeAddDialog()">Cancelar</button>
+            <button class="add-confirm" onclick="confirmAddSite()">Adicionar</button>
         </div>
     </div>
 </div>
