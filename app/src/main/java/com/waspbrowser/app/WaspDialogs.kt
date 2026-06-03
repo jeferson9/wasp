@@ -38,15 +38,19 @@ object WaspDialogs {
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        // Dangerous action = confirm button is red (delete, remove)
-        // Safe action = confirm is normal
+        // Perigosa (remover/excluir): confirmar vermelho.
+        // Positiva (salvar/adicionar/confirmar): confirmar amarelo Wasp.
+        // Cancelar é sempre neutro (transparente + borda).
         if (isDangerous) {
             btnConfirm.background = context.getDrawable(R.drawable.bg_wasp_button_danger)
-            btnCancel.background  = context.getDrawable(R.drawable.bg_wasp_button_cancel)
+            btnConfirm.setTextColor(0xFFFFFFFF.toInt())  // branco no vermelho
         } else {
-            btnConfirm.background = context.getDrawable(R.drawable.bg_wasp_button_cancel)
-            btnCancel.background  = context.getDrawable(R.drawable.bg_wasp_button_cancel)
+            btnConfirm.background = context.getDrawable(R.drawable.bg_wasp_button_confirm)
+            btnConfirm.setTextColor(0xFF000000.toInt())  // preto no amarelo
         }
+        btnCancel.background = context.getDrawable(R.drawable.bg_wasp_button_cancel)
+        btnCancel.setTextColor(0xFFC8D0E0.toInt())       // texto claro no neutro
+
         btnConfirm.backgroundTintList = null
         btnCancel.backgroundTintList  = null
 

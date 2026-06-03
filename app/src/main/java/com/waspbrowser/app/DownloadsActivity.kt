@@ -62,37 +62,16 @@ class DownloadsActivity : AppCompatActivity() {
         confirmText: String,
         onConfirm: () -> Unit
     ) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_wasp_confirm, null)
-
-        val txtTitle = dialogView.findViewById<TextView>(R.id.txtDialogTitle)
-        val txtMessage = dialogView.findViewById<TextView>(R.id.txtDialogMessage)
-        val btnCancel = dialogView.findViewById<Button>(R.id.btnDialogCancel)
-        val btnConfirm = dialogView.findViewById<Button>(R.id.btnDialogConfirm)
-
-        txtTitle.text = title
-        txtMessage.text = message
-        btnConfirm.text = confirmText
-
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
-
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        // 🔥 garante que não fica roxo
-        btnCancel.background = getDrawable(R.drawable.bg_wasp_button_cancel)
-        btnConfirm.background = getDrawable(R.drawable.bg_wasp_button_danger)
-
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        btnConfirm.setOnClickListener {
-            dialog.dismiss()
-            onConfirm()
-        }
-
-        dialog.show()
+        // Delega ao helper centralizado (padrão Wasp único). isDangerous=true
+        // porque os usos aqui são exclusão de downloads (ação perigosa).
+        WaspDialogs.confirm(
+            context = this,
+            title = title,
+            message = message,
+            confirmText = confirmText,
+            isDangerous = true,
+            onConfirm = onConfirm
+        )
     }
     // =========================
     // CARREGAR DOWNLOADS

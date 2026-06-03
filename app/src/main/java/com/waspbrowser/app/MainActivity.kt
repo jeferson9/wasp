@@ -568,8 +568,12 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView).create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
-        btnCancel.background = getDrawable(R.drawable.bg_wasp_button_danger)
-        btnConfirm.background = getDrawable(R.drawable.bg_wasp_button_cancel)
+        // Padrão Wasp: as ações aqui são positivas (Baixar/Permitir), então
+        // confirmar = amarelo (texto preto) e cancelar = neutro (texto claro).
+        btnConfirm.background = getDrawable(R.drawable.bg_wasp_button_confirm)
+        btnConfirm.setTextColor(0xFF000000.toInt())
+        btnCancel.background = getDrawable(R.drawable.bg_wasp_button_cancel)
+        btnCancel.setTextColor(0xFFC8D0E0.toInt())
         btnCancel.backgroundTintList = null
         btnConfirm.backgroundTintList = null
 
