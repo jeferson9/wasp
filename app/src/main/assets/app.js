@@ -1019,7 +1019,7 @@ function renderHive(){
 
     // ── 2. Atalhos fixos do sistema (Painel e Config) ─────────────────────────
     const PINNED = [
-        { id:"__panel__",  name:"Painel", pinned:true, icon:"file:///android_asset/img/ic_panel_hive.svg" },
+        { id:"__panel__",  name:"Bee Engine", pinned:true, icon:"file:///android_asset/img/ic_panel_hive.svg" },
         { id:"__config__", name:"Config", pinned:true, icon:"file:///android_asset/img/ic_settings_hive.svg" },
     ];
 
@@ -1091,7 +1091,7 @@ function renderHive(){
 
 function hiveFindItemById(id){
     if(id === "__panel__" || id === "__config__"){
-        return { id:id, pinned:true, name: id === "__panel__" ? "Painel" : "Config" };
+        return { id:id, pinned:true, name: id === "__panel__" ? "Bee Engine" : "Config" };
     }
     const list = loadHive();
     return list.find(i => i.id === id) || null;

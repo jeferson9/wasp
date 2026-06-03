@@ -1167,7 +1167,35 @@ body[data-theme="light"] .lose-card { background: rgba(20,22,26,0.03); }
 body[data-theme="light"] .hive-handle-top { background: rgba(0,0,0,0.35); }
 
 /* Header */
-.hive-header { margin-bottom: clamp(12px, 3vw, 18px); }
+.hive-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: clamp(12px, 3vw, 18px);
+}
+.hive-header-title {
+  font-size: clamp(26px, 7vw, 34px);
+  color: var(--accent);
+  font-weight: 800;
+  letter-spacing: .12em;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+.hive-edit-btn {
+  background: transparent;
+  border: 1px solid rgba(255,193,7,0.4);
+  color: var(--accent);
+  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.hive-edit-btn:active { transform: scale(.96); }
 
 .hive-header span {
   font-size: clamp(16px, 4vw, 18px);
