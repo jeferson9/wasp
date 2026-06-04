@@ -838,7 +838,15 @@
       } catch (_) {}
 
       if (bgMiningActive) {
-        el("miningStatus").textContent = "🐝 Minerando em bg — " + fmtSecs(bgMiningRem);
+        // A mineração em background é contínua (não é uma contagem regressiva).
+        // Se remainingMs vier como placeholder "infinito" (valor muito grande),
+        // mostramos um status claro em vez de um número sem sentido (ex.: 16666:40).
+        const UMA_HORA_MS = 60 * 60 * 1000;
+        if (bgMiningRem > UMA_HORA_MS) {
+          el("miningStatus").textContent = "Minerando em segundo plano";
+        } else {
+          el("miningStatus").textContent = "Minerando — " + fmtSecs(bgMiningRem) + " restante";
+        }
         el("miningStatus").style.color = "var(--green, #22C55E)";
       } else if (boostOn) {
         
