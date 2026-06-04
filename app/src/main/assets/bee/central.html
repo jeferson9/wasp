@@ -108,6 +108,9 @@
         }
         .c-bal-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .5px; margin-bottom: 4px; }
         .c-bal-value { font-size: clamp(38px, 10vw, 52px); font-weight: 900; color: var(--yellow); line-height: 1; margin-bottom: 6px; }
+        .c-bal-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+        .c-bal-row .c-bal-value { margin-bottom: 0; }
+        .wp-coin { width: clamp(40px, 11vw, 50px); height: clamp(40px, 11vw, 50px); flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(255,193,7,0.35)); }
         .c-bal-sub   { font-size: 12px; color: var(--muted); }
         .c-bal-sub span { color: var(--text); font-weight: 700; }
 
@@ -557,8 +560,20 @@
 <!-- BALANCE HERO -->
 <div class="c-balance-hero">
     <div class="c-bal-label">SEU SALDO</div>
-    <div class="c-bal-value" id="balValue">0 WP</div>
-    <div class="c-bal-sub">Total ganho: <span id="balTotal">0 WP</span></div>
+    <div class="c-bal-row">
+        <svg class="wp-coin" viewBox="0 0 48 48" aria-hidden="true">
+            <defs><radialGradient id="wpCoinGrad" cx="38%" cy="32%">
+                <stop offset="0%" stop-color="#FFE89A"/>
+                <stop offset="55%" stop-color="#FFD400"/>
+                <stop offset="100%" stop-color="#E0A800"/>
+            </radialGradient></defs>
+            <circle cx="24" cy="24" r="22" fill="url(#wpCoinGrad)" stroke="#B8860B" stroke-width="1.5"/>
+            <circle cx="24" cy="24" r="17" fill="none" stroke="#B8860B" stroke-width="1" opacity="0.45"/>
+            <text x="24" y="30" font-size="14" font-weight="900" text-anchor="middle" fill="#7a5c00" font-family="Arial, sans-serif">WP</text>
+        </svg>
+        <div class="c-bal-value" id="balValue">0</div>
+    </div>
+    <div class="c-bal-sub">Total ganho: <span id="balTotal">0</span> WP</div>
 
     <div class="c-stats-row">
         <div class="c-stat">
@@ -808,8 +823,8 @@
       const streak= getN(K.streak, 0);
 
       // Balance hero
-      el("balValue").textContent = wp + " WP";
-      el("balTotal").textContent = total + " WP";
+      el("balValue").textContent = wp;
+      el("balTotal").textContent = total;
       el("statLevel").textContent= ld.lvl;
       el("statStreak").textContent = streak;
       el("levelFill").style.width  = ld.pct + "%";
