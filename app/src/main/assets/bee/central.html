@@ -323,28 +323,23 @@
         .tap-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.92);
+          background: linear-gradient(180deg, #0d0e14, #0a0b0f);
           display: none;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
+          justify-content: space-between;
           z-index: 9999;
-          padding: 24px 20px;
+          padding: 48px 24px 40px;
         }
         .tap-overlay.active { display: flex; }
 
         .tap-game-card {
           width: 100%;
-          max-width: 360px;
-          background:
-            radial-gradient(circle at top, rgba(255,193,7,0.10), transparent 40%),
-            linear-gradient(180deg, #111318, #0a0b0f);
-          border: 1px solid rgba(255,193,7,0.22);
-          border-radius: 28px;
-          padding: 24px 20px 22px;
+          max-width: 420px;
           display: flex;
           flex-direction: column;
           align-items: center;
+          flex: 1;
           gap: 0;
         }
 
@@ -403,9 +398,9 @@
         /* ── Orbe de Energia ────────────────────────── */
         .tap-btn-wrap {
           position: relative;
-          width: 220px; height: 220px;
+          width: 280px; height: 280px;
           display: flex; align-items: center; justify-content: center;
-          margin: 8px auto 20px;
+          margin: 16px auto 24px;
         }
 
         /* SVG de progresso circular */
@@ -426,8 +421,8 @@
           stroke: url(#ringGrad);
           stroke-width: 4;
           stroke-linecap: round;
-          stroke-dasharray: 596;
-          stroke-dashoffset: 596;
+          stroke-dasharray: 603;
+          stroke-dashoffset: 603;
           transition: stroke-dashoffset 0.15s ease;
         }
 
@@ -448,7 +443,7 @@
 
         /* Orbe principal */
         .tap-main-btn {
-          width: 160px; height: 160px;
+          width: 210px; height: 210px;
           border-radius: 18px;
           background:
             radial-gradient(ellipse at 30% 25%, #4a3728 0%, #2a1f16 45%, #1a1209 100%);
@@ -495,7 +490,7 @@
             inset 0 -6px 14px rgba(0,0,0,0.55);
         }
         .tap-mine-icon {
-          font-size: 44px; line-height: 1;
+          font-size: 60px; line-height: 1;
           filter: drop-shadow(0 2px 6px rgba(0,0,0,0.7));
           pointer-events: none;
         }
