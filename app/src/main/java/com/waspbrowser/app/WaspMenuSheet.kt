@@ -275,9 +275,17 @@ object WaspMenuSheet {
         menuItem(R.drawable.ic_engine, "Web3 Hub",    "DApps e carteiras", "web3",
             bgColor = BG_WEB3, strokeColor = Color.parseColor("#3D2F00"),
             iconColor = YELLOW, badge = "NOVO")
-        menuItem(R.drawable.ic_bee_tech, "Bee Engine",  "Mineração ativa",   "bee",
-            bgColor = BG_BEE, strokeColor = Color.parseColor("#1A4D28"),
-            iconColor = GREEN, dot = GREEN)
+        val bgMining = BeeBackgroundService.isActive(context)
+        val fgMining = context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+            .getBoolean("mining_active", false)
+        val isMining = bgMining || fgMining
+        val beeSubtitle  = if (isMining) "Mineração ativa" else "Mineração inativa"
+        val beeDot       = if (isMining) GREEN else Color.parseColor("#E23B3B")
+        val beeStroke    = if (isMining) Color.parseColor("#1A4D28") else Color.parseColor("#4D1A1A")
+        val beeBg        = if (isMining) BG_BEE else Color.parseColor("#1A0A0A")
+        menuItem(R.drawable.ic_bee_tech, "Bee Engine", beeSubtitle, "bee",
+            bgColor = beeBg, strokeColor = beeStroke,
+            iconColor = GREEN, dot = beeDot)
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
         menuItem(R.drawable.ic_settings, "Configurações", null, "settings")
