@@ -678,9 +678,10 @@ class BeeActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun stopBgMining() {
-
             try {
                 startService(BeeBackgroundService.buildStopIntent(this@BeeActivity))
+                getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
+                    .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
             } catch (e: Exception) {
                 Log.e(TAG, "stopBgMining error: ${e.message}")
             }
