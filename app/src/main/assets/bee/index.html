@@ -14,11 +14,19 @@
             --blue: #64a8ff;
             --border: rgba(255,255,255,0.08);
             --card: rgba(255,255,255,0.05);
+            --body-bg: #0b0b0d;
+        }
+        [data-theme="light"] {
+            --text: #1A1E2E;
+            --muted: #6B7280;
+            --border: rgba(0,0,0,0.08);
+            --card: rgba(0,0,0,0.04);
+            --body-bg: #F0F2F8;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body {
             min-height: 100%;
-            background: #0b0b0d;
+            background: var(--body-bg);
             color: var(--text);
             font-family: Arial, sans-serif;
             padding: 50px 16px 60px;
@@ -320,6 +328,13 @@
         width: 0%;
         transition: width 1s linear;
     }
+        /* ── Tema Claro ── */
+        [data-theme="light"] .central-wp-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .wp-label { color: #1A1E2E; }
+        [data-theme="light"] .wp-amount { color: #1A1E2E; }
+        [data-theme="light"] .wp-sub { color: #6B7280; }
+        [data-theme="light"] .mining-status-bar { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .status-text { color: #1A1E2E; }
     </style>
 </head>
 <body>
