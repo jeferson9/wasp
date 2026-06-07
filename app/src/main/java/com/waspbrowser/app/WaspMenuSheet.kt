@@ -286,7 +286,7 @@ object WaspMenuSheet {
         android.util.Log.d("WaspMenu", "bgMining=$bgMining fgMining=$fgMining isMining=$isMining")
         menuItem(R.drawable.ic_bee_tech, "Bee Engine", beeSubtitle, "bee",
             bgColor = beeBg, strokeColor = beeStroke,
-            iconColor = GREEN, dot = beeDot)
+            iconColor = if (isMining) GREEN else Color.parseColor("#E23B3B"), dot = beeDot)
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
         menuItem(R.drawable.ic_settings, "Configurações", null, "settings")
