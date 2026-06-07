@@ -414,6 +414,9 @@ class BeeActivity : AppCompatActivity() {
     private fun loadBeePanel() {
         // Só carrega se ainda não inicializou — evita reiniciar o miner ao voltar
         if (pageLoaded) return
+        val theme = intent.getStringExtra("wasp_theme")
+            ?: getSharedPreferences("wasp_settings", android.content.Context.MODE_PRIVATE)
+                .getString("theme", "dark") ?: "dark"
         beeWebView.loadUrl("file:///android_asset/bee/index.html")
     }
 
@@ -449,15 +452,22 @@ class BeeActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                // Aplica tema
+                val theme = intent.getStringExtra("wasp_theme")
+                    ?: getSharedPreferences("wasp_settings", android.content.Context.MODE_PRIVATE)
+                        .getString("theme", "dark") ?: "dark"
+                view?.evaluateJavascript(
+                    "document.documentElement.setAttribute('data-theme','$theme');document.body&&document.body.setAttribute('data-theme','$theme');",
+                    null
+                )
                 if (!pageLoaded) {
                     pageLoaded = true
                     beeWebView.animate().alpha(1f).setDuration(200).start()
                 } else {
-                    // Recarga do WebView (JS morreu) — reinicia mineração após carregar
                     Log.d(TAG, "onPageFinished: recarga detectada — reiniciando mineração")
                     mainHandler.postDelayed({
                         evaluateJs("if(window.onAppResume) window.onAppResume()")
-                    }, 3000) // aguarda 3s para o WASM carregar
+                    }, 3000)
                 }
             }
         }

@@ -1211,9 +1211,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openBeePanel() {
+        val theme = getSharedPreferences("wasp_settings", android.content.Context.MODE_PRIVATE)
+            .getString("theme", "dark") ?: "dark"
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: run {
-            // Fallback: se o layout não tem o container, abre como Activity separada
-            startActivityFade(Intent(this, BeeActivity::class.java))
+            val intent = Intent(this, BeeActivity::class.java)
+            intent.putExtra("wasp_theme", theme)
+            startActivityFade(intent)
             return
         }
         container.visibility = android.view.View.VISIBLE
