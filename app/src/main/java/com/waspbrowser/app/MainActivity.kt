@@ -978,10 +978,8 @@ class MainActivity : AppCompatActivity() {
                     try {
                         try { popupSession?.close() } catch (_: Exception) {}
                         val newSession = GeckoSession()
-                        newSession.open(geckoRuntime!!)
                         popupSession = newSession
                         geckoView.setSession(newSession)
-                        if (uri.isNotBlank()) newSession.loadUri(uri)
                         btnBack.alpha = 1f
                         result.complete(newSession)
                     } catch (e: Exception) {
