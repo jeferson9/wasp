@@ -18,7 +18,14 @@ class AboutActivity : AppCompatActivity() {
         wv.setBackgroundColor(0xFF08090D.toInt())
         setContentView(wv)
 
-        val version = packageManager.getPackageInfo(packageName, 0).versionName ?: "1.0"
+        val version = try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(packageName, android.content.pm.PackageManager.PackageInfoFlags.of(0)).versionName ?: "1.0"
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0).versionName ?: "1.0"
+            }
+        } catch (e: Exception) { "1.0" }
 
         wv.loadDataWithBaseURL(null, buildHtml(version), "text/html", "UTF-8", null)
     }
