@@ -991,6 +991,7 @@ class MainActivity : AppCompatActivity() {
                         // Fecha popup quando navega para URL de callback
                         newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
                             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
+                                android.util.Log.d("PopupOAuth", "URL: $url")
                                 finishPopupLoginIfNeeded(session, url)
                             }
                         }
