@@ -39,15 +39,13 @@ class SplashActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // Inicializa o Start.io SDK cedo (no boot), para que o vídeo
-        // recompensado já esteja pronto quando o usuário pedir. Inicializar
-        // e carregar no mesmo instante (na Activity de anúncio) fazia o
-        // anúncio não carregar a tempo.
+        // Inicializa o Start.io SDK cedo (no boot)
         runCatching {
             com.startapp.sdk.adsbase.StartAppSDK.init(
                 applicationContext, "204731691", false
             )
-            com.startapp.sdk.adsbase.StartAppSDK.setTestAdsEnabled(false)
+            // HABILITADO MODO DE TESTE PARA DESENVOLVIMENTO
+            com.startapp.sdk.adsbase.StartAppSDK.setTestAdsEnabled(true)
         }
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
