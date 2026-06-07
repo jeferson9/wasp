@@ -35,6 +35,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
+import com.waspbrowser.app.AboutActivity
 
 class MainActivity : AppCompatActivity() {
 
