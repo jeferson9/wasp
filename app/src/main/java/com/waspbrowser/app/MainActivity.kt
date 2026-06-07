@@ -980,7 +980,6 @@ class MainActivity : AppCompatActivity() {
                         try { popupSession?.close() } catch (_: Exception) {}
 
                         val newSession = GeckoSession()
-                        newSession.settings.usePrivateMode = session.settings.usePrivateMode
                         setupSession(newSession)
                         newSession.open(runtime)
                         popupSession = newSession
