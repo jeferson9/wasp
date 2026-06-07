@@ -1158,11 +1158,9 @@
       if (tapCount >= CFG.tapMax) {
         if (tapFinished) return;
         tapFinished = true;
-        setTimeout(() => {
-          closeTap();
-          setN(K.tapLast, Date.now());
-          addWP(CFG.tapReward, "Tap Game concluído");
-        }, 200);
+        setN(K.tapLast, Date.now());
+        addWP(CFG.tapReward, "Tap Game concluído");
+        el("tapMilestone").textContent = "✅ Recompensa creditada! Toque ✕ para fechar.";
       }
     }
 
