@@ -574,32 +574,22 @@ async function waspUpdateGainersLosers(){
       .slice(0, 5);
 
     cachedGainersHTML = gainers.map(c => `
-      <div class="gain-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
-        <div style="display:flex;align-items:center;justify-content:space-between;background:#111420;border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:#C8D0E0">${safeText(c.symbol.toUpperCase())}</div>
-            <div style="font-size:9px;color:#3D4560;margin-top:1px">${safeText(c.name)}</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:11px;font-weight:700;color:#22C55E">+${c.price_change_percentage_24h.toFixed(2)}%</div>
-            <div style="font-size:9px;color:#3D4560;font-family:monospace;margin-top:1px">${waspFmtPrice(c.current_price)}</div>
-          </div>
+      <div class="mkt-gl-item" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:12px;font-weight:700;color:#C8D0E0">${safeText(c.symbol.toUpperCase())}</div>
+          <div style="font-size:11px;font-weight:700;color:#22C55E">+${c.price_change_percentage_24h.toFixed(2)}%</div>
         </div>
+        <div style="font-size:9px;color:#3D4560;font-family:monospace">${waspFmtPrice(c.current_price)}</div>
       </div>
     `).join("");
 
     cachedLosersHTML = losers.map(c => `
-      <div class="lose-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
-        <div style="display:flex;align-items:center;justify-content:space-between;background:#111420;border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:#C8D0E0">${safeText(c.symbol.toUpperCase())}</div>
-            <div style="font-size:9px;color:#3D4560;margin-top:1px">${safeText(c.name)}</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:11px;font-weight:700;color:#E23B3B">${c.price_change_percentage_24h.toFixed(2)}%</div>
-            <div style="font-size:9px;color:#3D4560;font-family:monospace;margin-top:1px">${waspFmtPrice(c.current_price)}</div>
-          </div>
+      <div class="mkt-gl-item" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:12px;font-weight:700;color:#C8D0E0">${safeText(c.symbol.toUpperCase())}</div>
+          <div style="font-size:11px;font-weight:700;color:#E23B3B">${c.price_change_percentage_24h.toFixed(2)}%</div>
         </div>
+        <div style="font-size:9px;color:#3D4560;font-family:monospace">${waspFmtPrice(c.current_price)}</div>
       </div>
     `).join("");
 
