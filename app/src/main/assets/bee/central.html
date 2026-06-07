@@ -858,13 +858,13 @@
         // mostramos um status claro em vez de um número sem sentido (ex.: 16666:40).
         const UMA_HORA_MS = 60 * 60 * 1000;
         if (bgMiningRem > UMA_HORA_MS) {
-          el("miningStatus").textContent = "Minerando em segundo plano";
+          el("miningStatus").textContent = "Participando da rede Acki Nacki";
         } else {
           el("miningStatus").textContent = "Minerando — " + fmtSecs(bgMiningRem) + " restante";
         }
         el("miningStatus").style.color = "var(--green, #22C55E)";
       } else if (boostOn) {
-        
+
         el("miningStatus").style.color = "var(--yellow)";
       } else if (wp >= 5) {
         const mins = wp; // 1 WP = 1 min
