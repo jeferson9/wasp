@@ -422,6 +422,11 @@ class BeeActivity : AppCompatActivity() {
     }
 
     private fun attachClients() {
+        beeWebView.webChromeClient = object : android.webkit.WebChromeClient() {
+            override fun onPermissionRequest(request: android.webkit.PermissionRequest) {
+                request.grant(request.resources)
+            }
+        }
         beeWebView.webViewClient = object : WebViewClient() {
 
             override fun shouldInterceptRequest(

@@ -1131,8 +1131,7 @@
 
     function doTap() {
       if (tapFinished) return;
-      const _vib = window.AndroidBee || window.Android;
-      if (_vib && _vib.vibrate) _vib.vibrate(18);
+      if (navigator.vibrate) navigator.vibrate(18);
       const now = Date.now();
       if (now - lastTapTs < 900 && lastTapTs > 0) tapCombo = Math.min(9, tapCombo + 1);
       else tapCombo = 1;
