@@ -53,9 +53,22 @@ class BeeBackgroundService : Service() {
                 action = ACTION_STOP
             }
 
-        fun isActive(context: Context): Boolean =
-            context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
+        fun isActive(context: Context): Boolean {
+            val prefActive = context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
                 .getBoolean(KEY_ACTIVE, false)
+            if (!prefActive) return false
+            // Verifica se o serviço realmente está rodando
+            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            @Suppress("DEPRECATION")
+            val running = manager.getRunningServices(Int.MAX_VALUE)
+                .any { it.service.className == BeeBackgroundService::class.java.name }
+            if (!running) {
+                // Serviço morreu sem limpar a flag — corrige
+                context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
+                    .edit().putBoolean(KEY_ACTIVE, false).apply()
+            }
+            return running
+        }
 
         fun remainingMs(context: Context): Long = Long.MAX_VALUE
 
