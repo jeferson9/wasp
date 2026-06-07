@@ -115,6 +115,19 @@ class BeeBridge(
     }
 
     @JavascriptInterface
+    fun vibrate(ms: Long) {
+        val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+        vib?.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                it.vibrate(android.os.VibrationEffect.createOneShot(ms, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                it.vibrate(ms)
+            }
+        }
+    }
+
+    @JavascriptInterface
     fun log(msg: String) {
         Log.d("BeeBridge", msg)
     }
