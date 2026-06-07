@@ -290,7 +290,7 @@ object WaspMenuSheet {
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
         menuItem(R.drawable.ic_settings, "Configurações", null, "settings")
-        menuItem(R.drawable.ic_info, "Sobre o Wasp",  null, "about")
+
 
         root.addView(View(context), LinearLayout.LayoutParams(1, 24.dp()))
 
