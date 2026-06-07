@@ -1005,6 +1005,21 @@ class MainActivity : AppCompatActivity() {
                                 android.util.Log.d("PopupOAuth", "URL: $url")
                                 finishPopupLoginIfNeeded(session, url)
                             }
+                            override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
+                                val url = request.uri ?: return null
+                                val lower = url.lowercase()
+                                val isDeeplink = !url.startsWith("http://") && !url.startsWith("https://") ||
+                                        lower.contains("links.gosh.sh/deeplinks") ||
+                                        lower.contains("deeplinks/wallet")
+                                if (isDeeplink) {
+                                    runOnUiThread {
+                                        openExternalApp(url)
+                                        resetToMainSession()
+                                    }
+                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                                }
+                                return null
+                            }
                         }
 
                         popupSession = newSession
@@ -1038,7 +1053,9 @@ class MainActivity : AppCompatActivity() {
                 val isAppLink = lowerUrl.contains("play.google.com/store") ||
                         lowerUrl.endsWith(".apk") ||
                         lowerUrl.startsWith("https://t.me/") ||
-                        lowerUrl.startsWith("https://telegram.me/")
+                        lowerUrl.startsWith("https://telegram.me/") ||
+                        lowerUrl.contains("links.gosh.sh/deeplinks") ||
+                        lowerUrl.contains("deeplinks/wallet")
 
                 if (isAppLink) {
                     runOnUiThread { openExternalApp(url) }
