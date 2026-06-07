@@ -5,13 +5,26 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Círculo amarelo -->
+    <!-- Círculo amarelo base -->
     <path
         android:fillColor="#FFC107"
-        android:pathData="M54,12a42,42 0 1,0 0.001,0Z"/>
+        android:pathData="M54,10a44,44 0 1,0 0.001,0Z"/>
+
+    <!-- Brilho superior (reflexo 3D) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M35,18 Q54,10 73,18 Q62,14 54,13 Q46,14 35,18Z"
+        android:fillAlpha="0.35"/>
+
+    <!-- Brilho central suave -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,22 Q54,16 68,22 Q54,19 40,22Z"
+        android:fillAlpha="0.2"/>
 
     <!-- W branco -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M28,35 L38,73 L54,50 L70,73 L80,35 L72,35 L64,60 L54,42 L44,60 L36,35 Z"/>
+        android:pathData="M29,38 L40,74 L54,52 L68,74 L79,38 L71,38 L63,62 L54,45 L45,62 L37,38 Z"/>
+
 </vector>
