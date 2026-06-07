@@ -973,8 +973,31 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
-                if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
-                return null
+                val result = GeckoResult<GeckoSession>()
+                runOnUiThread {
+                    try {
+                        // Fecha popup anterior se existir
+                        try { popupSession?.close() } catch (_: Exception) {}
+
+                        val newSession = GeckoSession()
+                        newSession.settings.usePrivateMode = session.settings.usePrivateMode
+                        setupSession(newSession)
+                        newSession.open(runtime)
+                        popupSession = newSession
+
+                        // Mostra o popup na GeckoView principal
+                        geckoView.setSession(newSession)
+                        if (uri.isNotBlank()) newSession.loadUri(uri)
+
+                        btnBack.alpha = 1f
+                        result.complete(newSession)
+                    } catch (e: Exception) {
+                        // Fallback — abre na mesma aba
+                        if (uri.isNotBlank()) openSite(uri)
+                        result.complete(null)
+                    }
+                }
+                return result
             }
 
             override fun onLoadRequest(
