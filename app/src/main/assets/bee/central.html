@@ -25,6 +25,16 @@
           --radius:  18px;
         }
 
+        [data-theme="light"] {
+          --bg:      #F0F2F8;
+          --bg2:     #ffffff;
+          --bg3:     #E4E7F0;
+          --text:    #1A1E2E;
+          --muted:   rgba(26,30,46,0.55);
+          --border:  rgba(0,0,0,0.08);
+          --shadow:  0 12px 36px rgba(0,0,0,0.12);
+        }
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         html, body {
@@ -540,6 +550,17 @@
         .c-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 </head>
+
+<script>
+  // Aplica tema antes de renderizar para evitar flash
+  (function(){
+    const t = localStorage.getItem("wasp_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+    document.addEventListener("DOMContentLoaded", function(){
+      document.body.setAttribute("data-theme", t);
+    });
+  })();
+</script>
 
 <body>
 
