@@ -5,26 +5,16 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Círculo amarelo base -->
+    <!-- Fundo transparente — o background já é preto -->
+
+    <!-- Círculo amarelo com padding seguro (safe zone: 12dp cada lado) -->
     <path
         android:fillColor="#FFC107"
-        android:pathData="M54,10a44,44 0 1,0 0.001,0Z"/>
+        android:pathData="M54,14a40,40 0 1,0 0.001,0Z"/>
 
-    <!-- Brilho superior (reflexo 3D) -->
+    <!-- W branco centralizado dentro do círculo -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M35,18 Q54,10 73,18 Q62,14 54,13 Q46,14 35,18Z"
-        android:fillAlpha="0.35"/>
-
-    <!-- Brilho central suave -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M40,22 Q54,16 68,22 Q54,19 40,22Z"
-        android:fillAlpha="0.2"/>
-
-    <!-- W branco -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M29,38 L40,74 L54,52 L68,74 L79,38 L71,38 L63,62 L54,45 L45,62 L37,38 Z"/>
+        android:pathData="M31,40 L41,72 L54,51 L67,72 L77,40 L69,40 L62,62 L54,46 L46,62 L39,40 Z"/>
 
 </vector>
