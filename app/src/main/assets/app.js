@@ -828,12 +828,14 @@ function setBottomTab(mode){
 }
 
 function openMarketTab(){
+    closeSettings();
     closeHive();
     openScreen("market");
     setBottomTab("market");
 }
 
 function openHiveTab(){
+    closeSettings();
     setBottomTab("hive");
     // Garante que abre — nunca fecha ao clicar na aba
     const panel = $("hivePanel");
@@ -866,6 +868,7 @@ function goNativeHome(){
 
 // Versão única de resetHome — com setBottomTab correto
 function resetHome(){
+    closeSettings();
     openScreen("home");
     var si = document.getElementById("urlInput") || document.querySelector(".url-input");
     if(si) si.value = "";
