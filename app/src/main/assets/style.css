@@ -3161,3 +3161,32 @@ body[data-theme="light"]::after {
   flex-direction: column;
   gap: 2px;
 }
+
+/* ── Market — Tema Claro ──────────────────────────────────────────── */
+body[data-theme="light"] .mkt-wrap { background: #F0F2F8; }
+body[data-theme="light"] .mkt-header { border-bottom-color: rgba(0,0,0,0.06); }
+body[data-theme="light"] .mkt-global { background: #E4E7F0; border-bottom-color: rgba(0,0,0,0.05); }
+body[data-theme="light"] .mkt-global-label { color: #8892A4; }
+body[data-theme="light"] .mkt-global-val { color: #1A1E2E; }
+body[data-theme="light"] .mkt-global-divider { background: rgba(0,0,0,0.1); }
+body[data-theme="light"] .mkt-nackl-card { background: linear-gradient(135deg, #fff, #F4F6FC); border-color: rgba(255,212,0,0.35); }
+body[data-theme="light"] .mkt-nackl-name { color: #B8960A; }
+body[data-theme="light"] .mkt-nackl-sub { color: #8892A4; }
+body[data-theme="light"] .mkt-nackl-price { color: #1A1E2E; }
+body[data-theme="light"] .mkt-nackl-mcap { color: #8892A4; }
+body[data-theme="light"] .mkt-section-label { color: #8892A4; }
+body[data-theme="light"] .mkt-top3 { background: #fff; border-color: rgba(0,0,0,0.06); }
+body[data-theme="light"] .mkt-coin-row { border-bottom-color: rgba(0,0,0,0.05); }
+body[data-theme="light"] .mkt-coin-name { color: #1A1E2E; }
+body[data-theme="light"] .mkt-coin-sym { color: #8892A4; }
+body[data-theme="light"] .mkt-coin-price { color: #1A1E2E; }
+body[data-theme="light"] .mkt-fg-card { background: #fff; border-color: rgba(0,0,0,0.06); }
+body[data-theme="light"] .mkt-fg-value { color: #B8960A; }
+body[data-theme="light"] .mkt-fg-label { color: #1A1E2E; }
+body[data-theme="light"] .mkt-fg-title { color: #1A1E2E; }
+body[data-theme="light"] .mkt-fg-bar { background: rgba(0,0,0,0.08); }
+body[data-theme="light"] .mkt-fg-scale { color: #8892A4; }
+body[data-theme="light"] .mkt-last-update { color: #8892A4; }
+body[data-theme="light"] .mkt-skeleton { color: #8892A4; }
+body[data-theme="light"] .mkt-trend-list .trend-card { background: #fff; border-color: rgba(0,0,0,0.06); }
+body[data-theme="light"] .mkt-gl-item { background: #fff; border-color: rgba(0,0,0,0.06); }
