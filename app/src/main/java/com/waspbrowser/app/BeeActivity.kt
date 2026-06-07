@@ -81,7 +81,7 @@ class BeeActivity : AppCompatActivity() {
                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
                         .edit()
                         .putBoolean("mining_active", active)
-                        .putBoolean("pip_allowed", active) // PiP só quando minerando
+                        .putBoolean("pip_allowed", active)
                         .apply()
                     try {
                         if (active) {
@@ -89,6 +89,8 @@ class BeeActivity : AppCompatActivity() {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                 context.startForegroundService(intent)
                             } else { context.startService(intent) }
+                        } else {
+                            context.startService(BeeBackgroundService.buildStopIntent(context))
                         }
                     } catch (e: Exception) { Log.e(TAG, "setMiningStatus error: ${e.message}") }
                 }
