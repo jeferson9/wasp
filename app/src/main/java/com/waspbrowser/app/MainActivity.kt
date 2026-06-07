@@ -631,9 +631,7 @@ class MainActivity : AppCompatActivity() {
         val shouldClose = safeUrl.isBlank() || safeUrl == "about:blank" ||
                 safeUrl.contains("login/success") || safeUrl.contains("login/callback") ||
                 safeUrl.contains("auth/success") || safeUrl.contains("auth/callback") ||
-                safeUrl.contains("signin/callback") || safeUrl.contains("close") ||
-                safeUrl.contains("accounts.google.com/o/oauth2/approval") ||
-                safeUrl.contains("accounts.google.com/signin/oauth/consent") ||
+                safeUrl.contains("signin/callback") ||
                 (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage"))
         if (!shouldClose) return
         runOnUiThread {
