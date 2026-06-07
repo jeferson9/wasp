@@ -2950,7 +2950,7 @@ body[data-theme="light"]::after {
 
 /* ── Market Page ──────────────────────────────────────────────────── */
 .mkt-wrap {
-  padding: 0 0 100px;
+  padding: 0 0 120px;
   background: #0d0e14;
   min-height: 100%;
 }
@@ -3059,14 +3059,14 @@ body[data-theme="light"]::after {
 .mkt-coin-row:last-child { border-bottom: none; }
 .mkt-coin-icon {
   width: 36px; height: 36px;
-  border-radius: 10px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 900;
   flex-shrink: 0;
+  overflow: hidden;
 }
-.mkt-coin-btc { background: rgba(247,147,26,0.12); color: #F7931A; }
-.mkt-coin-eth { background: rgba(98,126,234,0.12); color: #627EEA; }
-.mkt-coin-bnb { background: rgba(240,185,11,0.12); color: #F0B90B; }
+.mkt-coin-btc { background: #F7931A; }
+.mkt-coin-eth { background: #627EEA; }
+.mkt-coin-bnb { background: #F0B90B; }
 .mkt-coin-info { flex: 1; }
 .mkt-coin-name { font-size: 13px; font-weight: 600; color: #C8D0E0; }
 .mkt-coin-sym { font-size: 10px; color: #3D4560; margin-top: 1px; }
@@ -3128,6 +3128,7 @@ body[data-theme="light"]::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  text-align: left;
 }
 .mkt-skeleton {
   color: #3D4560;
