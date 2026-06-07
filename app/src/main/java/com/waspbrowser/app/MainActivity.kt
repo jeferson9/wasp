@@ -1500,15 +1500,66 @@ class MainActivity : AppCompatActivity() {
 
     @JavascriptInterface
     fun clearCacheAndCookies() {
-        runOnUiThread {
-            webAppView.clearCache(true)
-            webAppView.clearHistory()
-            android.webkit.WebStorage.getInstance().deleteAllData()
-            val cm = android.webkit.CookieManager.getInstance()
-            cm.removeAllCookies(null)
-            cm.flush()
-            try { geckoSession.purgeHistory() } catch (_: Exception) {}
-            WaspToast.show(this, "Cache e cookies apagados", WaspToast.SUCCESS)
+        // Chaves do localStorage que devem sobreviver à limpeza de cache
+        val preserveKeys = listOf(
+            "wasp_wp",
+            "wasp_wp_total_earned",
+            "wasp_wp_history_v1",
+            "wasp_daily_login",
+            "wasp_daily_streak",
+            "wasp_tap_last_play",
+            "wasp_wp_ad_last_view",
+            "wasp_boost_end",
+            "wasp_bee_epochs_paid",
+            "wasp_bee_state_v6",
+            "wasp_mamba_dismissed",
+            "wasp_pip_mining"
+        )
+
+        // 1. Lê os valores antes de apagar via JS
+        val js = buildString {
+            append("(function(){")
+            append("var r={};")
+            preserveKeys.forEach { k ->
+                val ek = org.json.JSONObject.quote(k)
+                append("r[$ek]=localStorage.getItem($ek);")
+            }
+            append("return JSON.stringify(r);")
+            append("})()")
+        }
+
+        webAppView.evaluateJavascript(js) { jsonResult ->
+            runOnUiThread {
+                // 2. Limpa tudo
+                webAppView.clearCache(true)
+                webAppView.clearHistory()
+                android.webkit.WebStorage.getInstance().deleteAllData()
+                val cm = android.webkit.CookieManager.getInstance()
+                cm.removeAllCookies(null)
+                cm.flush()
+                try { geckoSession.purgeHistory() } catch (_: Exception) {}
+
+                // 3. Restaura as chaves salvas após o WebView recarregar
+                val raw = jsonResult?.trim('"')?.replace("\\\"", "\"") ?: "{}"
+                try {
+                    val obj = org.json.JSONObject(raw)
+                    val restoreJs = buildString {
+                        append("(function(){")
+                        preserveKeys.forEach { k ->
+                            if (obj.has(k) && !obj.isNull(k)) {
+                                val v = obj.getString(k).replace("\\", "\\\\").replace("'", "\\'")
+                                append("localStorage.setItem('$k','$v');")
+                            }
+                        }
+                        append("})()")
+                    }
+                    webAppView.postDelayed({
+                        webAppView.evaluateJavascript(restoreJs, null)
+                    }, 800)
+                } catch (_: Exception) {}
+
+                WaspToast.show(this, "Cache e cookies apagados", WaspToast.SUCCESS)
+            }
         }
     }
 
