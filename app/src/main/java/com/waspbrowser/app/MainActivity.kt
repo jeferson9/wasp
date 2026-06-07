@@ -634,9 +634,7 @@ class MainActivity : AppCompatActivity() {
                 safeUrl.contains("signin/callback") || safeUrl.contains("close") ||
                 safeUrl.contains("accounts.google.com/o/oauth2/approval") ||
                 safeUrl.contains("accounts.google.com/signin/oauth/consent") ||
-                (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage")) ||
-                (safeUrl.contains("twitter.com") && !safeUrl.contains("accounts.google.com")) ||
-                (safeUrl.contains("x.com") && !safeUrl.contains("accounts.google.com"))
+                (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage"))
         if (!shouldClose) return
         runOnUiThread {
             val currentPopup = popupSession
