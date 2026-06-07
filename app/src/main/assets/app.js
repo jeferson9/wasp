@@ -1318,8 +1318,7 @@ document.addEventListener("pointerdown", function(e){
     const hivePanel = $("hivePanel");
     if(hivePanel){
         if(hivePanel.classList.contains("active") && !hivePanel.contains(target)){
-            hivePanel.classList.remove("active");
-            setBottomTab("main");
+            closeHive();
         }
     }
 });
