@@ -3021,8 +3021,9 @@ body[data-theme="light"]::after {
   width: 44px; height: 44px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid rgba(255,212,0,0.2);
+  border: 1px solid rgba(255,212,0,0.3);
   flex-shrink: 0;
+  background: #000;
 }
 .mkt-nackl-name { font-size: 16px; font-weight: 800; color: #FFD400; letter-spacing: 1px; }
 .mkt-nackl-sub { font-size: 10px; color: #3D4560; margin-top: 2px; }
