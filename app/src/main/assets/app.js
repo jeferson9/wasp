@@ -845,8 +845,10 @@ function openMarketTab(){
 
 function openHiveTab(){
     closeSettings();
+    // Salva a aba atual antes de abrir o Hive
+    const active = document.querySelector(".bottom-tab.active");
+    window._tabBeforeHive = active ? active.dataset.mode : "main";
     setBottomTab("hive");
-    // Garante que abre — nunca fecha ao clicar na aba
     const panel = $("hivePanel");
     if(!panel) return;
     if(!panel.classList.contains("active")){
@@ -949,8 +951,10 @@ function closeHive(){
     const panel = $("hivePanel");
     if(panel) panel.classList.remove("active");
     showHiveHandle();
-    // Volta aba ativa para home quando fecha o Hive
-    setBottomTab("main");
+    // Volta para a aba que estava ativa antes do Hive abrir
+    const prev = window._tabBeforeHive || "main";
+    setBottomTab(prev);
+    window._tabBeforeHive = null;
 }
 
 /* =========================
