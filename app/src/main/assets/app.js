@@ -838,6 +838,7 @@ function setBottomTab(mode){
 function openMarketTab(){
     closeSettings();
     closeHive();
+    lastGainerUpdate = 0;
     openScreen("market");
     setBottomTab("market");
 }
