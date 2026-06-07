@@ -2950,7 +2950,7 @@ body[data-theme="light"]::after {
 
 /* ── Market Page ──────────────────────────────────────────────────── */
 .mkt-wrap {
-  padding: 0 0 120px;
+  padding: 0 0 160px;
   background: #0d0e14;
   min-height: 100%;
 }
@@ -3019,10 +3019,10 @@ body[data-theme="light"]::after {
 .mkt-nackl-left { display: flex; align-items: center; gap: 12px; }
 .mkt-nackl-icon {
   width: 44px; height: 44px;
-  background: rgba(255,212,0,0.06);
+  border-radius: 50%;
+  overflow: hidden;
   border: 1px solid rgba(255,212,0,0.2);
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
 .mkt-nackl-name { font-size: 16px; font-weight: 800; color: #FFD400; letter-spacing: 1px; }
 .mkt-nackl-sub { font-size: 10px; color: #3D4560; margin-top: 2px; }
