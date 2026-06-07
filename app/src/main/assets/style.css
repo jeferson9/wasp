@@ -2947,3 +2947,205 @@ body[data-theme="light"]::after {
   from { transform: rotate(-2deg); }
   to   { transform: rotate(2deg); }
 }
+
+/* ── Market Page ──────────────────────────────────────────────────── */
+.mkt-wrap {
+  padding: 0 0 100px;
+  background: #0d0e14;
+  min-height: 100%;
+}
+
+/* Header */
+.mkt-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 52px 20px 16px;
+  border-bottom: 1px solid rgba(255,212,0,0.08);
+}
+.mkt-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #FFD400;
+  margin-bottom: 4px;
+}
+.mkt-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #E8ECF4;
+  letter-spacing: -0.5px;
+}
+.mkt-title-accent { color: #FFD400; }
+.mkt-last-update {
+  font-size: 11px;
+  color: #3D4560;
+  font-family: monospace;
+}
+
+/* Métricas globais */
+.mkt-global {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  background: #111420;
+  border-bottom: 1px solid rgba(255,212,0,0.06);
+}
+.mkt-global-item { flex: 1; text-align: center; }
+.mkt-global-label { font-size: 9px; letter-spacing: 1.5px; color: #3D4560; text-transform: uppercase; margin-bottom: 3px; }
+.mkt-global-val { font-size: 12px; font-weight: 700; color: #C8D0E0; font-family: monospace; }
+.mkt-global-divider { width: 1px; height: 28px; background: rgba(255,212,0,0.1); }
+
+/* NACKL card destaque */
+.mkt-nackl-card {
+  position: relative;
+  margin: 20px 16px 4px;
+  background: linear-gradient(135deg, #161922, #111420);
+  border: 1px solid rgba(255,212,0,0.25);
+  border-radius: 16px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.mkt-nackl-glow {
+  position: absolute;
+  top: -30px; left: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(255,212,0,0.08), transparent 70%);
+  pointer-events: none;
+}
+.mkt-nackl-left { display: flex; align-items: center; gap: 12px; }
+.mkt-nackl-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,212,0,0.06);
+  border: 1px solid rgba(255,212,0,0.2);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mkt-nackl-name { font-size: 16px; font-weight: 800; color: #FFD400; letter-spacing: 1px; }
+.mkt-nackl-sub { font-size: 10px; color: #3D4560; margin-top: 2px; }
+.mkt-nackl-right { text-align: right; }
+.mkt-nackl-price { font-size: 20px; font-weight: 800; color: #E8ECF4; font-family: monospace; }
+.mkt-nackl-change { font-size: 12px; font-weight: 700; margin-top: 2px; }
+.mkt-nackl-mcap { font-size: 10px; color: #3D4560; margin-top: 4px; font-family: monospace; }
+
+/* Section label */
+.mkt-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: #3D4560;
+  padding: 20px 20px 8px;
+  text-transform: uppercase;
+}
+
+/* Top 3 */
+.mkt-top3 {
+  margin: 0 16px;
+  background: #111420;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.mkt-coin-row {
+  display: flex;
+  align-items: center;
+  padding: 13px 16px;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.mkt-coin-row:last-child { border-bottom: none; }
+.mkt-coin-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900;
+  flex-shrink: 0;
+}
+.mkt-coin-btc { background: rgba(247,147,26,0.12); color: #F7931A; }
+.mkt-coin-eth { background: rgba(98,126,234,0.12); color: #627EEA; }
+.mkt-coin-bnb { background: rgba(240,185,11,0.12); color: #F0B90B; }
+.mkt-coin-info { flex: 1; }
+.mkt-coin-name { font-size: 13px; font-weight: 600; color: #C8D0E0; }
+.mkt-coin-sym { font-size: 10px; color: #3D4560; margin-top: 1px; }
+.mkt-coin-data { text-align: right; }
+.mkt-coin-price { font-size: 13px; font-weight: 700; color: #E8ECF4; font-family: monospace; }
+.mkt-coin-chg { font-size: 11px; font-weight: 600; margin-top: 2px; }
+
+/* Fear & Greed */
+.mkt-fg-card {
+  margin: 0 16px;
+  background: #111420;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.mkt-fg-left { text-align: center; min-width: 64px; }
+.mkt-fg-value { font-size: 36px; font-weight: 900; color: #FFD400; font-family: monospace; line-height: 1; }
+.mkt-fg-label { font-size: 10px; font-weight: 700; color: #C8D0E0; margin-top: 4px; letter-spacing: 0.5px; }
+.mkt-fg-right { flex: 1; }
+.mkt-fg-title { font-size: 11px; font-weight: 600; color: #C8D0E0; margin-bottom: 10px; }
+.mkt-fg-bar-wrap {}
+.mkt-fg-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mkt-fg-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #E23B3B, #FFD400, #22C55E);
+  background-size: 300% 100%;
+  transition: width 0.8s ease;
+}
+.mkt-fg-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 9px;
+  color: #3D4560;
+  letter-spacing: 0.5px;
+}
+
+/* Trending */
+.mkt-trend-list {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mkt-trend-list .trend-card {
+  background: #111420;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mkt-skeleton {
+  color: #3D4560;
+  font-size: 12px;
+  padding: 12px 0;
+  text-align: center;
+}
+
+/* Gainers / Losers */
+.mkt-gl-wrap {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+}
+.mkt-gl-col { flex: 1; }
+.mkt-gl-col .mkt-section-label { padding: 20px 0 8px; }
+.mkt-gl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

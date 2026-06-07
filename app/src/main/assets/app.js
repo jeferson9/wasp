@@ -515,16 +515,20 @@ async function waspUpdateTrending(){
       `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
     );
 
-    trendList.innerHTML = coins.slice(0, 10).map(c => {
+    trendList.innerHTML = coins.slice(0, 6).map((c, idx) => {
       const i = c.item;
+      const price = prices[i.id]?.usd;
+      const priceStr = price ? waspFmtPrice(price) : "$ --";
       return `
         <div class="trend-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${i.id}')">
-          <div class="trend-top">
-            <div class="trend-symbol">${safeText(i.symbol)}</div>
-            <div style="opacity:.7;font-weight:900;">#${i.market_cap_rank || "--"}</div>
+          <div style="display:flex;align-items:center;gap:10px;flex:1">
+            <div style="font-size:10px;color:#3D4560;font-weight:700;min-width:18px">#${idx+1}</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#C8D0E0">${safeText(i.symbol)}</div>
+              <div style="font-size:10px;color:#3D4560">${safeText(i.name)}</div>
+            </div>
           </div>
-          <div class="trend-name">${safeText(i.name)}</div>
-          <div class="trend-price">${waspFmtPrice(prices[i.id]?.usd)}</div>
+          <div style="font-size:12px;font-weight:700;color:#E8ECF4;font-family:monospace">${priceStr}</div>
         </div>
       `;
     }).join("");
@@ -567,23 +571,31 @@ async function waspUpdateGainersLosers(){
 
     cachedGainersHTML = gainers.map(c => `
       <div class="gain-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
-        <div class="gain-top">
-          <div class="gain-symbol">${safeText(c.symbol.toUpperCase())}</div>
-          <div class="gain-change" style="color:${WASP_GREEN}">+${c.price_change_percentage_24h.toFixed(2)}%</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#111420;border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#C8D0E0">${safeText(c.symbol.toUpperCase())}</div>
+            <div style="font-size:9px;color:#3D4560;margin-top:1px">${safeText(c.name)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;font-weight:700;color:#22C55E">+${c.price_change_percentage_24h.toFixed(2)}%</div>
+            <div style="font-size:9px;color:#3D4560;font-family:monospace;margin-top:1px">${waspFmtPrice(c.current_price)}</div>
+          </div>
         </div>
-        <div class="gain-name">${safeText(c.name)}</div>
-        <div class="gain-price">${waspFmtPrice(c.current_price)}</div>
       </div>
     `).join("");
 
     cachedLosersHTML = losers.map(c => `
       <div class="lose-card" onclick="openNativeUrl('https://www.coingecko.com/en/coins/${c.id}')">
-        <div class="lose-top">
-          <div class="lose-symbol">${safeText(c.symbol.toUpperCase())}</div>
-          <div class="lose-change" style="color:${WASP_RED}">${c.price_change_percentage_24h.toFixed(2)}%</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#111420;border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#C8D0E0">${safeText(c.symbol.toUpperCase())}</div>
+            <div style="font-size:9px;color:#3D4560;margin-top:1px">${safeText(c.name)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;font-weight:700;color:#E23B3B">${c.price_change_percentage_24h.toFixed(2)}%</div>
+            <div style="font-size:9px;color:#3D4560;font-family:monospace;margin-top:1px">${waspFmtPrice(c.current_price)}</div>
+          </div>
         </div>
-        <div class="lose-name">${safeText(c.name)}</div>
-        <div class="lose-price">${waspFmtPrice(c.current_price)}</div>
       </div>
     `).join("");
 
@@ -661,6 +673,8 @@ async function waspUpdateMarketAll(){
     await waspUpdateFearGreed();
     await waspUpdateTrending();
     await waspUpdateGainersLosers();
+    const el = $("mktLastUpdate");
+    if(el){ const n = new Date(); el.textContent = n.getHours().toString().padStart(2,"0")+":"+n.getMinutes().toString().padStart(2,"0"); }
   } catch(e){}
 }
 
