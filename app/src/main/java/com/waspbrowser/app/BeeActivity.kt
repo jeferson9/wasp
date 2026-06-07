@@ -460,6 +460,17 @@ class BeeActivity : AppCompatActivity() {
                     "document.documentElement.setAttribute('data-theme','$theme');document.body&&document.body.setAttribute('data-theme','$theme');",
                     null
                 )
+                if (theme == "light") {
+                    view?.evaluateJavascript("""
+                        (function(){
+                            var h = document.getElementById('bee-header');
+                            if(h) h.style.background = 'rgba(240,242,248,0.97)';
+                            if(h) h.style.borderBottomColor = 'rgba(0,0,0,0.08)';
+                            document.body.style.background = '#F0F2F8';
+                            document.body.style.color = '#1A1E2E';
+                        })()
+                    """.trimIndent(), null)
+                }
                 if (!pageLoaded) {
                     pageLoaded = true
                     beeWebView.animate().alpha(1f).setDuration(200).start()
