@@ -283,6 +283,7 @@ object WaspMenuSheet {
         val beeDot       = if (isMining) GREEN else Color.parseColor("#E23B3B")
         val beeStroke    = if (isMining) Color.parseColor("#1A4D28") else Color.parseColor("#4D1A1A")
         val beeBg        = if (isMining) BG_BEE else Color.parseColor("#1A0A0A")
+        android.util.Log.d("WaspMenu", "bgMining=$bgMining fgMining=$fgMining isMining=$isMining")
         menuItem(R.drawable.ic_bee_tech, "Bee Engine", beeSubtitle, "bee",
             bgColor = beeBg, strokeColor = beeStroke,
             iconColor = GREEN, dot = beeDot)
