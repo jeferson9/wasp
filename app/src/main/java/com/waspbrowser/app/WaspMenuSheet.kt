@@ -272,9 +272,9 @@ object WaspMenuSheet {
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
         sectionLabel("WEB3")
-        menuItem(R.drawable.ic_engine, "Web3 Hub",    "DApps e carteiras", "web3",
-            bgColor = BG_WEB3, strokeColor = Color.parseColor("#3D2F00"),
-            iconColor = YELLOW, badge = "NOVO")
+        menuItem(R.drawable.ic_engine, "Web3 Hub",    "Em desenvolvimento", "web3",
+            bgColor = Color.parseColor("#131824"), strokeColor = Color.parseColor("#252A3D"),
+            iconColor = Color.parseColor("#A0AABF"), badge = "EM BREVE")
         val bgMining = BeeBackgroundService.isActive(context)
         val fgMining = context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
             .getBoolean("mining_active", false)

@@ -801,7 +801,7 @@ class MainActivity : AppCompatActivity() {
                     "favorites"  -> startActivityFade(Intent(this, FavoritesActivity::class.java))
                     "history"    -> startActivityFade(Intent(this, HistoryActivity::class.java))
                     "downloads"  -> startActivityFade(Intent(this, DownloadsActivity::class.java))
-                    "web3"       -> startActivityFade(Intent(this, Web3Activity::class.java))
+                    "web3"       -> WaspToast.show(this, "Web3 Hub em breve!", WaspToast.INFO)
                     "bee"        -> openBeePanel()
                     "translate"  -> {
                         if (currentUrl.isBlank() || currentUrl.startsWith("about:")) {
