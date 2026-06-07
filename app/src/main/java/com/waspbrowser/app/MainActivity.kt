@@ -916,6 +916,19 @@ class MainActivity : AppCompatActivity() {
                 if (success && currentUrl.isNotBlank()) {
                     try {
                         val domain = android.net.Uri.parse(currentUrl).host ?: ""
+                        // Suprime Google One Tap no X/Twitter
+                        if (domain.contains("x.com") || domain.contains("twitter.com")) {
+                            val js = """javascript:(function(){
+                                function removeOneTap(){
+                                    var el=document.getElementById('credential_picker_container');
+                                    if(el)el.remove();
+                                    document.querySelectorAll('iframe[src*="accounts.google.com"]').forEach(function(f){f.remove();});
+                                }
+                                removeOneTap();
+                                new MutationObserver(removeOneTap).observe(document.body,{childList:true,subtree:true});
+                            })()""".trimIndent()
+                            session.loadUri(js)
+                        }
                         val faviconUrl = "https://www.google.com/s2/favicons?domain=$domain&sz=64"
                         Thread {
                             try {
