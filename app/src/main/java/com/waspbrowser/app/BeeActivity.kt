@@ -579,11 +579,10 @@ class BeeActivity : AppCompatActivity() {
                         startService(intent)
                     }
                 } else {
-                    // JS chama setMiningStatus(false) durante transição entre epochs
-                    // (coletando reward, aguardando restart). NÃO remove o overlay
-                    // nem para o Service — o overlay só some quando o usuário
-                    // desligar manualmente via stopBgMining().
-                    Log.d(TAG, "setMiningStatus(false) — mantendo overlay e Service ativos")
+                    // Usuário desligou — limpa flag
+                    getSharedPreferences(PREFS_MINING, MODE_PRIVATE)
+                        .edit().putBoolean(KEY_MINING_ACTIVE, false).apply()
+                    Log.d(TAG, "setMiningStatus(false) — mineração desligada")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "setMiningStatus service error: ${e.message}")
