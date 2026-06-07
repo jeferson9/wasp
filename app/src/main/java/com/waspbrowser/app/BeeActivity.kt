@@ -539,6 +539,19 @@ class BeeActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun vibrate(ms: Long) {
+            val vib = getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+            vib?.let {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    it.vibrate(android.os.VibrationEffect.createOneShot(ms, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    it.vibrate(ms)
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun log(msg: String) {
             Log.d("BeeBridgeJS", msg)
         }
