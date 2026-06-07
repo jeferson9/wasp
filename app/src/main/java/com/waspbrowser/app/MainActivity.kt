@@ -632,7 +632,11 @@ class MainActivity : AppCompatActivity() {
                 safeUrl.contains("login/success") || safeUrl.contains("login/callback") ||
                 safeUrl.contains("auth/success") || safeUrl.contains("auth/callback") ||
                 safeUrl.contains("signin/callback") || safeUrl.contains("close") ||
-                (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage"))
+                safeUrl.contains("accounts.google.com/o/oauth2/approval") ||
+                safeUrl.contains("accounts.google.com/signin/oauth/consent") ||
+                (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage")) ||
+                (safeUrl.contains("twitter.com") && !safeUrl.contains("accounts.google.com")) ||
+                (safeUrl.contains("x.com") && !safeUrl.contains("accounts.google.com"))
         if (!shouldClose) return
         runOnUiThread {
             val currentPopup = popupSession
@@ -978,6 +982,21 @@ class MainActivity : AppCompatActivity() {
                     try {
                         try { popupSession?.close() } catch (_: Exception) {}
                         val newSession = GeckoSession()
+
+                        // Fecha popup quando JS chama window.close()
+                        newSession.contentDelegate = object : GeckoSession.ContentDelegate {
+                            override fun onCloseRequest(session: GeckoSession) {
+                                runOnUiThread { resetToMainSession() }
+                            }
+                        }
+
+                        // Fecha popup quando navega para URL de callback
+                        newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
+                            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
+                                finishPopupLoginIfNeeded(session, url)
+                            }
+                        }
+
                         popupSession = newSession
                         geckoView.setSession(newSession)
                         btnBack.alpha = 1f
