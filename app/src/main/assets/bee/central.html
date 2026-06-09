@@ -1257,25 +1257,27 @@
       setInterval(() => renderAll(), 1000);
 
       // ── Timer de cobrança PiP: 0.2 WP/min ──────────────────────────────
-      setInterval(() => {
-        try {
-          const pipActive = window.AndroidBee && window.AndroidBee.isPipEnabled
-            ? window.AndroidBee.isPipEnabled()
-            : localStorage.getItem("wasp_pip_mining") === "true";
-          if (!pipActive) return;
-          const wp = getWP();
-          if (wp < 0.2) {
-            // Sem WP — desliga PiP
-            localStorage.removeItem("wasp_pip_mining");
-            if (window.AndroidBee && window.AndroidBee.setPipEnabled) {
-              window.AndroidBee.setPipEnabled(false);
+      if (!window._pipWpTimerStarted) {
+        window._pipWpTimerStarted = true;
+        setInterval(() => {
+          try {
+            const pipActive = window.AndroidBee && window.AndroidBee.isPipEnabled
+              ? window.AndroidBee.isPipEnabled()
+              : localStorage.getItem("wasp_pip_mining") === "true";
+            if (!pipActive) return;
+            const wp = getWP();
+            if (wp < 0.2) {
+              localStorage.removeItem("wasp_pip_mining");
+              if (window.AndroidBee && window.AndroidBee.setPipEnabled) {
+                window.AndroidBee.setPipEnabled(false);
+              }
+              toast("WP insuficiente — PiP desativado");
+              return;
             }
-            toast("WP insuficiente — PiP desativado");
-            return;
-          }
-          addWP(-0.2, "PiP Mining");
-        } catch(e) {}
-      }, 60000); // a cada 1 minuto
+            addWP(-0.2, "PiP Mining");
+          } catch(e) {}
+        }, 60000);
+      }
 
       // Liga o anúncio por addEventListener (além do onclick inline) — em
       // alguns WebViews o onclick inline no card não dispara de forma
