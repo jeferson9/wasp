@@ -532,20 +532,23 @@
         ══════════════════════════════════════════ */
         .c-toast {
           position: fixed;
-          bottom: calc(env(safe-area-inset-bottom,0px) + 24px);
-          left: 50%; transform: translateX(-50%) translateY(20px);
-          background: rgba(20,22,32,0.95);
-          border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 999px;
-          padding: 10px 22px;
-          font-size: 13px; font-weight: 700;
-          color: var(--text);
-          box-shadow: 0 8px 28px rgba(0,0,0,.5);
-          backdrop-filter: blur(14px);
+          bottom: calc(env(safe-area-inset-bottom,0px) + 32px);
+          left: 50%; transform: translateX(-50%) translateY(16px);
+          background: #1B1B1B;
+          border: 1px solid rgba(255,193,7,0.35);
+          border-radius: 12px;
+          padding: 11px 20px;
+          font-size: 13px; font-weight: 600;
+          color: #E8ECF4;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,193,7,0.08);
           z-index: 99999;
           opacity: 0;
-          transition: opacity .25s ease, transform .25s ease;
+          transition: opacity .22s ease, transform .22s ease;
           white-space: nowrap;
+          max-width: 88vw;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          letter-spacing: 0.2px;
         }
         .c-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
