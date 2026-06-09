@@ -1528,14 +1528,6 @@ function blurSearch(){
 ========================= */
 const TRACKER_KEY = "wasp_block_trackers";
 
-function togglePrivacyOptions(){
-    const menu = $("privacyOptions");
-    if(menu) menu.classList.toggle("active");
-    // Sincroniza toggle com estado salvo
-    const tog = $("trackerToggle");
-    if(tog) tog.checked = localStorage.getItem(TRACKER_KEY) === "1";
-}
-
 function setTrackerBlock(enabled){
     localStorage.setItem(TRACKER_KEY, enabled ? "1" : "0");
     if(window.Android && typeof Android.setTrackerBlock === "function"){
@@ -1544,23 +1536,25 @@ function setTrackerBlock(enabled){
     showToast(enabled ? "🛡️ Rastreadores bloqueados" : "Bloqueio desativado");
 }
 
-function clearBrowsingHistory(){
-    if(!confirm("Limpar todo o histórico de navegação?")) return;
-    localStorage.removeItem(HISTORY_KEY);
-    renderRecents();
-    if(window.Android && typeof Android.clearBrowsingHistory==="function"){
-        Android.clearBrowsingHistory();
-    } else {
-        showToast("🗑️ Histórico apagado");
+function confirmClearCache(){
+    const d = $("clearCacheDialog");
+    if(d) d.classList.add("active");
+}
+
+function closeClearCache(){
+    const d = $("clearCacheDialog");
+    if(d) d.classList.remove("active");
+}
+
+function doClearCache(){
+    closeClearCache();
+    if(window.Android && typeof Android.clearCacheAndCookies === "function"){
+        Android.clearCacheAndCookies();
     }
 }
 
 function clearCacheAndCookies(){
-    if(!confirm("Limpar cache e cookies?")) return;
-    if(window.Android && typeof Android.clearCacheAndCookies === "function"){
-        Android.clearCacheAndCookies();
-    }
-    showToast("🍪 Cache e cookies apagados");
+    confirmClearCache();
 }
 
 function showToast(msg){

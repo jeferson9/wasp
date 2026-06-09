@@ -396,26 +396,26 @@
             <div class="settings-subitem" onclick="setEngineFromSettings('bing')"><img src="img/bing.webp" style="width:20px;height:20px;object-fit:contain;margin-right:8px;vertical-align:middle;"> Bing</div>
             <div class="settings-subitem" onclick="setEngineFromSettings('duck')"><img src="img/duck.webp" style="width:20px;height:20px;object-fit:contain;margin-right:8px;vertical-align:middle;"> DuckDuckGo</div>
         </div>
-        <div class="settings-item" onclick="togglePrivacyOptions()">
-            <span>Privacidade</span>
-            <span style="margin-left:auto;margin-right:8px;opacity:0.5;font-size:12px;">›</span>
-        </div>
-        <div id="privacyOptions" class="settings-submenu">
-
-            <div class="settings-subitem" onclick="clearBrowsingHistory()">
-                🗑️ Limpar histórico de navegação
-            </div>
-
-            <div class="settings-subitem" onclick="clearCacheAndCookies()">
-                🍪 Limpar cache e cookies
-            </div>
-
+        <div class="settings-item" onclick="confirmClearCache()">
+            <span>🍪 Limpar cache e cookies</span>
         </div>
         <div class="settings-item">Bee Engine</div>
     </div>
 </div>
 
 <!-- DIALOG ADICIONAR -->
+<!-- DIALOG LIMPAR CACHE -->
+<div id="clearCacheDialog" class="remove-dialog">
+    <div class="remove-box">
+        <p class="remove-title">Limpar cache e cookies?</p>
+        <p class="remove-sub">O saldo WP e dados de mineração serão preservados.</p>
+        <div class="remove-actions">
+            <button class="remove-cancel" onclick="closeClearCache()">Cancelar</button>
+            <button class="remove-confirm" onclick="doClearCache()">Limpar</button>
+        </div>
+    </div>
+</div>
+
 <div id="addDialog" class="remove-dialog">
     <div class="remove-box add-box">
         <div class="add-title">
