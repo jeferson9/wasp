@@ -271,14 +271,13 @@ class BeeActivity : AppCompatActivity() {
                 @android.webkit.JavascriptInterface
                 fun setPipEnabled(enabled: Boolean) {
                     if (enabled) {
-                        // Verifica saldo WP na central (iframe) antes de ligar
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            beeWebView.evaluateJavascript(
+                            this@BeeActivity.beeWebView.evaluateJavascript(
                                 "(function(){ var f=document.querySelector('iframe'); if(!f||!f.contentWindow) return 'ok'; try{ var w=parseFloat(f.contentWindow.localStorage.getItem('wasp_wp')||'0'); return w>=1?'ok':'low'; }catch(e){ return 'ok'; } })()"
                             ) { result ->
                                 val clean = result?.trim()?.trim('"') ?: "ok"
                                 if (clean == "low") {
-                                    beeWebView.evaluateJavascript(
+                                    this@BeeActivity.beeWebView.evaluateJavascript(
                                         "var sw=document.getElementById('pipSwitch');if(sw)sw.checked=false;",
                                         null
                                     )
