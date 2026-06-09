@@ -270,8 +270,29 @@ class BeeActivity : AppCompatActivity() {
                 }
                 @android.webkit.JavascriptInterface
                 fun setPipEnabled(enabled: Boolean) {
-                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
-                        .edit().putBoolean("pip_user_enabled", enabled).apply()
+                    if (enabled) {
+                        // Verifica saldo WP na central (iframe) antes de ligar
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            beeWebView.evaluateJavascript(
+                                "(function(){ var f=document.querySelector('iframe'); if(!f||!f.contentWindow) return 'ok'; try{ var w=parseFloat(f.contentWindow.localStorage.getItem('wasp_wp')||'0'); return w>=1?'ok':'low'; }catch(e){ return 'ok'; } })()"
+                            ) { result ->
+                                val clean = result?.trim()?.trim('"') ?: "ok"
+                                if (clean == "low") {
+                                    beeWebView.evaluateJavascript(
+                                        "var sw=document.getElementById('pipSwitch');if(sw)sw.checked=false;",
+                                        null
+                                    )
+                                    BeeActivity.runJs("if(window.toast)toast('Saldo WP insuficiente para PiP');")
+                                } else {
+                                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                                        .edit().putBoolean("pip_user_enabled", true).apply()
+                                }
+                            }
+                        }
+                    } else {
+                        context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                            .edit().putBoolean("pip_user_enabled", false).apply()
+                    }
                 }
                 @android.webkit.JavascriptInterface
                 fun isPipEnabled(): Boolean {

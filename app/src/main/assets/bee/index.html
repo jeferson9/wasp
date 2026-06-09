@@ -578,46 +578,8 @@
 
 <script>
     // ── PiP (janela flutuante): escolha do usuário, não automático ──
-    var _pipWpTimer = null;
-    var PIP_WP_COST_PER_MIN = 0.2;
-
-    function startPipWpDrain() {
-        stopPipWpDrain();
-        _pipWpTimer = setInterval(function() {
-            try {
-                var wp = parseFloat(localStorage.getItem("wasp_wp") || "0");
-                if (wp < PIP_WP_COST_PER_MIN) {
-                    // Sem WP — desliga PiP
-                    var sw = document.getElementById("pipSwitch");
-                    if (sw) { sw.checked = false; togglePip(false); }
-                    stopPipWpDrain();
-                    if (window.AndroidBee && AndroidBee.toast) AndroidBee.toast("WP insuficiente — PiP desativado");
-                    return;
-                }
-                localStorage.setItem("wasp_wp", (wp - PIP_WP_COST_PER_MIN).toFixed(2));
-            } catch(e) {}
-        }, 60000); // a cada 1 minuto
-    }
-
-    function stopPipWpDrain() {
-        if (_pipWpTimer) { clearInterval(_pipWpTimer); _pipWpTimer = null; }
-    }
-
     function togglePip(enabled) {
         try {
-            if (enabled) {
-                // Verifica WP mínimo
-                var wp = parseFloat(localStorage.getItem("wasp_wp") || "0");
-                if (wp < 1) {
-                    var sw = document.getElementById("pipSwitch");
-                    if (sw) sw.checked = false;
-                    if (window.AndroidBee && AndroidBee.toast) AndroidBee.toast("Saldo WP insuficiente para PiP");
-                    return;
-                }
-                startPipWpDrain();
-            } else {
-                stopPipWpDrain();
-            }
             if (window.AndroidBee && typeof window.AndroidBee.setPipEnabled === "function") {
                 window.AndroidBee.setPipEnabled(!!enabled);
             }
