@@ -270,8 +270,6 @@ class BeeActivity : AppCompatActivity() {
                 }
                 @android.webkit.JavascriptInterface
                 fun setPipEnabled(enabled: Boolean) {
-                    // Escolha do usuário: ligar/desligar a janela flutuante (PiP)
-                    // ao sair do app. Guardado em SharedPreferences.
                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
                         .edit().putBoolean("pip_user_enabled", enabled).apply()
                 }
