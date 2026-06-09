@@ -964,12 +964,6 @@
       function scheduleRestart() {
         setStatus("warn", "Aguardando próximo epoch...", "Reiniciando em ~30s");
         if (switchSub) switchSub.textContent = "Aguardando próximo epoch...";
-        // Interstitial entre épocas
-        try {
-          if (window.AndroidBee && window.AndroidBee.showInterstitial) {
-            window.AndroidBee.showInterstitial();
-          }
-        } catch(_) {}
         setTimeout(function() {
           if (miningSwitch && miningSwitch.checked) startMining();
         }, 30000);

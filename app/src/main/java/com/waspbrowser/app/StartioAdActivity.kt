@@ -62,35 +62,21 @@ class StartioAdActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(buildLoadingOverlay())
 
-        val mode = intent.getStringExtra(EXTRA_MODE) ?: "wp"
+        // Mostra um overlay imediato para a tela nao ficar preta/vazia enquanto
+        // o video carrega pela rede. So feedback visual; nao acelera o load.
+        setContentView(buildLoadingOverlay())
 
         fun diag(m: String) {
             Log.d(TAG, m)
             statusText.text = m
         }
 
+        // SDK ja inicializado no SplashActivity (no boot). Nao reinicializamos
+        // aqui: chamar init() de novo no momento de abrir o anuncio so atrasa
+        // a abertura da tela. Mantemos o modo de teste alinhado com o Splash.
         StartAppSDK.setTestAdsEnabled(true) // MODO DE TESTE — trocar p/ false antes de publicar
 
-        if (mode == "interstitial") {
-            val ad = StartAppAd(this)
-            diag("Carregando anúncio...")
-            ad.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
-                override fun onReceiveAd(p: Ad) {
-                    ad.showAd(object : AdDisplayListener {
-                        override fun adHidden(p0: Ad) { safeFinish() }
-                        override fun adDisplayed(p0: Ad) {}
-                        override fun adClicked(p0: Ad) {}
-                        override fun adNotDisplayed(p0: Ad) { safeFinish() }
-                    })
-                }
-                override fun onFailedToReceiveAd(p: Ad?) { safeFinish() }
-            })
-            return
-        }
-
-        // Modo padrão: vídeo recompensado (wp)
         val ad = StartAppAd(this)
 
         // Marca rewarded so quando o video e assistido ate o fim.

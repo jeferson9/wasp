@@ -562,25 +562,6 @@ class BeeActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun showInterstitial() {
-            android.os.Handler(android.os.Looper.getMainLooper()).post {
-                try {
-                    val prefs = getSharedPreferences("wasp_ads", android.content.Context.MODE_PRIVATE)
-                    val last = prefs.getLong("epoch_ad_last", 0L)
-                    val now = System.currentTimeMillis()
-                    if (now - last > 10 * 60 * 1000L) {
-                        prefs.edit().putLong("epoch_ad_last", now).apply()
-                        val i = Intent(this@BeeActivity, StartioAdActivity::class.java)
-                        i.putExtra(StartioAdActivity.EXTRA_MODE, "interstitial")
-                        startActivity(i)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "showInterstitial error: ${e.message}")
-                }
-            }
-        }
-
-        @JavascriptInterface
         fun log(msg: String) {
             Log.d("BeeBridgeJS", msg)
         }
