@@ -270,14 +270,15 @@ class BeeActivity : AppCompatActivity() {
                 }
                 @android.webkit.JavascriptInterface
                 fun setPipEnabled(enabled: Boolean) {
+                    val webView = wv
                     if (enabled) {
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            this@BeeActivity.beeWebView.evaluateJavascript(
+                            webView.evaluateJavascript(
                                 "(function(){ var f=document.querySelector('iframe'); if(!f||!f.contentWindow) return 'ok'; try{ var w=parseFloat(f.contentWindow.localStorage.getItem('wasp_wp')||'0'); return w>=1?'ok':'low'; }catch(e){ return 'ok'; } })()"
                             ) { result ->
                                 val clean = result?.trim()?.trim('"') ?: "ok"
                                 if (clean == "low") {
-                                    this@BeeActivity.beeWebView.evaluateJavascript(
+                                    webView.evaluateJavascript(
                                         "var sw=document.getElementById('pipSwitch');if(sw)sw.checked=false;",
                                         null
                                     )
