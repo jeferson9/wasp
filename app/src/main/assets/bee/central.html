@@ -787,12 +787,12 @@
     /* ══════════════════════════════════════════
        WP CORE
     ══════════════════════════════════════════ */
-    const getWP    = ()  => getN(K.wp, 0);
-    const getTotal = ()  => getN(K.total, 0);
+    const getWP    = ()  => parseFloat(localStorage.getItem(K.wp) || "0");
+    const getTotal = ()  => parseFloat(localStorage.getItem(K.total) || "0");
 
     function addWP(amount, label) {
       const cur = getWP();
-      setN(K.wp, Math.max(0, cur + amount));
+      setN(K.wp, Math.max(0, parseFloat((cur + amount).toFixed(2))));
       setN(K.total, getTotal() + Math.max(0, amount));
       const hist = getJ(K.history, []);
       const sign = amount >= 0 ? "+" : "";
