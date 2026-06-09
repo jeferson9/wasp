@@ -75,7 +75,7 @@ class StartioAdActivity : Activity() {
         // SDK ja inicializado no SplashActivity (no boot). Nao reinicializamos
         // aqui: chamar init() de novo no momento de abrir o anuncio so atrasa
         // a abertura da tela. Mantemos o modo de teste alinhado com o Splash.
-        StartAppSDK.setTestAdsEnabled(true) // MODO DE TESTE — trocar p/ false antes de publicar
+        StartAppSDK.setTestAdsEnabled(false)
 
         val ad = StartAppAd(this)
 
@@ -109,29 +109,8 @@ class StartioAdActivity : Activity() {
             }
 
             override fun onFailedToReceiveAd(p: Ad?) {
-                // FALLBACK SO PARA TESTE — ver aviso no topo do arquivo.
-                // Tenta um anuncio automatico e credita ao fechar. NAO deixar
-                // em producao: credita WP sem video assistido (brecha).
-                diag("Sem vídeo, tentando alternativa (teste)...")
-                ad.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
-                    override fun onReceiveAd(a: Ad) {
-                        ad.showAd(object : AdDisplayListener {
-                            override fun adHidden(a0: Ad?) {
-                                // BRECHA (so teste): reward sem assistir video.
-                                CentralActivity.grantAdReward(applicationContext)
-                                safeFinish()
-                            }
-                            override fun adDisplayed(a0: Ad?) {}
-                            override fun adClicked(a0: Ad?) {}
-                            override fun adNotDisplayed(a0: Ad?) { safeFinish() }
-                        })
-                    }
-                    override fun onFailedToReceiveAd(a: Ad?) {
-                        diag("Nenhum anúncio disponível")
-                        // Pequena pausa so para o usuario ler a mensagem.
-                        handler.postDelayed({ safeFinish() }, 900)
-                    }
-                })
+                diag("Nenhum anúncio disponível")
+                handler.postDelayed({ safeFinish() }, 900)
             }
         })
     }
