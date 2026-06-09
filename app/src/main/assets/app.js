@@ -1283,12 +1283,14 @@ document.addEventListener("click", (e) => {
 document.addEventListener("pointerdown", function(e){
     const addDialog     = $("addDialog");
     const removeDialog  = $("removeDialog");
+    const clearCacheDialog = $("clearCacheDialog");
     const settingsPanel = $("settingsPanel");
     const bottomNav     = document.querySelector(".bottom-nav");
 
     // Não fechar nada se estiver em dialog/settings/nav
     if(addDialog     && addDialog.contains(e.target))     return;
     if(removeDialog  && removeDialog.contains(e.target))  return;
+    if(clearCacheDialog && clearCacheDialog.contains(e.target)) return;
     if(bottomNav     && bottomNav.contains(e.target))     return;
     if(settingsPanel && settingsPanel.classList.contains("active") && settingsPanel.contains(e.target)) return;
 
@@ -1538,12 +1540,12 @@ function setTrackerBlock(enabled){
 
 function confirmClearCache(){
     const d = $("clearCacheDialog");
-    if(d) d.classList.add("active");
+    if(d) d.style.display = "flex";
 }
 
 function closeClearCache(){
     const d = $("clearCacheDialog");
-    if(d) d.classList.remove("active");
+    if(d) d.style.display = "none";
 }
 
 function doClearCache(){
