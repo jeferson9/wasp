@@ -58,16 +58,21 @@ class BeeBackgroundService : Service() {
                 .getBoolean(KEY_ACTIVE, false)
             if (!prefActive) return false
             // Verifica se o serviço realmente está rodando
-            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
-            @Suppress("DEPRECATION")
-            val running = manager.getRunningServices(Int.MAX_VALUE)
-                .any { it.service.className == BeeBackgroundService::class.java.name }
-            if (!running) {
-                // Serviço morreu sem limpar a flag — corrige
-                context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
-                    .edit().putBoolean(KEY_ACTIVE, false).apply()
+            // Nota: getRunningServices é deprecated mas ainda funciona para serviços próprios
+            return try {
+                val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                @Suppress("DEPRECATION")
+                val running = manager.getRunningServices(Int.MAX_VALUE)
+                    ?.any { it.service.className == BeeBackgroundService::class.java.name } ?: false
+                if (!running) {
+                    context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
+                        .edit().putBoolean(KEY_ACTIVE, false).apply()
+                }
+                running
+            } catch (e: Exception) {
+                // Fallback para Xiaomi MIUI que pode restringir getRunningServices
+                prefActive
             }
-            return running
         }
 
         fun remainingMs(context: Context): Long = Long.MAX_VALUE

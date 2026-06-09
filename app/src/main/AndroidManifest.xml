@@ -52,6 +52,7 @@
 
         <activity
             android:name=".BeeActivity"
+            android:exported="false"
             android:launchMode="singleTop" />
 
         <activity
@@ -69,6 +70,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">
@@ -91,13 +93,13 @@
 
         <activity android:name=".HiveManagerActivity" android:exported="false" />
         <activity android:name=".StartioAdActivity" android:exported="false" android:theme="@style/Theme.WaspBrowser.Ad" />
-        <activity android:name=".FavoritesActivity" />
-        <activity android:name=".DownloadsActivity" />
-        <activity android:name=".HistoryActivity" />
-        <activity android:name=".Web3Activity" />
-        <activity android:name=".SettingsActivity" />
-        <activity android:name=".AboutActivity" />
-        <activity android:name=".WaspSecureMode" />
+        <activity android:name=".FavoritesActivity" android:exported="false" />
+        <activity android:name=".DownloadsActivity" android:exported="false" />
+        <activity android:name=".HistoryActivity" android:exported="false" />
+        <activity android:name=".Web3Activity" android:exported="false" />
+        <activity android:name=".SettingsActivity" android:exported="false" />
+        <activity android:name=".AboutActivity" android:exported="false" />
+        <activity android:name=".WaspSecureMode" android:exported="false" />
 
         <service
             android:name=".BeeBackgroundService"
