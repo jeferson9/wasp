@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Wasp Browser — navegador Web3 com hub cripto e mercado em tempo real.">
+    <meta name="description" content="Wasp Browser — Web3 browser with crypto hub and real-time market.">
     <meta name="theme-color" content="#0b0f1a">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
     <title>Wasp Browser</title>
@@ -25,7 +25,7 @@
             <!-- Topbar flutuante com saudação -->
             <div class="home-topbar-mini">
                 <div class="home-greeting home-greeting-topbar">
-                    <span id="greetingText">Olá, Wasp</span>
+                    <span id="greetingText">Hello, Wasp</span>
                     <span id="greetingEmoji" class="greeting-emoji">🐝</span>
                 </div>
                 <button class="home-menu-btn" onclick="toggleMenu()">☰</button>
@@ -56,13 +56,13 @@
                     <input
                         id="homeInput"
                         type="text"
-                        placeholder="Buscar ou digitar URL..."
+                        placeholder="Search or type URL..."
                         autocomplete="off"
                         autocorrect="off"
                         autocapitalize="none"
                         spellcheck="false"
                     />
-                    <button class="home-go" aria-label="Buscar" onclick="searchFrom('homeInput')"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+                    <button class="home-go" aria-label="Search" onclick="searchFrom('homeInput')"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
                     <div id="engineMenu" class="engine-menu">
                         <div class="engine-item" onclick="setEngine('google')">
                             <img id="engine-google" src="img/google.webp" alt=""> Google
@@ -89,7 +89,7 @@
 
             <!-- Indicador de scroll para o conteúdo -->
             <div class="home-scroll-hint" onclick="document.getElementById('homePanels').scrollIntoView({behavior:'smooth'})">
-                <span class="scroll-hint-label">Recentes · Blog · NACKL</span>
+                <span class="scroll-hint-label">Recent · Blog · NACKL</span>
                 <div class="scroll-hint-arrow">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -117,7 +117,7 @@
                 </div>
                 <div class="nackl-mcap-wrap">
                     <span class="nackl-mcap-label">MKT CAP</span>
-                    <span class="nackl-mcap" id="nacklMcap">Pré-lançamento</span>
+                    <span class="nackl-mcap" id="nacklMcap">Pre-launch</span>
                 </div>
             </div>
 
@@ -168,15 +168,15 @@
     <div class="panel-wrap">
 
         <div class="panel-hero">
-            <div class="panel-title">📊 Painel do Usuário</div>
+            <div class="panel-title">📊 User Panel</div>
             <div class="panel-sub">
-                Seu resumo diário de uso, atividade e recursos do Wasp Browser.
+                Your daily summary of usage, activity and Wasp Browser features.
             </div>
         </div>
 
         <div class="panel-grid">
             <div class="panel-card">
-                <div class="pc-label">⏱️ Tempo online hoje</div>
+                <div class="pc-label">⏱️ Online time today</div>
                 <div class="pc-value" id="onlineToday">00:00</div>
                 <div class="pc-sub">Zera automaticamente todo dia</div>
             </div>
@@ -184,14 +184,14 @@
             <div class="panel-card">
                 <div class="pc-label">⚡ Bee Engine</div>
                 <div class="pc-value" id="beeStatus">OFF</div>
-                <div class="pc-sub">Ativação manual (em breve)</div>
+                <div class="pc-sub">Manual activation (coming soon)</div>
                 <button class="pc-btn" onclick="toggleBeeDemo()">Ligar / Desligar</button>
             </div>
         </div>
 
         <div class="panel-card wide">
-            <div class="pc-label">📊 Gráfico (em breve)</div>
-            <div class="chart-placeholder">(Área reservada para gráfico)</div>
+            <div class="pc-label">📊 Chart (coming soon)</div>
+            <div class="chart-placeholder">(Chart area reserved)</div>
         </div>
 
     </div>
@@ -199,7 +199,7 @@
 
 
 <!-- =========================
-     MERCADO CRIPTO
+     MARKET CRIPTO
 ========================= -->
 <section id="market" class="screen">
     <div class="mkt-wrap">
@@ -207,7 +207,7 @@
         <!-- HEADER -->
         <div class="mkt-header">
             <div class="mkt-header-left">
-                <div class="mkt-label">MERCADO</div>
+                <div class="mkt-label">MARKET</div>
                 <div class="mkt-title">Crypto <span class="mkt-title-accent">Market</span></div>
             </div>
             <div class="mkt-last-update" id="mktLastUpdate">--:--</div>
@@ -251,7 +251,7 @@
         </div>
 
         <!-- TOP 3 -->
-        <div class="mkt-section-label">TOP ATIVOS</div>
+        <div class="mkt-section-label">TOP ASSETS</div>
         <div class="mkt-top3">
             <div class="mkt-coin-row">
                 <div class="mkt-coin-icon mkt-coin-btc">
@@ -295,7 +295,7 @@
         </div>
 
         <!-- FEAR & GREED -->
-        <div class="mkt-section-label">SENTIMENTO</div>
+        <div class="mkt-section-label">SENTIMENT</div>
         <div class="mkt-fg-card">
             <div class="mkt-fg-left">
                 <div class="mkt-fg-value" id="fgValue">--</div>
@@ -315,7 +315,7 @@
         <!-- TRENDING -->
         <div class="mkt-section-label">TRENDING</div>
         <div id="trendList" class="mkt-trend-list">
-            <div class="mkt-skeleton">Carregando…</div>
+            <div class="mkt-skeleton">Loading…</div>
         </div>
 
         <!-- GAINERS / LOSERS -->
@@ -323,13 +323,13 @@
             <div class="mkt-gl-col">
                 <div class="mkt-section-label">GAINERS</div>
                 <div id="gainerList" class="mkt-gl-list">
-                    <div class="mkt-skeleton">Carregando…</div>
+                    <div class="mkt-skeleton">Loading…</div>
                 </div>
             </div>
             <div class="mkt-gl-col">
                 <div class="mkt-section-label">LOSERS</div>
                 <div id="loserList" class="mkt-gl-list">
-                    <div class="mkt-skeleton">Carregando…</div>
+                    <div class="mkt-skeleton">Loading…</div>
                 </div>
             </div>
         </div>
@@ -352,7 +352,7 @@
 <div id="settingsPanel" class="settings-panel">
     <div class="settings-topbar">
         <div class="settings-back" onclick="closeSettings()">←</div>
-        <div class="settings-title">Configurações</div>
+        <div class="settings-title">Settings</div>
     </div>
     <div class="settings-content">
 
@@ -364,7 +364,7 @@
                     id="userNameInput"
                     class="settings-name-input"
                     type="text"
-                    placeholder="Ex: Jeferson"
+                    placeholder="e.g. Jeferson"
                     autocomplete="off"
                     autocapitalize="words"
                     maxlength="24"
@@ -373,7 +373,7 @@
         </div>
 
         <!-- TEMA -->
-        <div class="settings-section-title">Aparência</div>
+        <div class="settings-section-title">Appearance</div>
         <div class="settings-item" onclick="toggleThemeOptions()">
             Tema: <span id="themeLabel">Dark</span>
         </div>
@@ -382,7 +382,7 @@
             <div class="settings-subitem" onclick="setTheme('light')">☀️ Light</div>
         </div>
         <div class="settings-item" style="justify-content:space-between;">
-            <span>🌐 Idioma</span>
+            <span>🌐 Language</span>
             <span id="currentLang" style="font-size:12px;opacity:0.5;margin-left:auto;">—</span>
         </div>
         <div class="settings-item" onclick="toggleEngineOptions()">
@@ -397,7 +397,7 @@
             <div class="settings-subitem" onclick="setEngineFromSettings('duck')"><img src="img/duck.webp" style="width:20px;height:20px;object-fit:contain;margin-right:8px;vertical-align:middle;"> DuckDuckGo</div>
         </div>
         <div class="settings-item" onclick="confirmClearCache()">
-            <span>🍪 Limpar cache e cookies</span>
+            <span>🍪 Clear cache & cookies</span>
         </div>
         <div class="settings-item">Bee Engine</div>
     </div>
@@ -408,7 +408,7 @@
 <div id="clearCacheDialog" class="remove-dialog">
     <div class="remove-box">
         <p class="remove-title">Limpar cache e cookies?</p>
-        <p class="remove-sub">O saldo WP e dados de mineração serão preservados.</p>
+        <p class="remove-sub">WP balance and mining data will be preserved.</p>
         <div class="remove-actions">
             <button class="remove-cancel" onclick="closeClearCache()">Cancelar</button>
             <button class="remove-danger" onclick="doClearCache()">Limpar</button>
@@ -422,7 +422,7 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
             Adicionar site
         </div>
-        <input id="addName" class="add-input" type="text" placeholder="Nome do site">
+        <input id="addName" class="add-input" type="text" placeholder="Site name">
         <input id="addUrl"  class="add-input" type="text" inputmode="url" autocapitalize="none" placeholder="https://site.com">
         <div class="remove-actions">
             <button class="add-cancel" onclick="closeAddDialog()">Cancelar</button>

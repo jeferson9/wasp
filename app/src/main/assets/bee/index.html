@@ -388,7 +388,7 @@
         </div>
         <div class="cwb-info">
             <span class="cwb-title">Central WP</span>
-            <span class="cwb-sub">Tap Game · Anúncios · Boost · Login Diário</span>
+            <span class="cwb-sub">Tap Game · Ads · Boost · Daily Login</span>
         </div>
     </div>
     <div class="cwb-right">
@@ -416,7 +416,7 @@
 
 <div class="switch-row">
     <div>
-        <div style="font-weight:700;font-size:15px;">Mineração</div>
+        <div style="font-weight:700;font-size:15px;">Mining</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="switchSub">Configure primeiro</div>
     </div>
     <label class="switch">
@@ -428,7 +428,7 @@
 <div class="switch-row">
     <div>
         <div style="font-weight:700;font-size:15px;">Janela flutuante (PiP)</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Continuar minerando ao sair do app · <span style="color:#ffc107;font-weight:700;">0,2 WP/min</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Keep mining when leaving the app · <span style="color:#ffc107;font-weight:700;">0.2 WP/min</span></div>
     </div>
     <label class="switch">
         <input type="checkbox" id="pipSwitch" onchange="togglePip(this.checked)">
@@ -455,7 +455,7 @@
         </svg>
         <div>
             <div style="font-size:13px;font-weight:700;color:#ffc107;" id="wpBalanceBee">0 WP</div>
-            <div style="font-size:11px;color:var(--muted);">Custo: 1 WP/min (5 WP por sessão de 5min)</div>
+            <div style="font-size:11px;color:var(--muted);">Cost: 1 WP/min (5 WP per 5min session)</div>
         </div>
     </div>
     <button onclick="try{AndroidBee.openCentralWP()}catch(e){}" style="
@@ -494,15 +494,15 @@
         <div class="step-num" id="n1">1</div>
         <div class="step-body">
             <div class="step-title">Wallet name da AN Wallet</div>
-            <div class="step-desc">Nome que você escolheu ao criar sua carteira</div>
+            <div class="step-desc">Name you chose when creating your wallet</div>
             <input type="text" id="walletInput" placeholder="ex: jeferson" autocomplete="off" autocapitalize="none" spellcheck="false"/>
         </div>
     </div>
     <div class="step">
         <div class="step-num" id="n2">2</div>
         <div class="step-body">
-            <div class="step-title">Gerar chaves de mineração</div>
-            <div class="step-desc">Par de chaves criptográficas único para este app</div>
+            <div class="step-title">Generate mining keys</div>
+            <div class="step-desc">Unique cryptographic key pair for this app</div>
         </div>
     </div>
     <div class="step">
@@ -515,16 +515,16 @@
     <div class="step">
         <div class="step-num" id="n4">4</div>
         <div class="step-body">
-            <div class="step-title">Aguardar confirmação blockchain</div>
-            <div class="step-desc">Verificação na rede Acki Nacki (pode levar ~1 min)</div>
+            <div class="step-title">Wait for blockchain confirmation</div>
+            <div class="step-desc">Verification on Acki Nacki network (may take ~1 min)</div>
         </div>
     </div>
-    <button class="btn" id="btnSetup">Iniciar configuração</button>
+    <button class="btn" id="btnSetup">Start setup</button>
     <button class="btn ghost small hidden" id="btnConnectWallet">Conectar AN Wallet</button>
     <button class="btn ghost small hidden" id="btnManageWallet">Gerenciar Wallet</button>
     <button class="btn ghost small hidden" id="btnOpenWalletAgain">Abrir AN Wallet novamente</button>
-    <button class="btn small hidden" id="btnReauth" onclick="reauthorizeKeys()">🔁 Reautorizar chaves na AN Wallet</button>
-    <button class="btn danger small hidden" id="btnReset">Resetar configuração</button>
+    <button class="btn small hidden" id="btnReauth" onclick="reauthorizeKeys()">🔁 Reauthorize keys on AN Wallet</button>
+    <button class="btn danger small hidden" id="btnReset">Reset setup</button>
 </div>
 
 <!-- Aviso Mambaboard — requisito para rewards -->
@@ -532,20 +532,20 @@
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <span style="font-size:22px;">⚠️</span>
         <div>
-            <div style="font-weight:800;font-size:14px;color:var(--yellow);">Ativação de Rewards Necessária</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Requisito obrigatório da rede Acki Nacki</div>
+            <div style="font-weight:800;font-size:14px;color:var(--yellow);">Rewards Activation Required</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Mandatory requirement of the Acki Nacki network</div>
         </div>
     </div>
     <p style="font-size:13px;color:#ccc;line-height:1.6;margin-bottom:12px;">
-        Para receber NACKL, você precisa ativar sua participação no ecossistema:<br><br>
+        To receive NACKL, you need to activate your participation in the ecosystem:<br><br>
         <strong style="color:var(--yellow);">1.</strong> Acesse um dos apps oficiais abaixo<br>
         <strong style="color:var(--yellow);">2.</strong> Complete a tarefa inicial<br>
         <strong style="color:var(--yellow);">3.</strong> Coloque sua primeira parte no <strong>Mambaboard</strong>
     </p>
     <div style="display:flex;flex-direction:column;gap:8px;">
         <button class="btn" style="background:rgba(255,193,7,0.18);border:1px solid rgba(255,193,7,0.4);font-size:13px;padding:10px;" onclick="openMambaApp('batteries')">🔋 Batteries (Telegram)</button>
-        <button class="btn ghost small" onclick="openMambaApp('ludo')">🎮 Ludo (alternativo)</button>
-        <button class="btn ghost small" style="opacity:0.6;" onclick="hideMambaCard()">Já ativei — fechar aviso</button>
+        <button class="btn ghost small" onclick="openMambaApp('ludo')">🎮 Ludo (alternative)</button>
+        <button class="btn ghost small" style="opacity:0.6;" onclick="hideMambaCard()">Already activated — close notice</button>
     </div>
 </div>
 
@@ -553,7 +553,7 @@
 <div id="firstTapCard" class="card hidden" style="margin-bottom:14px;text-align:center;">
     <h3>Ativar Bee Engine</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:4px;line-height:1.5;">
-        Um tap é necessário para verificar sua identidade<br>e registrar o binding com o contrato Miner.
+        A tap is required to verify your identity<br>and register the binding with the Miner contract.
     </p>
     <button class="btn tap-btn" id="btnFirstTap" style="margin-top:12px;">
         TAP para ativar
@@ -575,24 +575,24 @@
     <div id="logBox"></div>
 </div>
 
-<button class="btn ghost small" id="btnDiag" onclick="toggleDiag()">Mostrar diagnóstico</button>
+<button class="btn ghost small" id="btnDiag" onclick="toggleDiag()">Show diagnostics</button>
 <div id="diagPanel" class="hidden">
     <div class="card" style="margin-top:10px;">
-        <h3>Diagnóstico</h3>
+        <h3>Diagnostics</h3>
         <div class="step"><div class="step-body"><div class="step-title">Bridge Android</div><div class="step-desc" id="dBridge">—</div></div></div>
         <div class="step"><div class="step-body"><div class="step-title">SDK (BeeSDK)</div><div class="step-desc" id="dSdk">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">WASM inicializado</div><div class="step-desc" id="dWasm">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">WASM initialized</div><div class="step-desc" id="dWasm">—</div></div></div>
         <div class="step"><div class="step-body"><div class="step-title">Miner address</div><div class="step-desc" id="dAddr" style="word-break:break-all;">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Mining ativo</div><div class="step-desc" id="dMining">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Mining active</div><div class="step-desc" id="dMining">—</div></div></div>
         <div class="step"><div class="step-body"><div class="step-title">can_start() — disponibilidade</div><div class="step-desc" id="dCanStart">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Reward atual</div><div class="step-desc" id="dReward">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Ciclos (eventos recebidos)</div><div class="step-desc" id="dCycles">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Último evento</div><div class="step-desc" id="dLastEvent">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Propagação confirmada</div><div class="step-desc" id="dPropagated">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">Mambaboard ativado</div><div class="step-desc" id="dMamba">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Current reward</div><div class="step-desc" id="dReward">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Cycles (events received)</div><div class="step-desc" id="dCycles">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Last event</div><div class="step-desc" id="dLastEvent">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Propagation confirmed</div><div class="step-desc" id="dPropagated">—</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Mambaboard activated</div><div class="step-desc" id="dMamba">—</div></div></div>
         <div class="step"><div class="step-body"><div class="step-title">Auto-tap</div><div class="step-desc" id="dAutoTap">—</div></div></div>
-        <div class="step"><div class="step-body"><div class="step-title">tapSum (taps contabilizados)</div><div class="step-desc" id="dTapSum">—</div></div></div>
-        <button class="btn ghost small" onclick="runDiag()">Atualizar diagnóstico</button>
+        <div class="step"><div class="step-body"><div class="step-title">tapSum (taps counted)</div><div class="step-desc" id="dTapSum">—</div></div></div>
+        <button class="btn ghost small" onclick="runDiag()">Update diagnostics</button>
     </div>
 </div>
 
@@ -689,7 +689,7 @@ async function initSDK() {
         await init(wasmBuf);
         window.BeeSDK = BeeSDKModule;
         window._sdkReady = true;
-        console.log('BeeSDK ES module: WASM inicializado com sucesso');
+        console.log('BeeSDK ES module: WASM initialized com sucesso');
         loadEngine();
     } catch(e) {
         console.error('BeeSDK init error: ' + e);

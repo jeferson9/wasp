@@ -27,7 +27,7 @@
       localStorage.setItem(KEY_WP, String(cur - amount));
       var hist = [];
       try { hist = JSON.parse(localStorage.getItem(KEY_WP_HISTORY) || "[]"); } catch(_) {}
-      hist.unshift("[" + new Date().toLocaleString("pt-BR") + "] -" + amount + " WP • " + label);
+      hist.unshift("[" + new Date().toLocaleString("en-US") + "] -" + amount + " WP • " + label);
       localStorage.setItem(KEY_WP_HISTORY, JSON.stringify(hist.slice(0, 100)));
       return true;
     } catch(e) { return false; }
@@ -104,7 +104,7 @@
   function log(msg, cls) {
     var lb = logBox || byId("logBox");
     if (!lb) { console.log("[Bee] " + msg); return; }
-    var t = new Date().toLocaleTimeString("pt-BR");
+    var t = new Date().toLocaleTimeString("en-US");
     var line = document.createElement("div");
     if (cls) line.className = cls;
     line.textContent = "[" + t + "] " + msg;
@@ -144,7 +144,7 @@
   }
 
   function updateMetrics() {
-    if (mEngine) mEngine.textContent = mining ? "Rodando ⚡" : (wasmReady ? "Pronta" : "Iniciando...");
+    if (mEngine) mEngine.textContent = mining ? "Running ⚡" : (wasmReady ? "Ready" : "Starting...");
     // "Ciclos" agora reflete épocas com reward efetivamente pago (métrica real),
     // não eventos de rede. Resolve a confusão entre o painel e o que cai na wallet.
     if (mCycles) mCycles.textContent = String(getEpochsPaid());
@@ -223,7 +223,7 @@
         return Array.from(new Uint8Array(sig)).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("");
       } catch(e) { log("crypto.subtle falhou: "+e.message, "lwrn"); }
     }
-    throw new Error("HMAC não disponível — Android WebView precisa de API >= 23");
+    throw new Error("HMAC not available — Android WebView requires API >= 23");
   }
 
   async function buildManualDeepLink(p) {
@@ -304,13 +304,13 @@
         var hasWasm = window.AndroidBee.hasWasm ? window.AndroidBee.hasWasm() : null;
         if (hasWasm === false) {
           log("❌ WASM NÃO encontrado nos assets! Coloque bee_sdk_bg.wasm em app/src/main/assets/bee/", "lerr");
-          setStatus("err", "WASM ausente nos assets", "Arquivo bee_sdk_bg.wasm não encontrado");
+          setStatus("err", "WASM missing from assets", "File bee_sdk_bg.wasm not found");
           return;
         }
         var assetList = window.AndroidBee.checkAssets ? window.AndroidBee.checkAssets() : "—";
         log("Assets em bee/: " + assetList, "linf");
       } catch(e) {
-        log("Não foi possível checar assets: " + e.message, "lwrn");
+        log("Could not check assets: " + e.message, "lwrn");
       }
     } else {
       log("⚠️ Bridge Android não encontrada (rodando fora do app?)", "lwrn");
@@ -318,7 +318,7 @@
 
     if (typeof window.BeeSDK === "undefined") {
       log("❌ window.BeeSDK não encontrado!", "lerr");
-      setStatus("err", "SDK não encontrado", "Erro ao inicializar bee_sdk.js");
+      setStatus("err", "SDK not found", "Error initializing bee_sdk.js");
       return;
     }
 
@@ -623,7 +623,7 @@
       localStorage.setItem(KEY_WP, String(cur + WP_MINING_COST));
       var hist = [];
       try { hist = JSON.parse(localStorage.getItem(KEY_WP_HISTORY) || "[]"); } catch(_) {}
-      hist.unshift("[" + new Date().toLocaleString("pt-BR") + "] +" + WP_MINING_COST + " WP • Reembolso (" + (reason || "sessão abortada") + ")");
+      hist.unshift("[" + new Date().toLocaleString("en-US") + "] +" + WP_MINING_COST + " WP • Reembolso (" + (reason || "sessão abortada") + ")");
       localStorage.setItem(KEY_WP_HISTORY, JSON.stringify(hist.slice(0, 100)));
     } catch(_) {}
     log("↩️ " + WP_MINING_COST + " WP reembolsados (" + (reason || "sessão abortada") + "). Saldo: " + getWP() + " WP", "lwrn");
@@ -984,7 +984,7 @@
 
       var evLog = "action=" + (action||"?") + " | " + eventStr.substring(0,200);
       // log("[Miner] " + evLog, "linf"); // suprimido
-      window._lastMinerEvent = new Date().toLocaleTimeString("pt-BR") + " — " + evLog;
+      window._lastMinerEvent = new Date().toLocaleTimeString("en-US") + " — " + evLog;
 
       // Se o SDK emitir evento de fim de epoch (não garante — mas tratamos)
       var epochEndActions = ["session_end","done","finished","complete","submit_session_root","computation_completed"];

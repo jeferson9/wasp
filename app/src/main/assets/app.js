@@ -379,7 +379,7 @@ function renderRecents(){
   const list = getRecents().slice(0, 7);
 
   if(list.length === 0){
-    container.innerHTML = `<div style="opacity:.6;padding:10px;">Nenhum recente ainda…</div>`;
+    container.innerHTML = `<div style="opacity:.6;padding:10px;">No recent sites yet…</div>`;
     return;
   }
 
@@ -631,7 +631,7 @@ async function waspUpdateNackl(){
     if(mcap >= 1e9)       mcapStr = "$ " + (mcap / 1e9).toFixed(2) + "B";
     else if(mcap >= 1e6)  mcapStr = "$ " + (mcap / 1e6).toFixed(2) + "M";
     else if(mcap > 0)     mcapStr = "$ " + mcap.toFixed(0);
-    else                  mcapStr = "Pré-lançamento";
+    else                  mcapStr = "Pre-launch";
 
     // Salva cache
     _nacklCache.price  = priceStr;
@@ -901,7 +901,7 @@ window.clearRecents = function(){
 
     const list = $("recentList");
     if(list){
-      list.innerHTML = `<div style="opacity:.6;padding:10px;">Nenhum recente ainda…</div>`;
+      list.innerHTML = `<div style="opacity:.6;padding:10px;">No recent sites yet…</div>`;
     }
   } catch(e){
     console.error("Erro ao limpar recents", e);
@@ -1402,10 +1402,10 @@ function initGreeting(){
     const h = new Date().getHours();
     let saudacao, em;
 
-    if(h >= 5  && h < 12){ saudacao = "Bom dia";    em = "☀️"; }
-    else if(h >= 12 && h < 18){ saudacao = "Boa tarde";  em = "🌤"; }
-    else if(h >= 18 && h < 23){ saudacao = "Boa noite";  em = "🌙"; }
-    else                       { saudacao = "Olá";        em = "⭐"; }
+    if(h >= 5  && h < 12){ saudacao = "Good morning";    em = "☀️"; }
+    else if(h >= 12 && h < 18){ saudacao = "Good afternoon";  em = "🌤"; }
+    else if(h >= 18 && h < 23){ saudacao = "Good evening";  em = "🌙"; }
+    else                       { saudacao = "Hello";        em = "⭐"; }
 
     const nome = getUserName();
     el.textContent = nome ? saudacao + ", " + nome : saudacao + ", Wasp";
@@ -1447,7 +1447,7 @@ function updateBeeHomeCard(){
             const status = raw ? JSON.parse(raw) : null;
 
             if(status && status.running){
-                statusEl.textContent = "Minerando ⚡";
+                statusEl.textContent = "Mining ⚡";
                 statusEl.style.color = "#37d67a";
                 if(card) card.classList.add("bee-card-active");
                 if(wpEl){
@@ -1535,7 +1535,7 @@ function setTrackerBlock(enabled){
     if(window.Android && typeof Android.setTrackerBlock === "function"){
         Android.setTrackerBlock(enabled);
     }
-    showToast(enabled ? "🛡️ Rastreadores bloqueados" : "Bloqueio desativado");
+    showToast(enabled ? "🛡️ Trackers blocked" : "Blocking disabled");
 }
 
 function confirmClearCache(){

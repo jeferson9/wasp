@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
@@ -571,7 +571,7 @@
 <div class="c-topbar">
     <div class="c-topbar-left">
         <span class="c-badge">Wasp Points</span>
-        <span class="c-title">Central WP ⚡</span>
+        <span class="c-title">WP Central ⚡</span>
     </div>
     <button class="c-close-btn" onclick="closeCentral()">✕</button>
 </div>
@@ -597,7 +597,7 @@
     <div class="c-stats-row">
         <div class="c-stat">
             <div class="c-stat-val" id="statLevel">1</div>
-            <div class="c-stat-lbl">Nível</div>
+            <div class="c-stat-lbl">Level</div>
         </div>
         <div class="c-stat">
             <div class="c-stat-val" id="statStreak">0</div>
@@ -623,9 +623,9 @@
 <!-- MINING INFO -->
 <div class="c-mining-card">
     <div class="cmc-left">
-        <div class="cmc-label">MINERAÇÃO NACKL</div>
-        <div class="cmc-val" id="miningStatus">WP necessário para minerar</div>
-        <div class="cmc-hint">Ganhe 30 WP no Tap + 30 WP no Anúncio por hora. Mineração custa 1 WP/min — 60 min de mineração com renda natural.</div>
+        <div class="cmc-label">NACKL MINING</div>
+        <div class="cmc-val" id="miningStatus">WP required to mine</div>
+        <div class="cmc-hint">Earn 30 WP on Tap + 30 WP on Ad per hour. Mining costs 1 WP/min — 60 min of natural income.</div>
     </div>
     <div class="cmc-icon">
       <svg width="44" height="44" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
@@ -644,7 +644,7 @@
 
 <!-- GAME CARDS -->
 <div class="c-section">
-    <span class="c-section-title">🎮 Ganhar WP</span>
+    <span class="c-section-title">🎮 Earn WP</span>
     <span class="c-section-hint">Toque para jogar</span>
 </div>
 
@@ -662,9 +662,9 @@
     <!-- ANÚNCIO -->
     <div class="c-game-card card-ad" id="cardAd">
         <div class="cgc-emoji">📺</div>
-        <div class="cgc-name">Ver Anúncio</div>
+        <div class="cgc-name">Watch Ad</div>
         <div class="cgc-reward">+30 WP</div>
-        <div class="cgc-status" id="adStatus">Disponível</div>
+        <div class="cgc-status" id="adStatus">Available</div>
         <button class="cgc-btn btn-blue" id="adBtn">Assistir</button>
     </div>
 
@@ -680,7 +680,7 @@
     <!-- LOGIN DIÁRIO -->
     <div class="c-game-card card-daily" id="cardDaily">
         <div class="cgc-emoji">📅</div>
-        <div class="cgc-name">Login Diário</div>
+        <div class="cgc-name">Daily Login</div>
         <div class="cgc-reward">+5 a +25 WP</div>
         <div class="cgc-status" id="dailyStatus">Verificando...</div>
         <button class="cgc-btn btn-green" id="dailyBtn" onclick="doDaily()">Coletar</button>
@@ -690,7 +690,7 @@
 
 <!-- HISTÓRICO -->
 <div class="c-section">
-    <span class="c-section-title">📋 Histórico</span>
+    <span class="c-section-title">📋 History</span>
     <button class="c-clear-btn" onclick="doClear()">Limpar</button>
 </div>
 
@@ -703,8 +703,8 @@
     <div class="tap-game-card">
         <div class="tap-game-head">
             <div>
-                <div class="tap-game-title">⛏ Mineração Manual</div>
-                <div class="tap-game-sub">100 taps registram ações no Merkle Tree</div>
+                <div class="tap-game-title">⛏ Manual Mining</div>
+                <div class="tap-game-sub">100 taps register actions on the Merkle Tree</div>
             </div>
             <button class="tap-game-close" onclick="closeTap()">✕</button>
         </div>
@@ -742,7 +742,7 @@
             </button>
         </div>
 
-        <div class="tap-milestone" id="tapMilestone">Toque para registrar ações no Merkle Tree.</div>
+        <div class="tap-milestone" id="tapMilestone">Tap to register actions on the Merkle Tree.</div>
     </div>
 </div>
 
@@ -799,7 +799,7 @@
       setN(K.total, getTotal() + Math.max(0, amount));
       const hist = getJ(K.history, []);
       const sign = amount >= 0 ? "+" : "";
-      hist.unshift(`[${new Date().toLocaleString("pt-BR")}] ${sign}${amount} WP • ${label}`);
+      hist.unshift(`[${new Date().toLocaleString("en-US")}] ${sign}${amount} WP • ${label}`);
       setJ(K.history, hist.slice(0, 100));
       // Acumula WP ganhos hoje numa chave separada
       if (amount > 0) {
@@ -864,7 +864,7 @@
 
       // Boost status in hero
       const boostOn = Date.now() < getN(K.boostEnd, 0);
-      el("statBank").textContent = boostOn ? "ATIVO ⚡" : "OFF";
+      el("statBank").textContent = boostOn ? "ACTIVE ⚡" : "OFF";
       el("statBank").style.color = boostOn ? "var(--yellow)" : "var(--muted)";
 
       // Mining status — checa bg mining via bridge ou localStorage
@@ -891,7 +891,7 @@
         if (bgMiningRem > UMA_HORA_MS) {
           el("miningStatus").textContent = "Participando da rede Acki Nacki";
         } else {
-          el("miningStatus").textContent = "Minerando — " + fmtSecs(bgMiningRem) + " restante";
+          el("miningStatus").textContent = "Mining — " + fmtSecs(bgMiningRem) + " remaining";
         }
         el("miningStatus").style.color = "var(--green, #22C55E)";
       } else if (boostOn) {
@@ -899,18 +899,18 @@
         el("miningStatus").style.color = "var(--yellow)";
       } else if (wp >= 5) {
         const mins = wp; // 1 WP = 1 min
-        el("miningStatus").textContent = `✅ ${wp} WP — você pode minerar ${mins} min`;
+        el("miningStatus").textContent = `✅ ${wp} WP — you can mine ${mins} min`;
         el("miningStatus").style.color = "var(--green, #22C55E)";
       } else {
         const falta = 5 - wp;
-        el("miningStatus").textContent = `Faltam ${falta} WP para iniciar — tap ou anúncio`;
+        el("miningStatus").textContent = `Need ${falta} WP to start — tap or ad`;
         el("miningStatus").style.color = "";
       }
 
       // TAP card
       const tapRem = remMs(K.tapLast, CFG.tapCooldown);
       const tapReady = tapRem <= 0;
-      el("tapStatus").textContent = tapReady ? "Disponível agora ✅" : `Em ${fmtTime(tapRem)}`;
+      el("tapStatus").textContent = tapReady ? "Available now ✅" : `In ${fmtTime(tapRem)}`;
       el("tapStatus").className   = "cgc-status " + (tapReady ? "ready" : "cooldown");
       el("tapBtn").disabled       = !tapReady;
       el("tapBtn").textContent    = tapReady ? "Jogar agora" : "Em cooldown";
@@ -924,9 +924,9 @@
       const today   = new Date().toDateString();
       const lastDay = localStorage.getItem(K.daily);
       const collected = lastDay === today;
-      el("dailyStatus").textContent = collected ? `Streak: ${streak} dia(s) 🔥` : "Disponível agora ✅";
+      el("dailyStatus").textContent = collected ? `Streak: ${streak} day(s) 🔥` : "Available now ✅";
       el("dailyStatus").className   = "cgc-status " + (collected ? "active" : "ready");
-      el("dailyBtn").textContent    = collected ? "Coletado ✅" : "Coletar";
+      el("dailyBtn").textContent    = collected ? "Collected ✅" : "Collect";
       el("dailyBtn").disabled       = collected;
       if (collected) el("dailyBtn").className = "cgc-btn btn-green";
       else           el("dailyBtn").className = "cgc-btn btn-green";
@@ -977,7 +977,7 @@
 
     function doDaily() {
       const today = new Date().toDateString();
-      if (localStorage.getItem(K.daily) === today) { toast("Já coletado hoje!"); return; }
+      if (localStorage.getItem(K.daily) === today) { toast("Already collected today!"); return; }
       let streak = getN(K.streak, 0);
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -993,16 +993,16 @@
        BOOST
     ══════════════════════════════════════════ */
     function doBoost() {
-      if (Date.now() < getN(K.boostEnd, 0)) { toast("Boost já está ativo!"); return; }
+      if (Date.now() < getN(K.boostEnd, 0)) { toast("Boost already active!"); return; }
       const wp = getWP();
       if (wp < CFG.boostCost) { toast(`Precisa de ${CFG.boostCost} WP`); return; }
       setN(K.wp, wp - CFG.boostCost);
       setN(K.boostEnd, Date.now() + CFG.boostDuration);
       const hist = getJ(K.history, []);
-      hist.unshift(`[${new Date().toLocaleString("pt-BR")}] -${CFG.boostCost} WP • Bg Mining ativados`);
+      hist.unshift(`[${new Date().toLocaleString("en-US")}] -${CFG.boostCost} WP • Bg Mining activated`);
       setJ(K.history, hist.slice(0,100));
       renderAll();
-      toast("Bg Mining ativado! O painel abrirá em PiP ao sair do app 🐝");
+      toast("Bg Mining activated! Panel will open in PiP when leaving the app 🐝");
 
       // ── Inicia BeeBackgroundService via bridge ──────────────────────────
       localStorage.setItem("wasp_pip_mining", "true");
@@ -1052,7 +1052,7 @@
           window.parent.postMessage({ type: "openWpAd" }, "*");
           return;
         }
-        toast("Recurso de anúncio indisponível");
+        toast("Ad feature unavailable");
       } catch(e) { toast("Erro: " + e.message); }
     }
 
@@ -1060,7 +1060,7 @@
     // É a ÚNICA via de crédito — robusta, sem depender de callbacks frágeis.
     window.waspAddWP = function(n, label) {
       try {
-        addWP(Number(n) || 0, label || "Anúncio assistido");
+        addWP(Number(n) || 0, label || "Ad watched");
         return true;
       } catch(e) { return false; }
     };
@@ -1077,7 +1077,7 @@
       setN(K.adLast, Date.now());
       if(el("adBtn")) el("adBtn").disabled    = true;
       if(el("adBtn")) el("adBtn").textContent = "Em cooldown";
-      addWP(CFG.adReward, "Anúncio assistido");
+      addWP(CFG.adReward, "Ad watched");
       renderAll();
       showRewardGranted(CFG.adReward);
     };
@@ -1086,14 +1086,14 @@
       if(el("adBtn")) el("adBtn").disabled    = false;
       if(el("adBtn")) el("adBtn").textContent = "Assistir";
       renderAll();
-      toast("Anúncio fechado sem recompensa.");
+      toast("Ad closed without reward.");
     };
 
     window.onWpAdUnavailable = function() {
       if(el("adBtn")) el("adBtn").disabled    = false;
       if(el("adBtn")) el("adBtn").textContent = "Assistir";
       renderAll();
-      toast("Anúncio indisponível. Tente novamente.");
+      toast("Ad unavailable. Try again.");
     };
 
     /* Tela de confirmação de recompensa */
