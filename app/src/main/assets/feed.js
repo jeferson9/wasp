@@ -109,8 +109,8 @@ function feedShowError() {
     var container = document.getElementById("waspFeedList");
     if (!container) return;
     container.innerHTML =
-        '<div class="feed-empty">Não foi possível carregar.<br>' +
-        '<a onclick="loadWaspFeed()">Tentar novamente \u2192</a></div>';
+        '<div class="feed-empty">Could not load.<br>' +
+        '<a onclick="loadWaspFeed()">Try again \u2192</a></div>';
 }
 
 /* -------------------------------------------------------

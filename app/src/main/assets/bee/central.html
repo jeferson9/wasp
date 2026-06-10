@@ -972,7 +972,7 @@
       setN(K.streak, streak);
       localStorage.setItem(K.daily, today);
       const reward = Math.min(25, 5 + (streak - 1) * 2);
-      addWP(reward, `Login diário • streak ${streak}`);
+      addWP(reward, `Daily login • streak ${streak}`);
     }
 
     function doDaily() {
@@ -986,7 +986,7 @@
       setN(K.streak, streak);
       localStorage.setItem(K.daily, today);
       const reward = Math.min(25, 5 + (streak - 1) * 2);
-      addWP(reward, `Login diário • streak ${streak}`);
+      addWP(reward, `Daily login • streak ${streak}`);
     }
 
     /* ══════════════════════════════════════════
@@ -1113,13 +1113,13 @@
         '<div style="background:#111318;border:1px solid rgba(55,214,122,0.35);border-radius:28px;' +
         'padding:32px 28px;max-width:320px;width:100%;text-align:center;">' +
         '<div style="font-size:60px;margin-bottom:12px">🐝</div>' +
-        '<div style="font-size:20px;font-weight:900;color:#37d67a;margin-bottom:6px">Recompensa Concedida!</div>' +
+        '<div style="font-size:20px;font-weight:900;color:#37d67a;margin-bottom:6px">Reward Granted!</div>' +
         '<div style="font-size:44px;font-weight:900;color:#ffc107;margin-bottom:6px">+' + amount + ' WP</div>' +
-        '<div style="font-size:13px;color:rgba(238,240,246,0.55);margin-bottom:22px">Anúncio assistido com sucesso</div>' +
+        '<div style="font-size:13px;color:rgba(238,240,246,0.55);margin-bottom:22px">Ad watched successfully</div>' +
         '<button onclick="document.getElementById(\'rewardOverlay\').remove();toast(\'+' + amount + ' WP added! 🐝\')" ' +
         'style="background:rgba(55,214,122,0.18);border:1px solid rgba(55,214,122,0.4);color:#37d67a;' +
         'border-radius:14px;padding:13px 0;font-size:15px;font-weight:800;width:100%;cursor:pointer;">' +
-        '✅ Receber WP</button></div>';
+        '✅ Claim WP</button></div>';
 
       document.body.appendChild(overlay);
       // Auto-fecha em 8s se não clicar
@@ -1143,7 +1143,7 @@
 
     function openTap() {
       const rem = remMs(K.tapLast, CFG.tapCooldown);
-      if (rem > 0) { toast(`Tap disponível em ${fmtTime(rem)}`); return; }
+      if (rem > 0) { toast(`Tap available in ${fmtTime(rem)}`); return; }
       tapCount = 0; tapCombo = 1; lastTapTs = 0; tapFinished = false;
       updateTapUI();
       el("tapOverlay").classList.add("active");
@@ -1196,12 +1196,12 @@
     }
 
     function getMilestone(c) {
-      if (c >= 100) return "Concluído! Recompensa liberada ✅";
-      if (c >= 75)  return "Incrível! Quase lá...";
-      if (c >= 50)  return "Metade feita! Continue!";
-      if (c >= 25)  return "Boa! Sua energia está subindo.";
-      if (c >= 1)   return "Continue tocando!";
-      return "Comece tocando para carregar energia.";
+      if (c >= 100) return "Completed! Reward unlocked ✅";
+      if (c >= 75)  return "Amazing! Almost there...";
+      if (c >= 50)  return "Halfway there! Keep going!";
+      if (c >= 25)  return "Nice! Your energy is rising.";
+      if (c >= 1)   return "Keep tapping!";
+      return "Start tapping to charge energy.";
     }
 
     function spawnFloat(text) {
