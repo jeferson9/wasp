@@ -578,7 +578,7 @@
 
 <!-- BALANCE HERO -->
 <div class="c-balance-hero">
-    <div class="c-bal-label">SEU SALDO</div>
+    <div class="c-bal-label">YOUR BALANCE</div>
     <div class="c-bal-row">
         <svg class="wp-coin" viewBox="0 0 48 48" aria-hidden="true">
             <defs><radialGradient id="wpCoinGrad" cx="38%" cy="32%">
@@ -592,7 +592,7 @@
         </svg>
         <div class="c-bal-value" id="balValue">0</div>
     </div>
-    <div class="c-bal-sub">Total ganho: <span id="balTotal">0</span> WP</div>
+    <div class="c-bal-sub">Total earned: <span id="balTotal">0</span> WP</div>
 
     <div class="c-stats-row">
         <div class="c-stat">
@@ -611,7 +611,7 @@
 
     <div class="c-level-bar-wrap">
         <div class="c-level-bar-head">
-            <span id="levelHint">Faltam 50 WP</span>
+            <span id="levelHint">50 WP remaining</span>
             <strong id="levelPct">0%</strong>
         </div>
         <div class="c-level-bar">
@@ -645,7 +645,7 @@
 <!-- GAME CARDS -->
 <div class="c-section">
     <span class="c-section-title">🎮 Earn WP</span>
-    <span class="c-section-hint">Toque para jogar</span>
+    <span class="c-section-hint">Tap to play</span>
 </div>
 
 <div class="c-game-grid">
@@ -860,7 +860,7 @@
       el("statStreak").textContent = streak;
       el("levelFill").style.width  = ld.pct + "%";
       el("levelPct").textContent   = ld.pct + "%";
-      el("levelHint").textContent  = `Faltam ${ld.remaining} WP`;
+      el("levelHint").textContent  = `${ld.remaining} WP remaining`;
 
       // Boost status in hero
       const boostOn = Date.now() < getN(K.boostEnd, 0);
