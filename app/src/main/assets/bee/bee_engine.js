@@ -657,7 +657,7 @@
       _awaitingPropagation = true;
       log("🔑 Primeira mineração: confirmando registro das chaves na rede antes de iniciar...", "lwrn");
       setStatus("warn", "Registrando chaves...", "Aguardando a rede confirmar (pode levar ~1 min)");
-      if (switchSub) switchSub.textContent = "Registrando chaves na rede...";
+      if (switchSub) switchSub.textContent = "Registering keys on network...";
       if (miningSwitch) miningSwitch.checked = true; // mantém intenção do usuário
       try {
         await window.BeeSDK.ensure_mining_keys_propagated({
@@ -679,7 +679,7 @@
       // Se o usuário desligou enquanto aguardava, não inicia.
       if (miningSwitch && !miningSwitch.checked) {
         setStatus("on", "Bee ready", "Mining paused");
-        if (switchSub) switchSub.textContent = "Ligue para minerar";
+        if (switchSub) switchSub.textContent = "Turn on to mine";
         return;
       }
       // Cai através para o fluxo normal de início abaixo.
@@ -690,7 +690,7 @@
     if (wp < WP_MINING_COST) {
       // Sem WP — bloqueia e avisa
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = false; }
-      if (switchSub) switchSub.textContent = "Precisa de " + WP_MINING_COST + " WP para minerar";
+      if (switchSub) switchSub.textContent = "Need " + WP_MINING_COST + " WP to mine";
       setStatus("err", "WP insuficiente", "Ganhe " + WP_MINING_COST + " WP na Central WP para iniciar mineração");
       log("❌ WP insuficiente para iniciar mineração. Saldo: " + wp + " WP. Necessário: " + WP_MINING_COST + " WP", "lerr");
       updateWpDisplay();
@@ -701,7 +701,7 @@
     var ok = spendWP(WP_MINING_COST, "Sessão de mineração NACKL");
     if (!ok) {
       if (miningSwitch) miningSwitch.checked = false;
-      if (switchSub) switchSub.textContent = "Erro ao debitar WP";
+      if (switchSub) switchSub.textContent = "Error debiting WP";
       return;
     }
     _wpDebited = true;
@@ -936,7 +936,7 @@
       sessionStart = null; stopUptimeTimer();
       if (miningSwitch) miningSwitch.checked = true;
       setStatus("warn", "Coletando reward...", "Aguardando slashing period (~16s)");
-      if (switchSub) switchSub.textContent = "Coletando reward...";
+      if (switchSub) switchSub.textContent = "Collecting reward...";
       if (tapSection) tapSection.classList.add("hidden");
       notifyMiningStatus();
 
@@ -1057,7 +1057,7 @@
         try { if (miner) miner.stop(); } catch(_) {}
         miner = null;
         refundSessionWP("desligado antes de iniciar");
-        if (switchSub) switchSub.textContent = "Ligue para retomar";
+        if (switchSub) switchSub.textContent = "Turn on to resume";
         setStatus("on", "Bee ready", "Mining paused");
       }
       return;
@@ -1067,7 +1067,7 @@
     try { if (miner) miner.stop(); } catch(_) {}
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
-    if (switchSub)  switchSub.textContent = "Ligue para retomar";
+    if (switchSub)  switchSub.textContent = "Turn on to resume";
     setStatus("on", "Bee ready", "Mining paused");
     notifyMiningStatus();
     updateMetrics();
@@ -1162,7 +1162,7 @@
     if (miningSwitch)  { miningSwitch.checked = false; miningSwitch.disabled = true; }
     if (tapSection)    tapSection.classList.add("hidden");
     var ftc = byId("firstTapCard"); if (ftc) ftc.classList.add("hidden");
-    if (switchSub) switchSub.textContent = "Configure primeiro";
+    if (switchSub) switchSub.textContent = "Setup required";
     setStep(1); setStatus("warn", "Resetado", "Configure novamente");
     updateMetrics(); log("Setup reset.", "lwrn");
   }
