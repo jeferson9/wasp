@@ -218,7 +218,7 @@
     if (window.crypto && window.crypto.subtle) {
       try {
         var bytes = new Uint8Array(keyHex.match(/.{2}/g).map(function(b){ return parseInt(b,16); }));
-        var key = await window.crypto.subtle.importKey("raw", bytes, {name:"HMAC",hash:"SHA-256"}, false, ["sign"]);
+        var key = await window.crypto.subtle.importKey("raw", bytes, {name:"HMAC",hash:"SHA-256"}, false, ["s..."]);
         var sig = await window.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
         return Array.from(new Uint8Array(sig)).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("");
       } catch(e) { log("crypto.subtle falhou: "+e.message, "lwrn"); }
@@ -274,7 +274,7 @@
     // SDK novo (ES module): WASM ja foi inicializado pelo <script type="module">
     // Aguarda ate 10s pelo evento beeSDKReady ou window._sdkReady
     if (typeof window.BeeSDK !== "undefined" && window._sdkReady === true) {
-      log("BeeSDK: ✅ encontrado e pronto (ES module)", "lok");
+      log("BeeSDK: ✅ found and ready (ES module)", "lok");
       wasmReady = true;
       onSdkReady();
       return;
@@ -288,7 +288,7 @@
         setTimeout(resolve, 10000); // fallback 10s
       });
       if (window._sdkReady === true) {
-        log("BeeSDK: ✅ pronto (ES module)", "lok");
+        log("BeeSDK: ✅ ready (ES module)", "lok");
         wasmReady = true;
         onSdkReady();
         return;
@@ -297,13 +297,13 @@
 
     // FIX: verificar bridge primeiro para diagnóstico antecipado
     if (window.AndroidBee) {
-      log("Bridge Android: ✅ conectada", "lok");
+      log("Android Bridge: ✅ connected", "lok");
 
       // FIX: usar bridge para verificar se WASM está nos assets
       try {
         var hasWasm = window.AndroidBee.hasWasm ? window.AndroidBee.hasWasm() : null;
         if (hasWasm === false) {
-          log("❌ WASM NÃO encontrado nos assets! Coloque bee_sdk_bg.wasm em app/src/main/assets/bee/", "lerr");
+          log("❌ WASM NOT found in assets! Place bee_sdk_bg.wasm in app/src/main/assets/bee/", "lerr");
           setStatus("err", "WASM missing from assets", "File bee_sdk_bg.wasm not found");
           return;
         }
@@ -313,16 +313,16 @@
         log("Could not check assets: " + e.message, "lwrn");
       }
     } else {
-      log("⚠️ Bridge Android não encontrada (rodando fora do app?)", "lwrn");
+      log("⚠️ Android Bridge not found (running outside the app?)", "lwrn");
     }
 
     if (typeof window.BeeSDK === "undefined") {
-      log("❌ window.BeeSDK não encontrado!", "lerr");
+      log("❌ window.BeeSDK not found!", "lerr");
       setStatus("err", "SDK not found", "Error initializing bee_sdk.js");
       return;
     }
 
-    log("BeeSDK: ✅ encontrado", "lok");
+    log("BeeSDK: ✅ found", "lok");
 
     // Ordem de tentativas — Android prioriza file:// via XHR (interceptado pelo WebViewClient)
     var isAndroid = !!(window.AndroidBee || (navigator.userAgent && navigator.userAgent.indexOf("Android") !== -1));
@@ -342,10 +342,10 @@
       try {
         log("Tentando WASM: " + p, "linf");
         var wasmBytes = await loadWasmViaXhr(p);
-        log("WASM baixado: " + wasmBytes.byteLength + " bytes — inicializando...", "linf");
+        log("WASM downloaded: " + wasmBytes.byteLength + " bytes — initializing...", "linf");
         await window.BeeSDK.init(wasmBytes);
         wasmReady = true;
-        log("WASM: ✅ pronto! (" + p + ")", "lok");
+        log("WASM: ✅ ready! (" + p + ")", "lok");
         onSdkReady();
         return;
       } catch (e) {
@@ -358,10 +358,10 @@
       log("Tentativa final: BeeSDK.init() sem argumento...", "linf");
       await window.BeeSDK.init();
       wasmReady = true;
-      log("WASM: ✅ pronto (path padrão)", "lok");
+      log("WASM: ✅ ready (default path)", "lok");
       onSdkReady();
     } catch (e) {
-      log("❌ Todas as tentativas falharam: " + (e.message || String(e)), "lerr");
+      log("❌ All attempts failed: " + (e.message || String(e)), "lerr");
       setStatus("err", "WASM falhou",
         "Confirme: bee_sdk_bg.wasm em app/src/main/assets/bee/ e AllowFileAccess=true");
     }
@@ -370,17 +370,17 @@
   function onSdkReady() {
     updateMetrics();
     if (saved.authorized && saved.walletName && saved.minerAddress) {
-      setStatus("on", "Bee pronta ✅", "Wallet: " + saved.walletName);
+      setStatus("on", "Bee ready ✅", "Wallet: " + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
       if (btnReset)     btnReset.classList.remove("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow = getWP();
       if (switchSub) switchSub.textContent = _wpNow >= WP_MINING_COST
-        ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
-        : "Precisa de " + WP_MINING_COST + " WP para iniciar (você tem " + _wpNow + ")";
+        ? "Turn on to mine — 1 WP/min (" + WP_MINING_COST + " WP per session)"
+        : "Need " + WP_MINING_COST + " WP to start (you have " + _wpNow + ")";
       updateWpDisplay();
       setStep(5);
-      log("Sessão restaurada: " + saved.walletName, "lok");
+      log("Session restored: " + saved.walletName, "lok");
       // Mostrar aviso Mambaboard se não foi dismissado (rewards requerem ativação)
       try {
         var mambaDismissed = localStorage.getItem("wasp_mamba_dismissed");
@@ -388,7 +388,7 @@
         if (mambaEl && !mambaDismissed) mambaEl.classList.remove("hidden");
       } catch(_) {}
       if (!saved.propagated) {
-        log("Propagação pendente — tentando confirmar em background...", "lwrn");
+        log("Propagation pending — trying to confirm in background...", "lwrn");
         setTimeout(tryPropagateBackground, 3000);
       }
 // Auto-start removido — usuario deve ligar manualmente
@@ -411,7 +411,7 @@
   async function tryPropagateBackground() {
     if (saved.propagated || !saved.minerAddress || !saved.publicKey) return;
     _propagateAttempts++;
-    log("🔍 Verificando propagação em background... (tentativa " + _propagateAttempts + "/" + _propagateMaxAttempts + ")", "linf");
+    log("🔍 Checking propagation in background... (attempt " + _propagateAttempts + "/" + _propagateMaxAttempts + ")", "linf");
 
     try {
       await window.BeeSDK.ensure_mining_keys_propagated({
@@ -424,16 +424,16 @@
       });
       // ✅ Confirmada — só a partir daqui o get_reward() será chamado com segurança
       saved.propagated = true; saveSaved();
-      log("✅ Propagação confirmada", "lok");
-      var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmada";
+      log("✅ Propagation confirmed", "lok");
+      var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
     } catch(e) {
       var em = e && e.message ? e.message.substring(0, 80) : String(e);
-      log("⏳ Propagação pendente: " + em, "linf");
+      log("⏳ Propagation pending: " + em, "linf");
       if (_propagateAttempts < _propagateMaxAttempts) {
-        log("🔁 Tentando novamente em " + (_propagateRetryMs/1000) + "s...", "linf");
+        log("🔁 Retrying in " + (_propagateRetryMs/1000) + "s...", "linf");
         setTimeout(tryPropagateBackground, _propagateRetryMs);
       } else {
-        log("⚠️ Propagação não confirmada após " + _propagateMaxAttempts + " tentativas — mineração pode falhar no claim.", "lwrn");
+        log("⚠️ Propagation not confirmed after " + _propagateMaxAttempts + " attempts — mining may fail on claim.", "lwrn");
       }
     }
   }
@@ -442,7 +442,7 @@
   async function runSetup() {
     if (setupRunning) return;
     if (!wasmReady) {
-      log("SDK ainda não carregou — aguarde", "lwrn");
+      log("SDK not yet loaded — please wait", "lwrn");
       toast("Aguarde o SDK carregar...");
       return;
     }
@@ -461,7 +461,7 @@
 
     try {
       setStep(2);
-      setStatus("warn", "Gerando chaves...", "Criando identidade de mineração");
+      setStatus("warn", "Generating keys...", "Creating mining identity");
       log("Chamando gen_mining_keys...", "linf");
 
       // FIX: walletName precisa ser definido ANTES de gen_mining_keys.
@@ -480,7 +480,7 @@
       saved.secretKey  = result.secret;
       saveSaved();
 
-      log("Chaves geradas ✅ pub=" + result.public.substring(0,20)+"...", "lok");
+      log("Keys generated ✅ pub=" + result.public.substring(0,20)+"...", "lok");
 
       // Construir deep link manualmente — formato /set-mining-keys
       // (o result.deep_link do SDK usa path legado /wallet/connect)
@@ -561,7 +561,7 @@
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow2 = getWP();
       if (switchSub) switchSub.textContent = _wpNow2 >= WP_MINING_COST
-        ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
+        ? "Turn on to mine — 1 WP/min (" + WP_MINING_COST + " WP per session)"
         : "Precisa de " + WP_MINING_COST + " WP para iniciar (você tem " + _wpNow2 + ")";
       updateWpDisplay();
       setStep(5); updateMetrics();
@@ -583,7 +583,7 @@
         }).then(function() {
           saved.propagated = true; saveSaved();
           log("✅ Propagação confirmada em background!", "lok");
-          var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmada";
+          var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
         }).catch(function(e) {
           log("Propagação background: " + (e&&e.message?e.message.substring(0,80):String(e)), "lwrn");
           log("Mineração funciona mesmo assim — propagação confirma automaticamente.", "linf");
@@ -670,7 +670,7 @@
         });
         saved.propagated = true; saveSaved();
         log("✅ Chaves confirmadas na rede! Iniciando mineração — o reward desta epoch já vai cair.", "lok");
-        var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmada";
+        var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
       } catch (e) {
         log("⚠️ Propagação ainda não confirmou após ~2 min. Iniciando mesmo assim; se o reward não cair, toque em Reautorizar chaves.", "lwrn");
         showReauthPrompt();
@@ -678,7 +678,7 @@
       _awaitingPropagation = false;
       // Se o usuário desligou enquanto aguardava, não inicia.
       if (miningSwitch && !miningSwitch.checked) {
-        setStatus("on", "Bee pronta", "Mineração pausada");
+        setStatus("on", "Bee ready", "Mining paused");
         if (switchSub) switchSub.textContent = "Ligue para minerar";
         return;
       }
@@ -868,7 +868,7 @@
               var paid = parseInt(localStorage.getItem("wasp_bee_epochs_paid") || "0", 10) || 0;
               localStorage.setItem("wasp_bee_epochs_paid", String(paid + 1));
             } catch(_) {}
-            var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
+            var el = byId("mReward"); if (el) el.textContent = "Sent ✅";
             updateMetrics();
             toast("Reward NACKL enviado! ✅");
             try { claimMiner.stop(); } catch(_) {}
@@ -948,12 +948,12 @@
           return;
         }
         if (!saved.minerAddress || !saved.publicKey || !saved.secretKey) {
-          log("⚠️ Credenciais ausentes para get_reward()", "lerr");
+          log("⚠️ Missing credentials for get_reward()", "lerr");
           try { claimMiner.stop(); } catch(_) {}
           scheduleRestart();
           return;
         }
-        log("💰 Chamando get_reward() na instância que minerou...", "linf");
+        log("💰 Calling get_reward() on the mining instance...", "linf");
         // Garante que a WebView está ativa (importante para PiP)
         if (window.AndroidBee && window.AndroidBee.resumeForClaim) {
           window.AndroidBee.resumeForClaim();
@@ -962,8 +962,8 @@
       }, 16000);
 
       function scheduleRestart() {
-        setStatus("warn", "Aguardando próximo epoch...", "Reiniciando em ~30s");
-        if (switchSub) switchSub.textContent = "Aguardando próximo epoch...";
+        setStatus("warn", "Waiting for next epoch...", "Reiniciando em ~30s");
+        if (switchSub) switchSub.textContent = "Waiting for next epoch...";
         setTimeout(function() {
           if (miningSwitch && miningSwitch.checked) startMining();
         }, 30000);
@@ -995,20 +995,20 @@
       }
 
       if (action === "error" || action === "failed")    log("❌ " + eventStr.substring(0,120), "lerr");
-      if (action === "status_updated")                  log("✅ Conectado à rede Acki Nacki", "lok");
-      if (action === "tap_computed")                    log("◈ Ação registrada na rede", "lok");
-      if (action === "submit_session_root")             log("◈ Dados submetidos à blockchain", "lok");
+      if (action === "status_updated")                  log("✅ Connected to Acki Nacki network", "lok");
+      if (action === "tap_computed")                    log("◈ Action registered on network", "lok");
+      if (action === "submit_session_root")             log("◈ Data submitted to blockchain", "lok");
     });
 
     mining = true; sessionStart = Date.now(); startUptimeTimer();
     // Sessão realmente iniciou — confirma o débito de WP (não reembolsa mais).
     _wpDebited = false;
     if (tapSection) tapSection.classList.remove("hidden");
-    if (switchSub)  switchSub.textContent = "Minerando NACKL ⚡";
-    setStatus("on", "Minerando NACKL ⚡", "Wallet: " + saved.walletName);
+    if (switchSub)  switchSub.textContent = "Mining NACKL ⚡";
+    setStatus("on", "Mining NACKL ⚡", "Wallet: " + saved.walletName);
     updateMetrics();
-    log("✅ Mineração iniciada — epoch ativo", "lok");
-    toast("Mineração NACKL iniciada! ⚡");
+    log("✅ Mining started — epoch active", "lok");
+    toast("NACKL Mining started! ⚡");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────
     // 100 taps por epoch de 5 min = 1 tap a cada 3s
@@ -1036,15 +1036,15 @@
         autoTapCount++;
         window._tapCount = (window._tapCount || 0) + 1;
         if (autoTapCount % 10 === 0) {
-          log("◈ Sincronizando com a rede... " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
+          log("◈ Syncing with network... " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
         }
         // Animar botão TAP visualmente
         if (window._tapBtnAnim) window._tapBtnAnim();
       } catch(e) {
-        log("⚠️ Erro de sincronização: " + e.message, "lwrn");
+        log("⚠️ Sync error: " + e.message, "lwrn");
       }
     }, AUTO_TAP_INTERVAL);
-    log("◈ Protocolo de mineração ativo", "linf");
+    log("◈ Mining protocol active", "linf");
   }
 
   // ─── STOP ────────────────────────────────────────────────────────────────
@@ -1058,7 +1058,7 @@
         miner = null;
         refundSessionWP("desligado antes de iniciar");
         if (switchSub) switchSub.textContent = "Ligue para retomar";
-        setStatus("on", "Bee pronta", "Mineração pausada");
+        setStatus("on", "Bee ready", "Mining paused");
       }
       return;
     }
@@ -1068,10 +1068,10 @@
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
     if (switchSub)  switchSub.textContent = "Ligue para retomar";
-    setStatus("on", "Bee pronta", "Mineração pausada");
+    setStatus("on", "Bee ready", "Mining paused");
     notifyMiningStatus();
     updateMetrics();
-    log("Mineração pausada.", "lwrn");
+    log("Mining paused.", "lwrn");
   }
 
   // ─── TAP ─────────────────────────────────────────────────────────────────
@@ -1083,7 +1083,7 @@
         Math.floor(Math.random()*300+50)
       );
       window._tapCount = (window._tapCount || 0) + 1;
-      log("◈ Ação registrada (" + window._tapCount + ")", "lok");
+      log("◈ Action registered (" + window._tapCount + ")", "lok");
       if (window._tapBtnAnim) window._tapBtnAnim();
     } catch(e) { log("Erro no tap: " + e.message, "lerr"); }
   }
@@ -1097,7 +1097,7 @@
       );
       saved.firstTapDone = true; saveSaved();
       var ftc = byId("firstTapCard"); if (ftc) ftc.classList.add("hidden");
-      log("✅ Protocolo iniciado!", "lok");
+      log("✅ Protocol started!", "lok");
       await startMining();
     } catch(e) { log("Erro no primeiro tap: " + e.message, "lerr"); }
   }
@@ -1109,12 +1109,12 @@
   async function reauthorizeKeys() {
     if (!wasmReady) { toast("Aguarde o SDK carregar..."); return; }
     if (!saved.walletName || !saved.publicKey || !saved.secretKey) {
-      log("Sem chaves locais para reautorizar — faça a configuração completa.", "lerr");
+      log("No local keys to reauthorize — complete the full setup.", "lerr");
       doReset();
       return;
     }
     try {
-      log("🔁 Reabrindo set-mining-keys na AN Wallet...", "linf");
+      log("🔁 Reopening set-mining-keys on AN Wallet...", "linf");
       var link = await buildManualDeepLink({
         appId: APP_ID,
         publicKey: saved.publicKey,
@@ -1122,7 +1122,7 @@
         walletName: saved.walletName
       });
       openDeepLink(link);
-      toast("Confirme as chaves de mineração na AN Wallet");
+      toast("Confirm your mining keys on AN Wallet");
       // Após reautorizar, tenta reconfirmar a propagação em background.
       saved.propagated = false; saveSaved();
       _propagateAttempts = 0;
@@ -1144,7 +1144,7 @@
       btn = document.createElement("button");
       btn.id = "btnReauth";
       btn.className = "btn";
-      btn.textContent = "🔁 Reautorizar chaves na AN Wallet";
+      btn.textContent = "🔁 Reauthorize keys on AN Wallet";
       btn.onclick = reauthorizeKeys;
       if (host) host.appendChild(btn);
     } catch(_) {}
@@ -1152,19 +1152,19 @@
 
   // ─── RESET ───────────────────────────────────────────────────────────────
   function doReset() {
-    if (!window.confirm("Resetar a Bee Engine? As chaves serão apagadas.")) return;
+    if (!window.confirm("Reset Bee Engine? Keys will be deleted.")) return;
     stopMining(); clearSaved(); rawDeepLink = null; cycles = 0;
     if (walletInput)   walletInput.value = "";
     if (setupCard)     setupCard.classList.remove("hidden");
     if (btnOpenAgain)  btnOpenAgain.classList.add("hidden");
     if (btnReset)      btnReset.classList.add("hidden");
-    if (btnSetup)      { btnSetup.disabled = false; btnSetup.textContent = "Iniciar configuração"; btnSetup.onclick = runSetup; }
+    if (btnSetup)      { btnSetup.disabled = false; btnSetup.textContent = "Start setup"; btnSetup.onclick = runSetup; }
     if (miningSwitch)  { miningSwitch.checked = false; miningSwitch.disabled = true; }
     if (tapSection)    tapSection.classList.add("hidden");
     var ftc = byId("firstTapCard"); if (ftc) ftc.classList.add("hidden");
     if (switchSub) switchSub.textContent = "Configure primeiro";
     setStep(1); setStatus("warn", "Resetado", "Configure novamente");
-    updateMetrics(); log("Configuração resetada.", "lwrn");
+    updateMetrics(); log("Setup reset.", "lwrn");
   }
 
   // ─── DIAGNÓSTICO ─────────────────────────────────────────────────────────
@@ -1176,13 +1176,13 @@
 
   window.runDiag = async function() {
     function el(id) { return byId(id); }
-    if (el("dBridge"))  el("dBridge").textContent  = window.AndroidBee ? "✅ Conectada" : "❌ Não encontrada";
-    if (el("dSdk"))     el("dSdk").textContent     = typeof window.BeeSDK !== "undefined" ? "✅ Encontrado" : "❌ Ausente";
-    if (el("dWasm"))    el("dWasm").textContent    = wasmReady ? "✅ Inicializado" : "⏳ Aguardando";
+    if (el("dBridge"))  el("dBridge").textContent  = window.AndroidBee ? "✅ Connected" : "❌ Not found";
+    if (el("dSdk"))     el("dSdk").textContent     = typeof window.BeeSDK !== "undefined" ? "✅ Found" : "❌ Missing";
+    if (el("dWasm"))    el("dWasm").textContent    = wasmReady ? "✅ Initialized" : "⏳ Waiting";
     if (el("dAddr"))    el("dAddr").textContent    = saved.minerAddress || "—";
-    if (el("dMining"))  el("dMining").textContent  = mining ? "✅ SIM" : "❌ NÃO";
+    if (el("dMining"))  el("dMining").textContent  = mining ? "✅ YES" : "❌ NO";
     if (el("dCycles"))  el("dCycles").textContent  = String(cycles) + " eventos";
-    if (el("dPropagated")) el("dPropagated").textContent = saved.propagated ? "✅ Sim" : "⚠️ Pendente";
+    if (el("dPropagated")) el("dPropagated").textContent = saved.propagated ? "✅ Yes" : "⚠️ Pending";
     if (el("dLastEvent"))  el("dLastEvent").textContent  = window._lastMinerEvent || "nenhum";
 
     // Verificar assets via bridge
@@ -1191,20 +1191,20 @@
       catch(e) { el("dAssets").textContent = "erro: "+e.message; }
     }
     if (window.AndroidBee && window.AndroidBee.hasWasm && el("dHasWasm")) {
-      try { el("dHasWasm").textContent = window.AndroidBee.hasWasm() ? "✅ Encontrado" : "❌ Ausente!"; }
+      try { el("dHasWasm").textContent = window.AndroidBee.hasWasm() ? "✅ Found" : "❌ Ausente!"; }
       catch(e) { el("dHasWasm").textContent = "erro: "+e.message; }
     }
 
     if (el("dCanStart")) {
       if (!miner) {
-        el("dCanStart").textContent = "— (miner não criado)";
+        el("dCanStart").textContent = "— (miner not created)";
       } else if (mining) {
         // Quando minerando, can_start() retorna false por design — sessão em andamento
-        el("dCanStart").textContent = "false — normal (sessão ativa, epoch rodando ✅)";
+        el("dCanStart").textContent = "false — normal (active session, epoch running ✅)";
       } else {
         try {
           var cs = miner.can_start();
-          el("dCanStart").textContent = String(cs) + (cs ? " ✅ pronto para iniciar" : " ⚠️ sem seeds disponíveis");
+          el("dCanStart").textContent = String(cs) + (cs ?  " ✅ ready to start" :  " ⚠️ no seeds available");
         }
         catch(e) { el("dCanStart").textContent = "Erro: "+e.message; }
       }
@@ -1213,7 +1213,7 @@
     if (el("dMamba")) {
       try {
         var dismissed = localStorage.getItem("wasp_mamba_dismissed");
-        el("dMamba").textContent = dismissed ? "✅ Marcado como ativado pelo usuário" : "⚠️ Não confirmado — necessário para rewards";
+        el("dMamba").textContent = dismissed ? "✅ Marked as activated by user" : "⚠️ Not confirmed — required for rewards";
       } catch(_) { el("dMamba").textContent = "—"; }
     }
     // tapSum — verificar contagem de taps
@@ -1236,7 +1236,7 @@
   };
 
   window.onAppPause = function() {
-    log("App em background — miner continua se WebView não for suspenso", "linf");
+    log("App in background — miner continues if WebView is not suspended", "linf");
   };
 
   // Tenta coletar reward pendente de sessão anterior
@@ -1245,7 +1245,7 @@
     if (!wasmReady || !saved.minerAddress) { if (callback) callback(); return; }
     // FIX: não colidir com um claim já em andamento (guard claiming).
     if (claiming) {
-      log("Claim já em andamento — pulando verificação de reward pendente.", "linf");
+      log("Claim already in progress — skipping pending reward check.", "linf");
       if (callback) callback();
       return;
     }
@@ -1258,9 +1258,9 @@
       );
       log("Verificando reward pendente...", "linf");
       await tmpMiner.get_reward();
-      log("get_reward (resume): executado ✅ -- verifique sua AN Wallet", "lok");
-      toast("Reward pendente enviado para a wallet ✅");
-      var el = byId("mReward"); if (el) el.textContent = "Enviado ✅";
+      log("get_reward (resume): executed ✅ -- check your AN Wallet", "lok");
+      toast("Pending reward sent to wallet ✅");
+      var el = byId("mReward"); if (el) el.textContent = "Sent ✅";
     } catch(e) {
       // Sem reward pendente -- normal apos epoch incompleto
       log("Sem reward pendente: " + (e&&e.message?e.message.substring(0,80):String(e)), "linf");
@@ -1284,10 +1284,10 @@
           var wp = getWP();
           if (wp < WP_MINING_COST) {
             miningSwitch.checked = false;
-            if (switchSub) switchSub.textContent = "Precisa de " + WP_MINING_COST + " WP — ganhe na Central WP";
+            if (switchSub) switchSub.textContent = "Need " + WP_MINING_COST + " WP — earn at WP Central";
             setStatus("err", "WP insuficiente",
-              "Você tem " + wp + " WP. Ganhe " + (WP_MINING_COST - wp) + " WP mais para minerar.");
-            log("❌ Sem WP para minerar. Saldo: " + wp + "/" + WP_MINING_COST, "lerr");
+              "You have " + wp + " WP. Earn " + (WP_MINING_COST - wp) + " more WP to mine.");
+            log("❌ No WP to mine. Balance: " + wp + "/" + WP_MINING_COST, "lerr");
             updateWpDisplay();
             // Abre central WP após 1.5s para facilitar
             setTimeout(function() {
@@ -1324,8 +1324,8 @@
       if (!document.hidden && saved.authorized && !mining) {
         var _wpV = getWP();
         if (switchSub) switchSub.textContent = _wpV >= WP_MINING_COST
-          ? "Ligue para minerar — 1 WP/min (" + WP_MINING_COST + " WP por sessão)"
-          : "Precisa de " + WP_MINING_COST + " WP para minerar (você tem " + _wpV + ")";
+          ? "Turn on to mine — 1 WP/min (" + WP_MINING_COST + " WP per session)"
+          : "Need " + WP_MINING_COST + " WP to mine (you have " + _wpV + ")";
       }
     });
   }
