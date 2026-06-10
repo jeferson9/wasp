@@ -23,7 +23,7 @@
             android:src="@drawable/ic_arrow_back"
             android:tint="#6B7A99"
             android:padding="9dp"
-            android:contentDescription="Voltar"/>
+            android:contentDescription="@string/nav_back"/>
 
         <EditText
             android:id="@+id/urlInput"

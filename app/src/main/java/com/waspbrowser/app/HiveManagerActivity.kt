@@ -118,7 +118,7 @@ class HiveManagerActivity : Activity() {
 
         if (sites.isEmpty()) {
             list.addView(TextView(this).apply {
-                text = "🐝\n\nNenhum site no Hive ainda.\nAdicione sites pelo botão +"
+                text = getString(R.string.hive_empty)
                 setTextColor(WASP_TEXT_DIM)
                 textSize = 14f
                 gravity = Gravity.CENTER

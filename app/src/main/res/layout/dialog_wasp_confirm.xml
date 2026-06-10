@@ -39,7 +39,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginEnd="6dp"
-            android:text="Cancelar"
+            android:text="@string/dialog_cancel"
             android:textAllCaps="false"
             android:textColor="#C8D0E0"
             android:textStyle="bold"

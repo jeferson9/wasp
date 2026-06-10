@@ -85,10 +85,10 @@ class StartioAdActivity : Activity() {
             Log.d(TAG, "Video completado")
         })
 
-        diag("Carregando vídeo...")
+        diag(getString(R.string.ad_loading_video))
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(p: Ad) {
-                diag("Iniciando vídeo...")
+                diag(getString(R.string.ad_starting_video))
                 // Sem delay artificial: exibimos assim que o video esta pronto.
                 ad.showAd(object : AdDisplayListener {
                     override fun adHidden(p0: Ad) {
@@ -102,14 +102,14 @@ class StartioAdActivity : Activity() {
                     override fun adDisplayed(p0: Ad) {}
                     override fun adClicked(p0: Ad) {}
                     override fun adNotDisplayed(p0: Ad) {
-                        diag("Anúncio não pôde ser exibido")
+                        diag(getString(R.string.ad_cant_show))
                         safeFinish()
                     }
                 })
             }
 
             override fun onFailedToReceiveAd(p: Ad?) {
-                diag("Nenhum anúncio disponível")
+                diag(getString(R.string.ad_none_available))
                 handler.postDelayed({ safeFinish() }, 900)
             }
         })
@@ -146,7 +146,7 @@ class StartioAdActivity : Activity() {
         column.addView(spinner, LinearLayout.LayoutParams(dp(48), dp(48)))
 
         statusText = TextView(this).apply {
-            text = "Carregando vídeo..."
+            text = getString(R.string.ad_loading_video)
             setTextColor(Color.parseColor("#ccffffff"))
             textSize = 14f
             gravity = Gravity.CENTER
@@ -157,7 +157,7 @@ class StartioAdActivity : Activity() {
         ).apply { topMargin = dp(18) })
 
         val hint = TextView(this).apply {
-            text = "Aguarde — você receberá 30 WP ao assistir"
+            text = getString(R.string.ad_wait_reward, 30)
             setTextColor(Color.parseColor("#66ffffff"))
             textSize = 11f
             gravity = Gravity.CENTER

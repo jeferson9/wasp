@@ -136,7 +136,7 @@ class BeeActivity : AppCompatActivity() {
                             msg.contains("WP", true) || msg.contains("recompensa", true) ||
                             msg.contains("mineraç", true) || msg.contains("iniciada", true) ||
                             msg.contains("reward", true) -> WaspToast.SUCCESS
-                            msg.contains("erro", true) || msg.contains("falhou", true) -> WaspToast.ERROR
+                            msg.contains("erro", true) || msg.contains("falhou", true) || msg.contains("error", true) || msg.contains("failed", true) -> WaspToast.ERROR
                             else -> WaspToast.NORMAL
                         }
                         WaspToast.show(context, msg, type)
@@ -310,7 +310,7 @@ class BeeActivity : AppCompatActivity() {
                         val remaining = CentralActivity.AD_COOLDOWN_MS - (now - last)
                         if (remaining > 0) {
                             val min = (remaining / 60000) + 1
-                            android.widget.Toast.makeText(context, "Próximo anúncio em ~$min min", android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, context.getString(R.string.ad_next_in, min.toInt()), android.widget.Toast.LENGTH_SHORT).show()
                             return@post
                         }
                         val i = Intent(context, StartioAdActivity::class.java)
@@ -521,7 +521,7 @@ class BeeActivity : AppCompatActivity() {
             startActivity(intent)
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao abrir link: $url — ${e.message}")
-            WaspToast.show(this, "Não foi possível abrir este link", WaspToast.ERROR, false)
+            WaspToast.show(this, getString(R.string.link_cant_open), WaspToast.ERROR, false)
         }
     }
 

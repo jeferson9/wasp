@@ -143,4 +143,25 @@
     <string name="tr_other_lang_sub">Choose from %d languages</string>
     <string name="tr_view_original">View original</string>
     <string name="tr_view_original_sub">Reload page without translation</string>
+    <string name="ad_loading_video">Loading video...</string>
+    <string name="ad_starting_video">Starting video...</string>
+    <string name="ad_cant_show">Ad could not be shown</string>
+    <string name="ad_none_available">No ad available</string>
+    <string name="ad_wait_reward">Please wait — you\'ll get %d WP for watching</string>
+    <string name="ad_next_in">Next ad in ~%d min</string>
+    <string name="toast_translate_error">Could not start translation</string>
+    <string name="toast_no_page_translate">No page to translate</string>
+    <string name="link_cant_open">Could not open this link</string>
+    <string name="hive_empty">🐝\n\nNo sites in the Hive yet.\nAdd sites with the + button</string>
+    <string name="notif_mining_title">🐝 Mining NACKL</string>
+    <string name="notif_mining_active">Mining active</string>
+    <string name="about_title">About Wasp</string>
+    <string name="about_subtitle">Wasp Browser initial version</string>
+    <string name="nav_back">Back</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_menu">Menu</string>
+    <string name="secure_connecting">Opening secure connection...</string>
+    <string name="web3_coming_soon">Web3 under development</string>
+    <string name="splash_tagline">Web3 browser with Bee Engine</string>
+    <string name="splash_footer">v1.0 • Powered by Wasp</string>
 </resources>

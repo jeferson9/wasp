@@ -26,7 +26,7 @@
             android:src="@drawable/ic_arrow_back"
             android:tint="#6B7A99"
             android:padding="9dp"
-            android:contentDescription="Voltar" />
+            android:contentDescription="@string/nav_back" />
 
         <!-- HOME -->
         <ImageButton
@@ -38,7 +38,7 @@
             android:src="@drawable/ic_home"
             android:tint="#6B7A99"
             android:padding="9dp"
-            android:contentDescription="Home" />
+            android:contentDescription="@string/nav_home" />
 
         <!-- URL BAR -->
         <LinearLayout
@@ -155,6 +155,6 @@
             android:src="@drawable/ic_more_vert"
             android:tint="#6B7A99"
             android:padding="9dp"
-            android:contentDescription="Menu" />
+            android:contentDescription="@string/nav_menu" />
     </LinearLayout>
 </LinearLayout>

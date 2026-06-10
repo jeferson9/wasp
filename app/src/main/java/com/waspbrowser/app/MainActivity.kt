@@ -514,7 +514,7 @@ class MainActivity : AppCompatActivity() {
             val loader = GeckoSession.Loader().uri("javascript:(function(){$js})();")
             getActiveSession().load(loader)
         } catch (e: Exception) {
-            showWaspToast("Erro ao iniciar tradução")
+            showWaspToast(getString(R.string.toast_translate_error))
         }
     }
 
@@ -805,7 +805,7 @@ class MainActivity : AppCompatActivity() {
                     "bee"        -> openBeePanel()
                     "translate"  -> {
                         if (currentUrl.isBlank() || currentUrl.startsWith("about:")) {
-                            showWaspToast("Nenhuma página para traduzir")
+                            showWaspToast(getString(R.string.toast_no_page_translate))
                         } else {
                             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                 WaspTranslator.show(
@@ -1556,7 +1556,7 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread {
             try { geckoSession.purgeHistory() } catch (_: Exception) {}
             webAppView.clearHistory()
-            WaspToast.show(this, "Histórico apagado", WaspToast.SUCCESS)
+            WaspToast.show(this, getString(R.string.hist_cleared), WaspToast.SUCCESS)
         }
     }
 

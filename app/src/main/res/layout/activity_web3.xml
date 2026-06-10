@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:text="Web3 Hub"
+        android:text="@string/menu_web3"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"
@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"/>
 
     <TextView
-        android:text="Web3 em desenvolvimento"
+        android:text="@string/web3_coming_soon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 

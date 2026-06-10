@@ -120,7 +120,7 @@ class CentralActivity : AppCompatActivity() {
                 if (remaining > 0) {
                     val min = (remaining / 60000) + 1
                     Toast.makeText(this@CentralActivity,
-                        "Próximo anúncio em ~$min min", Toast.LENGTH_SHORT).show()
+                        getString(R.string.ad_next_in, min.toInt()), Toast.LENGTH_SHORT).show()
                     return@post
                 }
                 val i = android.content.Intent(this@CentralActivity, StartioAdActivity::class.java)
