@@ -889,7 +889,7 @@
         // mostramos um status claro em vez de um número sem sentido (ex.: 16666:40).
         const UMA_HORA_MS = 60 * 60 * 1000;
         if (bgMiningRem > UMA_HORA_MS) {
-          el("miningStatus").textContent = "Participando da rede Acki Nacki";
+          el("miningStatus").textContent = "Participating in Acki Nacki network";
         } else {
           el("miningStatus").textContent = "Mining — " + fmtSecs(bgMiningRem) + " remaining";
         }
@@ -1116,7 +1116,7 @@
         '<div style="font-size:20px;font-weight:900;color:#37d67a;margin-bottom:6px">Recompensa Concedida!</div>' +
         '<div style="font-size:44px;font-weight:900;color:#ffc107;margin-bottom:6px">+' + amount + ' WP</div>' +
         '<div style="font-size:13px;color:rgba(238,240,246,0.55);margin-bottom:22px">Anúncio assistido com sucesso</div>' +
-        '<button onclick="document.getElementById(\'rewardOverlay\').remove();toast(\'+' + amount + ' WP adicionado! 🐝\')" ' +
+        '<button onclick="document.getElementById(\'rewardOverlay\').remove();toast(\'+' + amount + ' WP added! 🐝\')" ' +
         'style="background:rgba(55,214,122,0.18);border:1px solid rgba(55,214,122,0.4);color:#37d67a;' +
         'border-radius:14px;padding:13px 0;font-size:15px;font-weight:800;width:100%;cursor:pointer;">' +
         '✅ Receber WP</button></div>';
@@ -1133,7 +1133,7 @@
     function doClear() {
       localStorage.removeItem(K.history);
       renderAll();
-      toast("Histórico limpo.");
+      toast("History cleared.");
     }
 
     /* ══════════════════════════════════════════
@@ -1179,8 +1179,8 @@
         if (tapFinished) return;
         tapFinished = true;
         setN(K.tapLast, Date.now());
-        addWP(CFG.tapReward, "Tap Game concluído");
-        el("tapMilestone").textContent = "✅ Recompensa creditada! Toque ✕ para fechar.";
+        addWP(CFG.tapReward, "Tap Game completed");
+        el("tapMilestone").textContent = "✅ Reward credited! Tap ✕ to close.";
       }
     }
 
