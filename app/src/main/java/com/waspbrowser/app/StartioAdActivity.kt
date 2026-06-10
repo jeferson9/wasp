@@ -75,7 +75,7 @@ class StartioAdActivity : Activity() {
         // SDK ja inicializado no SplashActivity (no boot). Nao reinicializamos
         // aqui: chamar init() de novo no momento de abrir o anuncio so atrasa
         // a abertura da tela. Mantemos o modo de teste alinhado com o Splash.
-        StartAppSDK.setTestAdsEnabled(false)
+        StartAppSDK.setTestAdsEnabled(true) // REMOVER ANTES DE PUBLICAR
 
         val ad = StartAppAd(this)
 
