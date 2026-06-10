@@ -218,7 +218,7 @@
     if (window.crypto && window.crypto.subtle) {
       try {
         var bytes = new Uint8Array(keyHex.match(/.{2}/g).map(function(b){ return parseInt(b,16); }));
-        var key = await window.crypto.subtle.importKey("raw", bytes, {name:"HMAC",hash:"SHA-256"}, false, ["s..."]);
+        var key = await window.crypto.subtle.importKey("raw", bytes, {name:"HMAC",hash:"SHA-256"}, false, ["sign"]);
         var sig = await window.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
         return Array.from(new Uint8Array(sig)).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("");
       } catch(e) { log("crypto.subtle falhou: "+e.message, "lwrn"); }
@@ -462,7 +462,7 @@
     try {
       setStep(2);
       setStatus("warn", "Generating keys...", "Creating mining identity");
-      log("Chamando gen_mining_keys...", "linf");
+      log("Calling gen_mining_keys...", "linf");
 
       // FIX: walletName precisa ser definido ANTES de gen_mining_keys.
       // Antes, gen_mining_keys recebia saved.walletName ainda vazio na 1ª
@@ -484,7 +484,7 @@
 
       // Construir deep link manualmente — formato /set-mining-keys
       // (o result.deep_link do SDK usa path legado /wallet/connect)
-      log("Construindo deep link...", "linf");
+      log("Building deep link...", "linf");
       rawDeepLink = await buildManualDeepLink({
         appId: APP_ID,
         publicKey: result.public,
@@ -513,7 +513,7 @@
       setStatus("err", "Erro no setup", em.substring(0,100));
       if (btnSetup) {
         btnSetup.disabled = false;
-        btnSetup.textContent = "Tentar novamente";
+        btnSetup.textContent = "Try again";
         btnSetup.onclick = runSetup;
       }
     }
