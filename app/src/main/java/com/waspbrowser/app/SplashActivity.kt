@@ -20,12 +20,12 @@ class SplashActivity : AppCompatActivity() {
     private var progress = 0
 
     private val steps = listOf(
-        0  to "Inicializando motor...",
-        20 to "Carregando engine Web3...",
-        40 to "Verificando segurança...",
-        60 to "Sincronizando Bee Engine...",
-        80 to "Otimizando performance...",
-        95 to "Pronto para navegar..."
+        0  to "Initializing engine...",
+        20 to "Loading Web3 engine...",
+        40 to "Checking security...",
+        60 to "Syncing Bee Engine...",
+        80 to "Optimizing performance...",
+        95 to "Ready to browse..."
     )
 
     private lateinit var progressBar: ProgressBar
@@ -136,7 +136,7 @@ class SplashActivity : AppCompatActivity() {
         }
 
         tvStatus = TextView(this).apply {
-            text = "Inicializando motor..."
+            text = "Initializing engine..."
             setTextColor(Color.parseColor("#88ffffff"))
             textSize = 12f
             typeface = Typeface.MONOSPACE
@@ -228,7 +228,7 @@ class SplashActivity : AppCompatActivity() {
                 steps.lastOrNull { it.first <= progress }?.let { tvStatus.text = it.second }
                 animateProgress()
             } else {
-                tvStatus.text = "Bem-vindo ao Wasp \uD83D\uDC1D"
+                tvStatus.text = "Welcome to Wasp \uD83D\uDC1D"
                 handler.postDelayed({
                     startActivity(Intent(this, MainActivity::class.java))
                     overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
