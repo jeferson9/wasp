@@ -50,7 +50,7 @@
                 <!-- Barra de busca -->
                 <div class="home-search" id="homeSearchWrap">
                     <div class="search-engine" id="engineBtn">
-                        <img id="engineIcon" src="img/google.webp" alt="Motor de busca">
+                        <img id="engineIcon" src="img/google.webp" alt="Search engine">
                         <span class="engine-arrow">▼</span>
                     </div>
                     <input
@@ -128,9 +128,9 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f7c600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-bottom:2px">
                             <circle cx="12" cy="12" r="9"/>
                             <polyline points="12 7 12 12 15 15"/>
-                        </svg>Recentes
+                        </svg>Recent
                     </div>
-                    <button class="panel-action" onclick="clearRecents()">Limpar</button>
+                    <button class="panel-action" onclick="clearRecents()">Clear</button>
                 </div>
                 <div id="recentList" class="recent-list"></div>
             </div>
@@ -146,7 +146,7 @@
                             <line x1="12" y1="15" x2="16" y2="15"/>
                         </svg>Wasp Blog
                     </div>
-                    <button class="panel-action" onclick="openNativeUrl('https://waspblogblockchain.blogspot.com')">Ver tudo</button>
+                    <button class="panel-action" onclick="openNativeUrl('https://waspblogblockchain.blogspot.com')">See all</button>
                 </div>
                 <div id="waspFeedList" class="wasp-feed-list">
                     <div class="feed-skeleton"><div class="feed-sk-img"></div><div class="feed-sk-lines"><div class="feed-sk-line long"></div><div class="feed-sk-line short"></div></div></div>
@@ -178,7 +178,7 @@
             <div class="panel-card">
                 <div class="pc-label">⏱️ Online time today</div>
                 <div class="pc-value" id="onlineToday">00:00</div>
-                <div class="pc-sub">Zera automaticamente todo dia</div>
+                <div class="pc-sub">Resets automatically every day</div>
             </div>
 
             <div class="panel-card">
@@ -357,9 +357,9 @@
     <div class="settings-content">
 
         <!-- NOME DO USUÁRIO -->
-        <div class="settings-section-title">Perfil</div>
+        <div class="settings-section-title">Profile</div>
         <div class="settings-item settings-item-input">
-            <span class="settings-item-label">Seu nome</span>
+            <span class="settings-item-label">Your name</span>
             <input
                     id="userNameInput"
                     class="settings-name-input"
@@ -375,7 +375,7 @@
         <!-- TEMA -->
         <div class="settings-section-title">Appearance</div>
         <div class="settings-item" onclick="toggleThemeOptions()">
-            Tema: <span id="themeLabel">Dark</span>
+            Theme: <span id="themeLabel">Dark</span>
         </div>
         <div id="themeOptions" class="settings-submenu">
             <div class="settings-subitem" onclick="setTheme('dark')">🌙 Dark</div>
@@ -386,7 +386,7 @@
             <span id="currentLang" style="font-size:12px;opacity:0.5;margin-left:auto;">—</span>
         </div>
         <div class="settings-item" onclick="toggleEngineOptions()">
-            <span>Motor de busca</span>
+            <span>Search engine</span>
             <span id="currentEngineName" style="font-size:12px;opacity:0.6;margin-left:auto;margin-right:8px;">Google</span>
             <span>›</span>
         </div>
@@ -407,11 +407,11 @@
 <!-- DIALOG LIMPAR CACHE -->
 <div id="clearCacheDialog" class="remove-dialog">
     <div class="remove-box">
-        <p class="remove-title">Limpar cache e cookies?</p>
+        <p class="remove-title">Clear cache and cookies?</p>
         <p class="remove-sub">WP balance and mining data will be preserved.</p>
         <div class="remove-actions">
             <button class="remove-cancel" onclick="closeClearCache()">Cancelar</button>
-            <button class="remove-danger" onclick="doClearCache()">Limpar</button>
+            <button class="remove-danger" onclick="doClearCache()">Clear</button>
         </div>
     </div>
 </div>
@@ -462,7 +462,7 @@
                 <rect x="14" y="14" width="7" height="7" rx="1.5"/>
             </svg>
         </span>
-        <span class="bottom-label">Painel</span>
+        <span class="bottom-label">Panel</span>
     </button>
     <button class="bottom-tab" data-mode="market" onclick="openMarketTab()">
         <span class="bottom-icon">
@@ -471,7 +471,7 @@
                 <polyline points="16 7 22 7 22 13"/>
             </svg>
         </span>
-        <span class="bottom-label">Mercado</span>
+        <span class="bottom-label">Market</span>
     </button>
     <button class="bottom-tab" data-mode="hive" onclick="openHiveTab()">
         <span class="bottom-icon">
