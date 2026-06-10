@@ -26,15 +26,15 @@ class FavoritesActivity : AppCompatActivity() {
         val btnClear = findViewById<Button>(R.id.btnClearFavorites)
         listView     = findViewById(R.id.listFavorites)
 
-        urlInput.setText("FAVORITOS")
+        urlInput.setText(getString(R.string.fav_title_caps))
         urlInput.isEnabled = false
         btnUrl.visibility  = View.GONE
         btnBack.setOnClickListener { finish(); @Suppress("DEPRECATION") overridePendingTransition(R.anim.fade_in, R.anim.fade_out) }
 
         btnClear.setOnClickListener {
-            WaspDialogs.confirm(this, "Limpar favoritos", "Apagar todos os favoritos?", "Apagar") {
+            WaspDialogs.confirm(this, getString(R.string.fav_clear_title), getString(R.string.fav_clear_body), getString(R.string.fav_clear_confirm)) {
                 FavoritesManager.clear(this)
-                WaspDialogs.toast(this, "Favoritos apagados")
+                WaspDialogs.toast(this, getString(R.string.fav_cleared))
                 loadList()
             }
         }
@@ -88,7 +88,7 @@ class FavoritesActivity : AppCompatActivity() {
 
         listView.setOnItemLongClickListener { _, _, position, _ ->
             val fav = favorites[position]
-            WaspDialogs.confirm(this, "Remover", "Remover dos favoritos?", "Remover") {
+            WaspDialogs.confirm(this, getString(R.string.fav_remove_title), getString(R.string.fav_remove_body), getString(R.string.fav_remove_confirm)) {
                 FavoritesManager.remove(this, fav.url)
                 loadList()
             }

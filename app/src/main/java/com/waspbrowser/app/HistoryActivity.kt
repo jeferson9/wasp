@@ -37,7 +37,7 @@ class HistoryActivity : AppCompatActivity() {
         listView     = findViewById(R.id.listHistory)
         btnClear     = findViewById(R.id.btnClearHistory)
 
-        urlInput.setText("Histórico")
+        urlInput.setText(getString(R.string.hist_title))
         urlInput.isEnabled = false
         btnUrl.visibility  = View.GONE
         btnBack.setOnClickListener { finish(); @Suppress("DEPRECATION") overridePendingTransition(R.anim.fade_in, R.anim.fade_out) }
@@ -98,10 +98,10 @@ class HistoryActivity : AppCompatActivity() {
         val now  = System.currentTimeMillis()
         val diff = now - timestamp
         val age  = when {
-            diff < 60_000L             -> "agora mesmo"
-            diff < 3_600_000L          -> "${diff / 60_000}min atrás"
-            diff < 86_400_000L         -> "${diff / 3_600_000}h atrás"
-            diff < 86_400_000L * 7     -> "${diff / 86_400_000}d atrás"
+            diff < 60_000L             -> getString(R.string.time_just_now)
+            diff < 3_600_000L          -> getString(R.string.time_min_ago, (diff / 60_000).toInt())
+            diff < 86_400_000L         -> getString(R.string.time_hour_ago, (diff / 3_600_000).toInt())
+            diff < 86_400_000L * 7     -> getString(R.string.time_day_ago, (diff / 86_400_000).toInt())
             else                       -> SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date(timestamp))
         }
         return "$domain  ·  $age"
@@ -125,16 +125,16 @@ class HistoryActivity : AppCompatActivity() {
     }
 
     private fun confirmClearHistory() {
-        WaspDialogs.confirm(this, "Limpar histórico", "Apagar todo o histórico?", "Apagar") {
+        WaspDialogs.confirm(this, getString(R.string.hist_clear_title), getString(R.string.hist_clear_body), getString(R.string.hist_clear_confirm)) {
             getSharedPreferences("wasp_recents", MODE_PRIVATE)
                 .edit().putString("recents_json", "[]").apply()
-            WaspDialogs.toast(this, "Histórico apagado")
+            WaspDialogs.toast(this, getString(R.string.hist_cleared))
             loadList()
         }
     }
 
     private fun confirmDeleteItem(position: Int) {
-        WaspDialogs.confirm(this, "Remover", "Remover este item do histórico?", "Remover") {
+        WaspDialogs.confirm(this, getString(R.string.hist_remove_title), getString(R.string.hist_remove_body), getString(R.string.hist_remove_confirm)) {
             allRecents.remove(filtered[position])
             filtered.removeAt(position)
             saveRecents(allRecents)

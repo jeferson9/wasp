@@ -29,9 +29,9 @@ object WaspTranslator {
 
     data class Lang(val flag: String, val name: String, val code: String)
 
-    private val LANGUAGES_BY_REGION: List<Pair<String, List<Lang>>> = listOf(
+    private val LANGUAGES_BY_REGION: List<Pair<Int, List<Lang>>> = listOf(
 
-        "🌎 Américas" to listOf(
+        R.string.tr_reg_americas to listOf(
             Lang("🇧🇷", "Português (BR)",          "pt"),
             Lang("🇺🇸", "English",                 "en"),
             Lang("🇪🇸", "Español",                 "es"),
@@ -43,7 +43,7 @@ object WaspTranslator {
             Lang("🇧🇴", "Aymara",                  "ay")
         ),
 
-        "🌍 Europa Ocidental" to listOf(
+        R.string.tr_reg_west_europe to listOf(
             Lang("🇩🇪", "Deutsch",                 "de"),
             Lang("🇮🇹", "Italiano",                "it"),
             Lang("🇵🇹", "Português (PT)",          "pt"),
@@ -65,7 +65,7 @@ object WaspTranslator {
             Lang("🇨🇭", "Romansh",                 "rm")
         ),
 
-        "🌍 Europa Central & Leste" to listOf(
+        R.string.tr_reg_central_east_europe to listOf(
             Lang("🇦🇱", "Shqip (Albanian)",        "sq"),
             Lang("🇧🇦", "Bosanski",                "bs"),
             Lang("🇭🇷", "Hrvatski",                "hr"),
@@ -88,7 +88,7 @@ object WaspTranslator {
             Lang("🇪🇺", "Latin",                   "la")
         ),
 
-        "🌍 Cáucaso & Ásia Central" to listOf(
+        R.string.tr_reg_caucasus_central_asia to listOf(
             Lang("🇦🇿", "Azərbaycan",              "az"),
             Lang("🇬🇪", "ქართული (Georgian)",      "ka"),
             Lang("🇦🇲", "Հայերեն (Armenian)",      "hy"),
@@ -99,7 +99,7 @@ object WaspTranslator {
             Lang("🇰🇬", "Кыргызча (Kyrgyz)",       "ky")
         ),
 
-        "🌏 Ásia Oriental" to listOf(
+        R.string.tr_reg_east_asia to listOf(
             Lang("🇨🇳", "中文 (Simplificado)",      "zh-CN"),
             Lang("🇹🇼", "中文 (Tradicional)",       "zh-TW"),
             Lang("🇯🇵", "日本語",                   "ja"),
@@ -109,7 +109,7 @@ object WaspTranslator {
             Lang("🇨🇳", "Tibetan",                 "bo")
         ),
 
-        "🌏 Sudeste Asiático" to listOf(
+        R.string.tr_reg_se_asia to listOf(
             Lang("🇻🇳", "Tiếng Việt",              "vi"),
             Lang("🇹🇭", "ภาษาไทย",                 "th"),
             Lang("🇮🇩", "Bahasa Indonesia",        "id"),
@@ -126,7 +126,7 @@ object WaspTranslator {
             Lang("🇵🇭", "Ilocano",                 "ilo")
         ),
 
-        "🌏 Sul da Ásia" to listOf(
+        R.string.tr_reg_south_asia to listOf(
             Lang("🇮🇳", "हिन्दी (Hindi)",           "hi"),
             Lang("🇮🇳", "বাংলা (Bengali)",          "bn"),
             Lang("🇮🇳", "తెలుగు (Telugu)",          "te"),
@@ -147,7 +147,7 @@ object WaspTranslator {
             Lang("🇧🇹", "Dzongkha",                "dz")
         ),
 
-        "🌍 Oriente Médio" to listOf(
+        R.string.tr_reg_middle_east to listOf(
             Lang("🇸🇦", "العربية (Arabic)",         "ar"),
             Lang("🇮🇱", "עברית (Hebrew)",           "iw"),
             Lang("🇹🇷", "Türkçe",                  "tr"),
@@ -155,7 +155,7 @@ object WaspTranslator {
             Lang("🇮🇶", "Kurdish (Sorani)",         "ckb")
         ),
 
-        "🌍 África" to listOf(
+        R.string.tr_reg_africa to listOf(
             Lang("🇿🇦", "Zulu",                    "zu"),
             Lang("🇿🇦", "Xhosa",                   "xh"),
             Lang("🇿🇦", "Afrikaans",               "af"),
@@ -185,7 +185,7 @@ object WaspTranslator {
             Lang("🇸🇩", "Beja",                    "bej")
         ),
 
-        "🌏 Pacífico & Regionais" to listOf(
+        R.string.tr_reg_pacific_regional to listOf(
             Lang("🇵🇬", "Tok Pisin",               "tpi"),
             Lang("🇫🇯", "Fijian",                  "fj"),
             Lang("🇲🇻", "Dhivehi",                 "dv"),
@@ -250,7 +250,7 @@ object WaspTranslator {
 
         // Título
         outer.addView(TextView(context).apply {
-            text = "Traduzir página para"
+            text = context.getString(R.string.tr_title)
             textSize = 15f
             setTypeface(null, Typeface.BOLD)
             setTextColor(Color.parseColor("#C8D0E0"))
@@ -259,7 +259,7 @@ object WaspTranslator {
 
         val total = LANGUAGES_BY_REGION.sumOf { it.second.size }
         outer.addView(TextView(context).apply {
-            text = "Textos substituídos direto na página  •  $total idiomas"
+            text = context.getString(R.string.tr_subtitle, total)
             textSize = 11f
             setTextColor(Color.parseColor("#3D4560"))
             setPadding(20.dp(), 0, 20.dp(), 10.dp())
@@ -342,7 +342,7 @@ object WaspTranslator {
         fun renderFull() {
             listRoot.removeAllViews()
             LANGUAGES_BY_REGION.forEach { (regionName, langs) ->
-                listRoot.addView(buildSectionHeader(regionName))
+                listRoot.addView(buildSectionHeader(context.getString(regionName)))
                 langs.forEach { lang ->
                     listRoot.addView(buildLangRow(lang))
                     listRoot.addView(buildDivider())
@@ -435,7 +435,7 @@ object WaspTranslator {
         }, handleLp)
 
         root.addView(TextView(context).apply {
-            text = "Página traduzida ✓"
+            text = context.getString(R.string.tr_translated_badge)
             textSize = 15f
             setTypeface(null, Typeface.BOLD)
             setTextColor(Color.parseColor("#60A5FA"))
@@ -498,11 +498,11 @@ object WaspTranslator {
         }
 
         val total = LANGUAGES_BY_REGION.sumOf { it.second.size }
-        actionRow("🔄", "Traduzir para outro idioma", "Escolher entre $total idiomas") {
+        actionRow("🔄", context.getString(R.string.tr_other_lang), context.getString(R.string.tr_other_lang_sub, total)) {
             activeTargetLang = null; translatedUrl = null
             showLanguagePicker(context, currentUrl, onBadgeRequest, onInjectJS)
         }
-        actionRow("↩️", "Ver original", "Recarregar a página sem tradução") {
+        actionRow("↩️", context.getString(R.string.tr_view_original), context.getString(R.string.tr_view_original_sub)) {
             revertTranslation(onBadgeRequest, onReload)
         }
 
