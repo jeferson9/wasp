@@ -375,10 +375,15 @@
 <button class="central-wp-btn" onclick="openCentralWP()">
     <div class="cwb-left">
         <div class="cwb-icon">
-            <svg width="22" height="22" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="14" cy="14" r="13" fill="#FFD400"/>
-                <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>
-                <text x="14" y="19" text-anchor="middle" font-size="13" font-weight="900" fill="#1A1200" font-family="Arial">W</text>
+            <svg width="26" height="26" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <defs><radialGradient id="wpCoinG" cx="38%" cy="32%">
+                    <stop offset="0%" stop-color="#FFE89A"/>
+                    <stop offset="55%" stop-color="#FFD400"/>
+                    <stop offset="100%" stop-color="#E0A800"/>
+                </radialGradient></defs>
+                <circle cx="24" cy="24" r="22" fill="url(#wpCoinG)" stroke="#B8860B" stroke-width="1.5"/>
+                <circle cx="24" cy="24" r="17" fill="none" stroke="#B8860B" stroke-width="1" opacity="0.45"/>
+                <text x="24" y="30" font-size="14" font-weight="900" text-anchor="middle" fill="#7a5c00" font-family="Arial, sans-serif">WP</text>
             </svg>
         </div>
         <div class="cwb-info">
@@ -438,10 +443,15 @@
     border-radius:10px; padding:10px 14px; margin-bottom:12px;
 ">
     <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="22" height="22" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="14" cy="14" r="13" fill="#FFD400"/>
-            <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>
-            <text x="14" y="19" text-anchor="middle" font-size="13" font-weight="900" fill="#1A1200" font-family="Arial">W</text>
+        <svg width="26" height="26" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <defs><radialGradient id="wpCoinG2" cx="38%" cy="32%">
+                <stop offset="0%" stop-color="#FFE89A"/>
+                <stop offset="55%" stop-color="#FFD400"/>
+                <stop offset="100%" stop-color="#E0A800"/>
+            </radialGradient></defs>
+            <circle cx="24" cy="24" r="22" fill="url(#wpCoinG2)" stroke="#B8860B" stroke-width="1.5"/>
+            <circle cx="24" cy="24" r="17" fill="none" stroke="#B8860B" stroke-width="1" opacity="0.45"/>
+            <text x="24" y="30" font-size="14" font-weight="900" text-anchor="middle" fill="#7a5c00" font-family="Arial, sans-serif">WP</text>
         </svg>
         <div>
             <div style="font-size:13px;font-weight:700;color:#ffc107;" id="wpBalanceBee">0 WP</div>
