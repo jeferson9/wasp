@@ -80,4 +80,6 @@
         <item>Bing</item>
         <item>DuckDuckGo</item>
     </string-array>
+    <string name="menu_coming_soon">EM BREVE</string>
+    <string name="menu_bee_sub_inactive">Mineração inativa</string>
 </resources>

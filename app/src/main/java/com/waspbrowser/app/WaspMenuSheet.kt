@@ -112,10 +112,10 @@ object WaspMenuSheet {
         // Quick row: Recarregar | Avançar | Compartilhar | Hive
         data class Quick(val icon: Int, val label: String, val action: String, val accent: Boolean = false)
         val quicks = listOf(
-            Quick(R.drawable.ic_refresh,  "Recarregar",   "reload"),
-            Quick(R.drawable.ic_forward,  "Avançar",      "forward"),
-            Quick(R.drawable.ic_share,    "Compartilhar", "share"),
-            Quick(R.drawable.ic_add_tab,  "Nova aba",     "newtab", true)
+            Quick(R.drawable.ic_refresh,  context.getString(R.string.menu_reload),   "reload"),
+            Quick(R.drawable.ic_forward,  context.getString(R.string.menu_forward),  "forward"),
+            Quick(R.drawable.ic_share,    context.getString(R.string.menu_share),    "share"),
+            Quick(R.drawable.ic_add_tab,  context.getString(R.string.menu_new_tab),  "newtab", true)
         )
         val quickRow = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
         quicks.forEach { q ->
@@ -251,7 +251,7 @@ object WaspMenuSheet {
                         setColor(dot)
                     }
                 }, LinearLayout.LayoutParams(8.dp(), 8.dp()))
-            } else if (sub != null || name == "Favoritos" || name == "Histórico" || name == "Downloads" || name == "Configurações") {
+            } else if (sub != null || action == "favorites" || action == "history" || action == "downloads" || action == "settings") {
                 row.addView(TextView(context).apply {
                     text = "›"; textSize = 18f
                     setTextColor(Color.parseColor("#2E3550"))
@@ -262,34 +262,34 @@ object WaspMenuSheet {
             root.addView(row)
         }
 
-        sectionLabel("NAVEGAÇÃO")
-        menuItem(R.drawable.ic_translate, "Traduzir página", "Google Translate", "translate",
+        sectionLabel(context.getString(R.string.menu_section_navigation))
+        menuItem(R.drawable.ic_translate, context.getString(R.string.menu_translate), context.getString(R.string.menu_translate_sub), "translate",
             bgColor = Color.parseColor("#0A0F1A"), strokeColor = Color.parseColor("#1A2A4A"),
             iconColor = Color.parseColor("#60A5FA"))
-        menuItem(R.drawable.ic_star, "Favoritos",   "Sites salvos",      "favorites")
-        menuItem(R.drawable.ic_history, "Histórico",   "Páginas visitadas", "history")
-        menuItem(R.drawable.ic_download, "Downloads",   "Arquivos baixados", "downloads")
+        menuItem(R.drawable.ic_star, context.getString(R.string.menu_favorites),   context.getString(R.string.menu_favorites_sub),      "favorites")
+        menuItem(R.drawable.ic_history, context.getString(R.string.menu_history),   context.getString(R.string.menu_history_sub), "history")
+        menuItem(R.drawable.ic_download, context.getString(R.string.menu_downloads),   context.getString(R.string.menu_downloads_sub), "downloads")
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
-        sectionLabel("WEB3")
-        menuItem(R.drawable.ic_engine, "Web3 Hub",    "Em desenvolvimento", "web3",
+        sectionLabel(context.getString(R.string.menu_section_web3))
+        menuItem(R.drawable.ic_engine, context.getString(R.string.menu_web3),    context.getString(R.string.menu_web3_sub), "web3",
             bgColor = Color.parseColor("#131824"), strokeColor = Color.parseColor("#252A3D"),
-            iconColor = Color.parseColor("#A0AABF"), badge = "EM BREVE")
+            iconColor = Color.parseColor("#A0AABF"), badge = context.getString(R.string.menu_coming_soon))
         val bgMining = BeeBackgroundService.isActive(context)
         val fgMining = context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
             .getBoolean("mining_active", false)
         val isMining = bgMining || fgMining
-        val beeSubtitle  = if (isMining) "Mineração ativa" else "Mineração inativa"
+        val beeSubtitle  = if (isMining) context.getString(R.string.menu_bee_sub) else context.getString(R.string.menu_bee_sub_inactive)
         val beeDot       = if (isMining) GREEN else Color.parseColor("#E23B3B")
         val beeStroke    = if (isMining) Color.parseColor("#1A4D28") else Color.parseColor("#4D1A1A")
         val beeBg        = if (isMining) BG_BEE else Color.parseColor("#1A0A0A")
         android.util.Log.d("WaspMenu", "bgMining=$bgMining fgMining=$fgMining isMining=$isMining")
-        menuItem(R.drawable.ic_bee_tech, "Bee Engine", beeSubtitle, "bee",
+        menuItem(R.drawable.ic_bee_tech, context.getString(R.string.menu_bee), beeSubtitle, "bee",
             bgColor = beeBg, strokeColor = beeStroke,
             iconColor = if (isMining) GREEN else Color.parseColor("#E23B3B"), dot = beeDot)
 
         divider(); root.addView(View(context), LinearLayout.LayoutParams(1, 6.dp()))
-        menuItem(R.drawable.ic_settings, "Configurações", null, "settings")
+        menuItem(R.drawable.ic_settings, context.getString(R.string.menu_settings), null, "settings")
 
 
         root.addView(View(context), LinearLayout.LayoutParams(1, 24.dp()))
