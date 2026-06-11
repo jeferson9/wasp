@@ -1154,7 +1154,9 @@
     // É a ÚNICA via de crédito — robusta, sem depender de callbacks frágeis.
     window.waspAddWP = function(n, label) {
       try {
-        addWP(Number(n) || 0, label || "Ad watched");
+        // Ignora o label vindo do Kotlin: usa sempre o texto traduzido da central
+        // para o histórico ficar no idioma ativo (label externo vinha fixo/em PT).
+        addWP(Number(n) || 0, t("lbl_ad_watched"));
         return true;
       } catch(e) { return false; }
     };
