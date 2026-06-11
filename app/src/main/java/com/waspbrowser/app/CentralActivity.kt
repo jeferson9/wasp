@@ -86,7 +86,10 @@ class CentralActivity : AppCompatActivity() {
         val bridge = Bridge()
         webView.addJavascriptInterface(bridge, "AndroidBee")
         webView.addJavascriptInterface(bridge, "Android")
-        webView.loadUrl("file:///android_asset/bee/central.html")
+        // i18n: passa o idioma efetivo do app (escolha do usuário OU sistema) para o WebView.
+        // Locale.getDefault() já reflete o que o SettingsActivity aplicou via setApplicationLocales().
+        val lang = java.util.Locale.getDefault().language.lowercase()
+        webView.loadUrl("file:///android_asset/bee/central.html?lang=$lang")
         activeWebView = java.lang.ref.WeakReference(webView)
     }
 
