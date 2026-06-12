@@ -1,6 +1,7 @@
 package com.waspbrowser.app
 
 import android.app.Activity
+import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -22,7 +23,7 @@ import android.widget.*
  * Estilo: identidade visual do Wasp (amarelo #FFD400, fundo #111420,
  * cards #1A1E2E, stroke #252A3D). Tudo montado em código (sem XML).
  */
-class HiveManagerActivity : Activity() {
+class HiveManagerActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_SITES = "sites"

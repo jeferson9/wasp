@@ -28,6 +28,7 @@ package com.waspbrowser.app
  */
 
 import android.app.Activity
+import androidx.appcompat.app.AppCompatActivity
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -47,7 +48,7 @@ import com.startapp.sdk.adsbase.adlisteners.AdDisplayListener
 import com.startapp.sdk.adsbase.adlisteners.AdEventListener
 import com.startapp.sdk.adsbase.adlisteners.VideoListener
 
-class StartioAdActivity : Activity() {
+class StartioAdActivity : AppCompatActivity() {
 
     companion object {
         const val TAG       = "StartioAdActivity"
