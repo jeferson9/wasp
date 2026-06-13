@@ -438,7 +438,8 @@ class BeeActivity : AppCompatActivity() {
         val theme = intent.getStringExtra("wasp_theme")
             ?: getSharedPreferences("wasp_settings", android.content.Context.MODE_PRIVATE)
                 .getString("theme", "dark") ?: "dark"
-        beeWebView.loadUrl("file:///android_asset/bee/index.html")
+        val lang = java.util.Locale.getDefault().language.lowercase()
+        beeWebView.loadUrl("file:///android_asset/bee/index.html?lang=$lang")
     }
 
     private fun attachBridge() {

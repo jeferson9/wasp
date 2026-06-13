@@ -324,7 +324,7 @@ class MainActivity : AppCompatActivity() {
         setupTopBar()
         setupUrlInput()
         setupPersistentBee()
-        webAppView.loadUrl("file:///android_asset/index.html")
+        webAppView.loadUrl("file:///android_asset/index.html?lang=" + java.util.Locale.getDefault().language.lowercase())
         webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
 
         // Start with toolbar hidden - home has no toolbar
@@ -1391,7 +1391,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        wv.loadUrl("file:///android_asset/bee/index.html")
+        wv.loadUrl("file:///android_asset/bee/index.html?lang=" + java.util.Locale.getDefault().language.lowercase())
         container.addView(wv)
         persistentBeeView = wv
         android.util.Log.d("PersistentBee", "Bee WebView persistente criada na MainActivity")
