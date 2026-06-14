@@ -1163,7 +1163,7 @@
     if (tapSection)    tapSection.classList.add("hidden");
     var ftc = byId("firstTapCard"); if (ftc) ftc.classList.add("hidden");
     if (switchSub) switchSub.textContent = "Setup required";
-    setStep(1); setStatus("warn", "Resetado", "Configure novamente");
+    setStep(1); setStatus("warn", "Reset done", "Configure again");
     updateMetrics(); log("Setup reset.", "lwrn");
   }
 

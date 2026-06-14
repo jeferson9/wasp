@@ -505,9 +505,9 @@
     };
     const HOME_LANG = (function () {
       try {
-        var lang = (window.WaspConfig && WaspConfig.getLang) ? WaspConfig.getLang() : null;
-        if (!lang) lang = new URLSearchParams(location.search).get("lang");
-        if (!lang) lang = (navigator.language || "en").slice(0, 2);
+        var lang = "en";
+        if (window.WaspConfig && WaspConfig.getLang) lang = WaspConfig.getLang();
+        else lang = (navigator.language || "en").slice(0, 2).toLowerCase();
         lang = lang.slice(0, 2).toLowerCase();
         return HOME_I18N[lang] ? lang : "en";
       } catch (e) { return "en"; }

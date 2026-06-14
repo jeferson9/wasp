@@ -670,6 +670,12 @@ class MainActivity : AppCompatActivity() {
             "Android"
         )
 
+        // Interface síncrona para idioma — disponível antes do JS rodar
+        webAppView.addJavascriptInterface(object {
+            @android.webkit.JavascriptInterface
+            fun getLang(): String = java.util.Locale.getDefault().language.lowercase()
+        }, "WaspConfig")
+
         btnBack      = topBar.findViewById(R.id.btnBack)
         btnHome      = topBar.findViewById(R.id.btnHome)
         btnMenu      = topBar.findViewById(R.id.btnMenu)
