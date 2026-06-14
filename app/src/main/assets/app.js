@@ -114,7 +114,7 @@ function applyTheme(theme){
 
     const label = $("themeLabel");
     if(label){
-        label.textContent = theme === "dark" ? (window.ht ? ht("theme_dark") : "Dark") : (window.ht ? ht("theme_light") : "Light");
+        label.textContent = theme === "dark" ? "🌙" : "☀️";
     }
 
     // Remove background no tema claro
@@ -141,7 +141,7 @@ function setTheme(theme){
 
     const label = $("themeLabel");
     if(label){
-        label.textContent = theme === "dark" ? (window.ht ? ht("theme_dark") : "Dark") : (window.ht ? ht("theme_light") : "Light");
+        label.textContent = theme === "dark" ? "🌙" : "☀️";
     }
 
     const menu = $("themeOptions");
@@ -1582,7 +1582,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const _savedTheme = localStorage.getItem(THEME_KEY) || "dark";
         const _themeLabel = $("themeLabel");
         if (_themeLabel && window.ht) {
-            _themeLabel.textContent = _savedTheme === "dark" ? ht("theme_dark") : ht("theme_light");
+            _themeLabel.textContent = _savedTheme === "dark" ? "🌙" : "☀️";
         }
     }, 100);
 
