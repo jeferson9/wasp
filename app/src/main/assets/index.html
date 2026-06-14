@@ -514,7 +514,8 @@
     })();
     window.HOME_LANG = HOME_LANG;
     function ht(key) {
-      return (HOME_I18N[HOME_LANG] && HOME_I18N[HOME_LANG][key]) || HOME_I18N.en[key] || key;
+      var lang = window.HOME_LANG || HOME_LANG;
+      return (HOME_I18N[lang] && HOME_I18N[lang][key]) || HOME_I18N.en[key] || key;
     }
     function applyHomeI18n() {
       document.querySelectorAll("[data-i18n]").forEach(function (node) {

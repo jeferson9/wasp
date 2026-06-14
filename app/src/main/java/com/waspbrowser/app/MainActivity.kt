@@ -713,6 +713,12 @@ class MainActivity : AppCompatActivity() {
                 view?.evaluateJavascript(
                     "if(window.setStatusBarHeight) window.setStatusBarHeight($statusBarDp);", null
                 )
+                // Injeta idioma e aplica traduções
+                val lang = java.util.Locale.getDefault().language.lowercase()
+                view?.evaluateJavascript(
+                    "(function(){ try { window.HOME_LANG='$lang'; if(window.applyHomeI18n) applyHomeI18n(); } catch(e){} })();",
+                    null
+                )
             }
         }
         webAppView.webChromeClient = WebChromeClient()
