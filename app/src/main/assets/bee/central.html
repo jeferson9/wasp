@@ -655,8 +655,8 @@
         <div class="cgc-emoji">👆</div>
         <div class="cgc-name" data-i18n="tap_name">Tap Game</div>
         <div class="cgc-reward">+30 WP</div>
-        <div class="cgc-status" id="tapStatus" data-i18n="checking">Verificando...</div>
-        <button class="cgc-btn btn-yellow" id="tapBtn" data-i18n="play_now">Jogar agora</button>
+        <div class="cgc-status" id="tapStatus" data-i18n="checking">Checking...</div>
+        <button class="cgc-btn btn-yellow" id="tapBtn" data-i18n="play_now">Play now</button>
     </div>
 
     <!-- ANÚNCIO -->
@@ -665,7 +665,7 @@
         <div class="cgc-name" data-i18n="watch_ad">Watch Ad</div>
         <div class="cgc-reward">+30 WP</div>
         <div class="cgc-status" id="adStatus" data-i18n="ad_available">Available</div>
-        <button class="cgc-btn btn-blue" id="adBtn" data-i18n="ad_watch">Assistir</button>
+        <button class="cgc-btn btn-blue" id="adBtn" data-i18n="ad_watch">Watch</button>
     </div>
 
     <!-- BANK -->
@@ -673,8 +673,8 @@
         <div class="cgc-emoji">🏦</div>
         <div class="cgc-name" data-i18n="bank_name">Bank</div>
         <div class="cgc-reward" data-i18n="bank_stake">Stake WP</div>
-        <div class="cgc-status" data-i18n="coming_soon">Em breve</div>
-        <button class="cgc-btn btn-purple" style="opacity:0.5;" data-i18n="bank_open">Abrir Bank</button>
+        <div class="cgc-status" data-i18n="coming_soon">Coming soon</div>
+        <button class="cgc-btn btn-purple" style="opacity:0.5;" data-i18n="bank_open">Open Bank</button>
     </div>
 
     <!-- LOGIN DIÁRIO -->
@@ -839,7 +839,7 @@
     // Aplica em todos os elementos com data-i18n após o DOM carregar.
     function applyI18n() {
       document.querySelectorAll("[data-i18n]").forEach(function (node) {
-        node.textContent = t(node.getAttribute("data-i18n"));
+        node.innerHTML = t(node.getAttribute("data-i18n"));
       });
     }
     document.addEventListener("DOMContentLoaded", applyI18n);
@@ -1180,14 +1180,14 @@
 
     window.onWpAdClosed = function() {
       if(el("adBtn")) el("adBtn").disabled    = false;
-      if(el("adBtn")) el("adBtn").textContent = "Assistir";
+      if(el("adBtn")) el("adBtn").textContent = t("ad_watch");
       renderAll();
       toast(t("toast_ad_no_reward"));
     };
 
     window.onWpAdUnavailable = function() {
       if(el("adBtn")) el("adBtn").disabled    = false;
-      if(el("adBtn")) el("adBtn").textContent = "Assistir";
+      if(el("adBtn")) el("adBtn").textContent = t("ad_watch");
       renderAll();
       toast(t("toast_ad_retry"));
     };
