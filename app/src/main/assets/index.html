@@ -510,6 +510,8 @@
         return HOME_I18N[code] ? code : "en";
       } catch (e) { return "en"; }
     })();
+    window.HOME_LANG = HOME_LANG;
+    console.log("HOME_LANG detected:", HOME_LANG, "location.search:", location.search, "navigator.language:", navigator.language);
     function ht(key) {
       return (HOME_I18N[HOME_LANG] && HOME_I18N[HOME_LANG][key]) || HOME_I18N.en[key] || key;
     }
