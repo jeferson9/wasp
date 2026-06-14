@@ -499,7 +499,7 @@
 
       if (btnSetup) {
         btnSetup.disabled = false;
-        btnSetup.textContent = "✅ Já autorizei — continuar";
+        btnSetup.textContent = "✅ Already authorized — continue";
         btnSetup.onclick = confirmAuthorization;
       }
       if (btnOpenAgain) btnOpenAgain.classList.remove("hidden");
@@ -548,7 +548,7 @@
         }
       }
       if (!minerAddr) {
-        throw new Error("Miner address não encontrado — verifique se autorizou na wallet");
+        throw new Error("Miner address not found — check if you authorized in the wallet");
       }
 
       saved.minerAddress = minerAddr; saveSaved();
@@ -562,7 +562,7 @@
       var _wpNow2 = getWP();
       if (switchSub) switchSub.textContent = _wpNow2 >= WP_MINING_COST
         ? "Turn on to mine — 1 WP/min (" + WP_MINING_COST + " WP per session)"
-        : "Precisa de " + WP_MINING_COST + " WP para iniciar (você tem " + _wpNow2 + ")";
+        : "Need " + WP_MINING_COST + " WP to start (you have " + _wpNow2 + ")";
       updateWpDisplay();
       setStep(5); updateMetrics();
       log("Bee authorized! Turn on mining.", "lok");
@@ -623,10 +623,10 @@
       localStorage.setItem(KEY_WP, String(cur + WP_MINING_COST));
       var hist = [];
       try { hist = JSON.parse(localStorage.getItem(KEY_WP_HISTORY) || "[]"); } catch(_) {}
-      hist.unshift("[" + new Date().toLocaleString("en-US") + "] +" + WP_MINING_COST + " WP • Reembolso (" + (reason || "sessão abortada") + ")");
+      hist.unshift("[" + new Date().toLocaleString("en-US") + "] -" + WP_MINING_COST + " WP • Refund (" + (reason || "session aborted") + ")");
       localStorage.setItem(KEY_WP_HISTORY, JSON.stringify(hist.slice(0, 100)));
     } catch(_) {}
-    log("↩️ " + WP_MINING_COST + " WP reembolsados (" + (reason || "sessão abortada") + "). Saldo: " + getWP() + " WP", "lwrn");
+    log("↩️ " + WP_MINING_COST + " WP refunded (" + (reason || "session aborted") + "). Balance: " + getWP() + " WP", "lwrn");
     updateWpDisplay();
   }
 
@@ -698,7 +698,7 @@
     }
 
     // Desconta WP da sessão (provisório — confirmado só em doStartMiner)
-    var ok = spendWP(WP_MINING_COST, "Sessão de mineração NACKL");
+    var ok = spendWP(WP_MINING_COST, "NACKL mining session");
     if (!ok) {
       if (miningSwitch) miningSwitch.checked = false;
       if (switchSub) switchSub.textContent = "Error debiting WP";
@@ -742,7 +742,7 @@
           throw retryErr;
         }
       }
-      if (!minerCreated) throw new Error("Não foi possível criar o Miner após 5 tentativas");
+      if (!minerCreated) throw new Error("Could not create Miner after 5 attempts");
 
       var canStart = miner.can_start();
       log("can_start() = " + canStart, "linf");
@@ -776,7 +776,7 @@
                 setStatus("err", "Epoch timeout", "Try resetting the setup");
                 if (miningSwitch) miningSwitch.checked = false;
                 miner = null;
-                refundSessionWP("epoch não iniciou");
+                refundSessionWP("epoch did not start");
               }
             }
           } catch(e) {
@@ -797,7 +797,7 @@
         log("⚠️ Unstable node (fetch error) — retrying in 60s...", "lwrn");
         setStatus("warn", "Unstable node — reconnecting...", "Next attempt in 60s");
         miner = null;
-        refundSessionWP("nó instável");
+        refundSessionWP("unstable node");
         setTimeout(function() {
           if (miningSwitch && miningSwitch.checked) startMining();
         }, 60000);
