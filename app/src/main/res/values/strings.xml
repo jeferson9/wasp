@@ -38,7 +38,7 @@
     <string name="perm_location_title">Доступ до місцезнаходження</string>
     <string name="perm_location_body">%s хоче отримати доступ до вашого місцезнаходження</string>
     <string name="perm_media_title">Доступ до медіа</string>
-    <string name="perm_media_body">%s хоче отримати доступ до: %s</string>
+    <string name="perm_media_body" formatted="false">%s хоче отримати доступ до: %s</string>
     <string name="perm_allow">Дозволити</string>
     <string name="perm_camera">камера</string>
     <string name="perm_microphone">мікрофон</string>
@@ -134,7 +134,7 @@
     <string name="nav_back">Назад</string>
     <string name="nav_home">Головна</string>
     <string name="nav_menu">Меню</string>
-    <string name="secure_connecting">Відкриття захищеного з&apos;єднання...</string>
+    <string name="secure_connecting">Відкриття захищеного з єднання...</string>
     <string name="web3_coming_soon">Web3 у розробці</string>
     <string name="splash_tagline">Web3-браузер із Bee Engine</string>
     <string name="splash_footer">v1.0 - Powered by Wasp</string>

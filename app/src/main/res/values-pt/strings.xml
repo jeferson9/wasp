@@ -38,7 +38,7 @@
     <string name="perm_location_title">Permissão de localização</string>
     <string name="perm_location_body">%s quer acessar sua localização</string>
     <string name="perm_media_title">Acesso de mídia</string>
-    <string name="perm_media_body">%s quer acessar: %s</string>
+    <string name="perm_media_body" formatted="false">%s quer acessar: %s</string>
     <string name="perm_allow">Permitir</string>
     <string name="perm_camera">câmera</string>
     <string name="perm_microphone">microfone</string>

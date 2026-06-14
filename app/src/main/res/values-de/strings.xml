@@ -38,7 +38,7 @@
     <string name="perm_location_title">Standortberechtigung</string>
     <string name="perm_location_body">%s möchte auf Ihren Standort zugreifen</string>
     <string name="perm_media_title">Medienzugriff</string>
-    <string name="perm_media_body">%s möchte zugreifen auf: %s</string>
+    <string name="perm_media_body" formatted="false">%s möchte zugreifen auf: %s</string>
     <string name="perm_allow">Erlauben</string>
     <string name="perm_camera">Kamera</string>
     <string name="perm_microphone">Mikrofon</string>

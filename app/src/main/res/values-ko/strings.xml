@@ -38,7 +38,7 @@
     <string name="perm_location_title">위치 권한</string>
     <string name="perm_location_body">%s이(가) 귀하의 위치에 액세스하려고 합니다</string>
     <string name="perm_media_title">Media access</string>
-    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_media_body" formatted="false">%s wants to access: %s</string>
     <string name="perm_allow">허용</string>
     <string name="perm_camera">카메라</string>
     <string name="perm_microphone">마이크</string>

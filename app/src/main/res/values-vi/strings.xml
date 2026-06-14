@@ -38,7 +38,7 @@
     <string name="perm_location_title">Location permission</string>
     <string name="perm_location_body">%s wants to access your location</string>
     <string name="perm_media_title">Media access</string>
-    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_media_body" formatted="false">%s wants to access: %s</string>
     <string name="perm_allow">Cho phép</string>
     <string name="perm_camera">camera</string>
     <string name="perm_microphone">microphone</string>

@@ -38,7 +38,7 @@
     <string name="perm_location_title">位置权限</string>
     <string name="perm_location_body">%s 想要访问您的位置</string>
     <string name="perm_media_title">Media access</string>
-    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_media_body" formatted="false">%s wants to access: %s</string>
     <string name="perm_allow">允许</string>
     <string name="perm_camera">摄像头</string>
     <string name="perm_microphone">麦克风</string>

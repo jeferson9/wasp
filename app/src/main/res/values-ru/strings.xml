@@ -38,7 +38,7 @@
     <string name="perm_location_title">Разрешение на геолокацию</string>
     <string name="perm_location_body">%s хочет получить доступ к вашему местоположению</string>
     <string name="perm_media_title">Media access</string>
-    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_media_body" formatted="false">%s wants to access: %s</string>
     <string name="perm_allow">Разрешить</string>
     <string name="perm_camera">камера</string>
     <string name="perm_microphone">микрофон</string>

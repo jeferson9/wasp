@@ -38,7 +38,7 @@
     <string name="perm_location_title">位置情報の許可</string>
     <string name="perm_location_body">%s があなたの位置情報へのアクセスを求めています</string>
     <string name="perm_media_title">Media access</string>
-    <string name="perm_media_body">%s wants to access: %s</string>
+    <string name="perm_media_body" formatted="false">%s wants to access: %s</string>
     <string name="perm_allow">許可</string>
     <string name="perm_camera">カメラ</string>
     <string name="perm_microphone">マイク</string>
