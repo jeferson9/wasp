@@ -522,7 +522,7 @@
 
   // ─── CONFIRMAR AUTORIZAÇÃO ───────────────────────────────────────────────
   async function confirmAuthorization() {
-    if (!wasmReady) { log("SDK não está pronto", "lwrn"); return; }
+    if (!wasmReady) { log("SDK not ready yet", "lwrn"); return; }
     if (!saved.walletName) { log("Wallet name not provided", "lerr"); return; }
 
     if (btnSetup) {
@@ -565,14 +565,14 @@
         : "Precisa de " + WP_MINING_COST + " WP para iniciar (você tem " + _wpNow2 + ")";
       updateWpDisplay();
       setStep(5); updateMetrics();
-      log("Bee autorizada! Ligue a mineração.", "lok");
-      log("⚠️ IMPORTANTE: Para receber rewards, ative o Mambaboard em Batteries ou Ludo (Telegram).", "lwrn");
+      log("Bee authorized! Turn on mining.", "lok");
+      log("⚠️ IMPORTANT: To receive rewards, activate Mambaboard in Batteries or Ludo (Telegram).", "lwrn");
       toast("Bee Engine authorized! ✅");
 
       // Propagação em background — não bloqueia o usuário
       // O SDK faz o poll internamente com max_attempts=60 e interval_ms=3000 (~3 min total)
       if (!saved.propagated) {
-        log("🔄 Confirmando propagação em background (não precisa aguardar)...", "linf");
+        log("🔄 Confirming propagation in background (no need to wait)...", "linf");
         window.BeeSDK.ensure_mining_keys_propagated({
           client_config: { network: { endpoints: ENDPOINTS } },
           miner_address: minerAddr,
@@ -582,11 +582,11 @@
           interval_ms: 1000
         }).then(function() {
           saved.propagated = true; saveSaved();
-          log("✅ Propagação confirmada em background!", "lok");
+          log("✅ Propagation confirmed in background!", "lok");
           var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
         }).catch(function(e) {
-          log("Propagação background: " + (e&&e.message?e.message.substring(0,80):String(e)), "lwrn");
-          log("Mineração funciona mesmo assim — propagação confirma automaticamente.", "linf");
+          log("Background propagation: " + (e&&e.message?e.message.substring(0,80):String(e)), "lwrn");
+          log("Mining works anyway — propagation confirms automatically.", "linf");
         });
       }
       // Mostrar aviso Mambaboard se não foi dismissado
@@ -598,7 +598,7 @@
 
     } catch (e) {
       var em2 = e && e.message ? e.message : String(e);
-      log("Erro na confirmação: " + em2, "lerr");
+      log("Confirmation error: " + em2, "lerr");
       setStatus("err", "Confirmation failed", em2.substring(0,120));
       if (btnSetup) {
         btnSetup.disabled = false;
@@ -637,7 +637,7 @@
     //    abortar silenciosamente (isso perdia a epoch). Reagenda e tenta
     //    de novo quando o claim terminar.
     if (claiming) {
-      log("⏳ Claim do reward anterior ainda em andamento — reagendando início em 10s...", "lwrn");
+      log("⏳ Previous reward claim in progress — rescheduling start in 10s...", "lwrn");
       setTimeout(function() {
         if (miningSwitch && miningSwitch.checked) startMining();
       }, 10000);
@@ -651,11 +651,11 @@
     //    não caía — só caía ao desligar/religar (quando já havia propagado).
     if (!saved.propagated && saved.minerAddress && saved.publicKey) {
       if (_awaitingPropagation) {
-        log("⏳ Já aguardando propagação das chaves — aguarde...", "linf");
+        log("⏳ Already waiting for key propagation — please wait...", "linf");
         return;
       }
       _awaitingPropagation = true;
-      log("🔑 Primeira mineração: confirmando registro das chaves na rede antes de iniciar...", "lwrn");
+      log("🔑 First mining: confirming key registration on network before starting...", "lwrn");
       setStatus("warn", "Registrando chaves...", "Aguardando a rede confirmar (pode levar ~1 min)");
       if (switchSub) switchSub.textContent = "Registering keys on network...";
       if (miningSwitch) miningSwitch.checked = true; // mantém intenção do usuário
@@ -669,10 +669,10 @@
           interval_ms: 2000
         });
         saved.propagated = true; saveSaved();
-        log("✅ Chaves confirmadas na rede! Iniciando mineração — o reward desta epoch já vai cair.", "lok");
+        log("✅ Keys confirmed on network! Starting mining — reward for this epoch will arrive.", "lok");
         var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
       } catch (e) {
-        log("⚠️ Propagação ainda não confirmou após ~2 min. Iniciando mesmo assim; se o reward não cair, toque em Reautorizar chaves.", "lwrn");
+        log("⚠️ Propagation not confirmed after ~2 min. Starting anyway; if reward does not arrive, tap Reauthorize keys.", "lwrn");
         showReauthPrompt();
       }
       _awaitingPropagation = false;
@@ -692,7 +692,7 @@
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = false; }
       if (switchSub) switchSub.textContent = "Need " + WP_MINING_COST + " WP to mine";
       setStatus("err", "Insufficient WP", "Earn " + WP_MINING_COST + " WP at WP Central to start mining");
-      log("❌ WP insuficiente para iniciar mineração. Saldo: " + wp + " WP. Necessário: " + WP_MINING_COST + " WP", "lerr");
+      log("❌ Insufficient WP to start mining. Balance: " + wp + " WP. Required: " + WP_MINING_COST + " WP", "lerr");
       updateWpDisplay();
       return;
     }
@@ -705,7 +705,7 @@
       return;
     }
     _wpDebited = true;
-    log("✅ " + WP_MINING_COST + " WP debitados. Saldo restante: " + getWP() + " WP", "lok");
+    log("✅ " + WP_MINING_COST + " WP deducted. Remaining balance: " + getWP() + " WP", "lok");
     updateWpDisplay();
 
     // Reseta taps e incrementa epoch a cada novo inicio
@@ -719,7 +719,7 @@
       var retryDelays = [0, 15000, 20000, 25000, 30000];
       for (var ri = 0; ri < retryDelays.length; ri++) {
         if (retryDelays[ri] > 0) {
-          log("⏳ Aguardando " + (retryDelays[ri]/1000) + "s para sessão expirar... (" + (ri+1) + "/5)", "lwrn");
+          log("⏳ Waiting " + (retryDelays[ri]/1000) + "s for session to expire... (" + (ri+1) + "/5)", "lwrn");
           setStatus("warn", "Waiting for session to expire...", "Attempt " + (ri+1) + " of 5");
           await sleep(retryDelays[ri]);
         }
@@ -728,7 +728,7 @@
             ENDPOINTS, APP_ID, saved.minerAddress, saved.publicKey, saved.secretKey
           );
           minerCreated = true;
-          log("Miner criado ✅ (tentativa " + (ri+1) + ")", "lok");
+          log("Miner created ✅ (attempt " + (ri+1) + ")", "lok");
           break;
         } catch(retryErr) {
           var retryMsg = retryErr && retryErr.message ? retryErr.message : String(retryErr);
@@ -736,7 +736,7 @@
                      || retryMsg.indexOf("410") !== -1
                      || retryMsg.indexOf("Cancel") !== -1;
           if (isStale && ri < retryDelays.length - 1) {
-            log("⏳ Sessão ainda ativa (stale 410). Aguardando...", "lwrn");
+            log("⏳ Session still active (stale 410). Waiting...", "lwrn");
             continue;
           }
           throw retryErr;
@@ -749,7 +749,7 @@
 
       if (!canStart) {
         // Meio de epoch — aguarda próximo (até 6 min)
-        log("⏳ Aguardando próximo epoch... can_start() vai virar true", "lwrn");
+        log("⏳ Waiting for next epoch... can_start() will become true", "lwrn");
         setStatus("warn", "Waiting for epoch...", "Next epoch in up to 5.5 minutes");
         if (miningSwitch) miningSwitch.checked = true;
 
@@ -766,13 +766,13 @@
             if (cs) {
               clearInterval(epochCheck); window._epochCheckTimer = null;
               miner = tmpMiner;
-              log("✅ Novo epoch! Iniciando mineração...", "lok");
+              log("✅ New epoch! Starting mining...", "lok");
               doStartMiner();
             } else {
               try { tmpMiner.stop(); } catch(_) {}
               if (epochWait >= 360) {
                 clearInterval(epochCheck); window._epochCheckTimer = null;
-                log("❌ Epoch não iniciou em 6 minutos. Tente resetar.", "lerr");
+                log("❌ Epoch did not start in 6 minutes. Try resetting.", "lerr");
                 setStatus("err", "Epoch timeout", "Try resetting the setup");
                 if (miningSwitch) miningSwitch.checked = false;
                 miner = null;
@@ -794,7 +794,7 @@
       var isFetch = em.indexOf("205") !== -1 || em.indexOf("Failed to fetch") !== -1 || em.indexOf("fetch") !== -1;
       if (isFetch) {
         // Nó instável — reembolsa WP e tenta novamente em 60s sem desistir
-        log("⚠️ Nó instável (fetch error) — tentando novamente em 60s...", "lwrn");
+        log("⚠️ Unstable node (fetch error) — retrying in 60s...", "lwrn");
         setStatus("warn", "Unstable node — reconnecting...", "Next attempt in 60s");
         miner = null;
         refundSessionWP("nó instável");
@@ -802,7 +802,7 @@
           if (miningSwitch && miningSwitch.checked) startMining();
         }, 60000);
       } else {
-        log("Erro ao iniciar mineração: " + em, "lerr");
+        log("Error starting mining: " + em, "lerr");
         setStatus("err", "Erro ao iniciar", em.substring(0,100));
         if (miningSwitch) miningSwitch.checked = false;
         miner = null;
@@ -822,7 +822,7 @@
       if (!mining) { clearInterval(window._watchdogTimer); return; }
       var silence = Date.now() - lastEventTime;
       if (silence > 90000) {
-        log("⚠️ Watchdog: " + Math.round(silence/1000) + "s sem eventos — reiniciando...", "lwrn");
+        log("⚠️ Watchdog: " + Math.round(silence/1000) + "s without events — restarting...", "lwrn");
         clearInterval(window._watchdogTimer); window._watchdogTimer = null;
         if (window._epochTimer) { clearTimeout(window._epochTimer); window._epochTimer = null; }
         epochDone = true;
@@ -845,7 +845,7 @@
       window._epochTimer = null;
       if (epochDone) return;
       epochDone = true;
-      log("⏱️ Epoch de 5 minutos concluído — iniciando claim de reward...", "lwrn");
+      log("⏱️ 5-minute epoch completed — starting reward claim...", "lwrn");
       handleEpochEnd("timeout");
     }, MINING_DURATION_MS + 3000); // +3s de margem após a sessão terminar
 
@@ -882,9 +882,9 @@
               log("🔄 Tentando novamente em " + (delay/1000) + "s...", "lwrn");
               setTimeout(function() { doGetReward(attempt + 1); }, delay);
             } else {
-              log("❌ get_reward() falhou após 3 tentativas. Causas: chaves de mineração não propagadas, Mambaboard inativo, ou rede instável.", "lerr");
+              log("❌ get_reward() failed after 3 attempts. Causes: mining keys not propagated, Mambaboard inactive, or unstable network.", "lerr");
               if (!saved.propagated) {
-                log("⚠️ AÇÃO NECESSÁRIA: as chaves de mineração ainda não estão registradas na sua AN Wallet. Toque em \"Reautorizar chaves\" e confirme na wallet.", "lerr");
+                log("⚠️ ACTION REQUIRED: mining keys are not yet registered in your AN Wallet. Tap \"Reauthorize keys\" and confirm in wallet.", "lerr");
                 setStatus("err", "Reauthorize on AN Wallet", "Mining keys not propagated — tap Reauthorize");
                 showReauthPrompt();
                 toast("Reauthorize mining keys on AN Wallet");
@@ -943,7 +943,7 @@
       // Slashing period: aguardar ~16s antes do claim
       setTimeout(function() {
         if (!claimMiner) {
-          log("⚠️ Instância do miner perdida — reward não pôde ser coletado", "lerr");
+          log("⚠️ Miner instance lost — reward could not be collected", "lerr");
           scheduleRestart();
           return;
         }
