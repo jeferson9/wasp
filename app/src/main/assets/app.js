@@ -1576,15 +1576,17 @@ function showToast(msg){
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Aplica traduções i18n
-    if (window.applyHomeI18n) applyHomeI18n();
-    // Reaplica tema para traduzir Dark/Light com ht() já disponível
-    const _savedTheme = localStorage.getItem(THEME_KEY) || "dark";
-    const _themeLabel = $("themeLabel");
-    console.log("i18n debug: ht=", !!window.ht, "lang=", window.HOME_LANG, "theme=", _savedTheme, "translated=", window.ht ? ht("theme_dark") : "N/A");
-    if (_themeLabel && window.ht) {
-        _themeLabel.textContent = _savedTheme === "dark" ? ht("theme_dark") : ht("theme_light");
-    }
+    // Aplica traduções i18n após tudo carregar
+    setTimeout(function() {
+        if (window.applyHomeI18n) applyHomeI18n();
+        // Traduz label do tema
+        const _savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+        const _themeLabel = $("themeLabel");
+        if (_themeLabel && window.ht) {
+            _themeLabel.textContent = _savedTheme === "dark" ? ht("theme_dark") : ht("theme_light");
+        }
+        console.log("i18n applied, ht=", !!window.ht, "lang=", window.HOME_LANG);
+    }, 100);
 
     // sticky search removido
 
