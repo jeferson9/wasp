@@ -1575,6 +1575,9 @@ function showToast(msg){
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    // Aplica traduções i18n
+    if (window.applyHomeI18n) applyHomeI18n();
+
     // sticky search removido
 
     // Saudação personalizada

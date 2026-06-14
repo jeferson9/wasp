@@ -16,7 +16,8 @@ const FEED_TTL        = 6 * 60 * 60 * 1000; // 6 horas
 function feedFormatDate(dateStr) {
     try {
         const d = new Date(dateStr);
-        return d.toLocaleDateString("pt-BR", {
+        const locale = (new URLSearchParams(location.search).get("lang") || navigator.language || "en").slice(0,2);
+        return d.toLocaleDateString(locale, {
             day:   "2-digit",
             month: "short",
             year:  "numeric"
