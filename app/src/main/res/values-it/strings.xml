@@ -80,4 +80,11 @@
         <item>Bing</item>
         <item>DuckDuckGo</item>
     </string-array>
+    <string name="splash_step0">Inizializzazione motore...</string>
+    <string name="splash_step1">Caricamento motore Web3...</string>
+    <string name="splash_step2">Controllo sicurezza...</string>
+    <string name="splash_step3">Sincronizzazione Bee Engine...</string>
+    <string name="splash_step4">Ottimizzazione prestazioni...</string>
+    <string name="splash_step5">Pronto per navigare...</string>
+    <string name="splash_welcome">Benvenuto in Wasp</string>
 </resources>

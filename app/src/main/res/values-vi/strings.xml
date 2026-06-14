@@ -80,4 +80,11 @@
         <item>Bing</item>
         <item>DuckDuckGo</item>
     </string-array>
+    <string name="splash_step0">Khởi động động cơ...</string>
+    <string name="splash_step1">Tải động cơ Web3...</string>
+    <string name="splash_step2">Kiểm tra bảo mật...</string>
+    <string name="splash_step3">Đồng bộ Bee Engine...</string>
+    <string name="splash_step4">Tối ưu hiệu suất...</string>
+    <string name="splash_step5">Sẵn sàng duyệt web...</string>
+    <string name="splash_welcome">Chào mừng đến với Wasp</string>
 </resources>
