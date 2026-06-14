@@ -145,4 +145,19 @@
     <string name="splash_step4">Оптимізація продуктивності...</string>
     <string name="splash_step5">Готово до перегляду...</string>
     <string name="splash_welcome">Ласкаво просимо до Wasp</string>
+    <string name="hist_title_caps">ІСТОРІЯ</string>
+    <string name="hist_empty">Немає історії</string>
+    <string name="hist_today">Сьогодні</string>
+    <string name="hist_yesterday">Вчора</string>
+    <string name="fav_empty">Немає обраного</string>
+    <string name="dl_title">Завантаження</string>
+    <string name="dl_title_caps">ЗАВАНТАЖЕННЯ</string>
+    <string name="dl_clear">Очистити</string>
+    <string name="dl_clear_title">Очистити завантаження</string>
+    <string name="dl_clear_body">Видалити історію завантажень?</string>
+    <string name="dl_clear_confirm">Видалити</string>
+    <string name="dl_cleared">Завантаження очищено</string>
+    <string name="dl_empty">Немає завантажень</string>
+    <string name="dl_open">Відкрити</string>
+    <string name="dl_size_unknown">Невідомий розмір</string>
 </resources>
