@@ -34,7 +34,7 @@
     <string name="download_image_confirm">Télécharger</string>
     <string name="error_no_app">Aucune application trouvée pour ce lien</string>
     <string name="error_load_title">Échec du chargement</string>
-    <string name="error_load_body">Wasp n\'a pas pu ouvrir cette page.</string>
+    <string name="error_load_body">Wasp n\\'a pas pu ouvrir cette page.</string>
     <string name="perm_location_title">Permission de localisation</string>
     <string name="perm_location_body">%s veut accéder à votre localisation</string>
     <string name="perm_media_title">Accès aux médias</string>
@@ -50,7 +50,7 @@
     <string name="translate_done_to">Traduite en : %s</string>
     <string name="translate_change">Traduire dans une autre langue</string>
     <string name="translate_change_sub">Choisir parmi %d langues</string>
-    <string name="translate_revert">Voir l\'original</string>
+    <string name="translate_revert">Voir l\\'original</string>
     <string name="translate_revert_sub">Recharger la page sans traduction</string>
     <string name="translate_loading">⟳ Traduction...</string>
     <string name="translate_error">Erreur au démarrage de la traduction</string>
@@ -63,9 +63,9 @@
     <string name="settings_theme">Thème</string>
     <string name="settings_theme_dark">Sombre</string>
     <string name="settings_theme_light">Clair</string>
-    <string name="settings_language">Langue de l\'application</string>
+    <string name="settings_language">Langue de l\\'application</string>
     <string name="settings_language_system">Suivre le système</string>
-    <string name="settings_language_changed">Langue modifiée. Redémarrez l\'application pour appliquer.</string>
+    <string name="settings_language_changed">Langue modifiée. Redémarrez l\\'application pour appliquer.</string>
     <string name="settings_search_engine">Moteur de recherche</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_bee">Bee Engine</string>

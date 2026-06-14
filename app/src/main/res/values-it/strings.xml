@@ -48,12 +48,12 @@
     <string name="translate_not_found">Nessuna lingua trovata</string>
     <string name="translate_done">Pagina tradotta ✓</string>
     <string name="translate_done_to">Tradotta in: %s</string>
-    <string name="translate_change">Traduci in un\'altra lingua</string>
+    <string name="translate_change">Traduci in un\\'altra lingua</string>
     <string name="translate_change_sub">Scegli tra %d lingue</string>
     <string name="translate_revert">Vedi originale</string>
     <string name="translate_revert_sub">Ricarica pagina senza traduzione</string>
     <string name="translate_loading">⟳ Traduzione in corso...</string>
-    <string name="translate_error">Errore nell\'avvio della traduzione</string>
+    <string name="translate_error">Errore nell\\'avvio della traduzione</string>
     <string name="translate_none">Nessuna pagina da tradurre</string>
     <string name="settings_title">Impostazioni</string>
     <string name="settings_section_appearance">Aspetto</string>
@@ -63,9 +63,9 @@
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_dark">Scuro</string>
     <string name="settings_theme_light">Chiaro</string>
-    <string name="settings_language">Lingua dell\'app</string>
+    <string name="settings_language">Lingua dell\\'app</string>
     <string name="settings_language_system">Segui il sistema</string>
-    <string name="settings_language_changed">Lingua modificata. Riavvia l\'app per applicare.</string>
+    <string name="settings_language_changed">Lingua modificata. Riavvia l\\'app per applicare.</string>
     <string name="settings_search_engine">Search engine</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_bee">Bee Engine</string>
