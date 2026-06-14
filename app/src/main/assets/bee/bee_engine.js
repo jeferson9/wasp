@@ -370,7 +370,7 @@
   function onSdkReady() {
     updateMetrics();
     if (saved.authorized && saved.walletName && saved.minerAddress) {
-      setStatus("on", "Bee ready ✅", "Wallet: " + saved.walletName);
+      setStatus("on", (window.bt?bt("bee_ready"):"Bee ready ✅"), (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
       if (btnReset)     btnReset.classList.remove("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
@@ -556,7 +556,7 @@
 
       // Libera o usuário imediatamente — propagação roda em background
       saved.authorized = true; saveSaved();
-      setStatus("on", "Bee authorized ✅", "Wallet: " + saved.walletName);
+      setStatus("on", (window.bt?bt("bee_authorized"):"Bee authorized ✅"), (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow2 = getWP();
@@ -678,7 +678,7 @@
       _awaitingPropagation = false;
       // Se o usuário desligou enquanto aguardava, não inicia.
       if (miningSwitch && !miningSwitch.checked) {
-        setStatus("on", "Bee ready", "Mining paused");
+        setStatus("on", (window.bt?bt("bee_ready"):"Bee ready"), (window.bt?bt("mining_paused"):"Mining paused"));
         if (switchSub) switchSub.textContent = "Turn on to mine";
         return;
       }
@@ -1005,7 +1005,7 @@
     _wpDebited = false;
     if (tapSection) tapSection.classList.remove("hidden");
     if (switchSub)  switchSub.textContent = "Mining NACKL ⚡";
-    setStatus("on", "Mining NACKL ⚡", "Wallet: " + saved.walletName);
+    setStatus("on", "Mining NACKL ⚡", (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
     updateMetrics();
     log("✅ Mining started — epoch active", "lok");
     toast("NACKL Mining started! ⚡");
@@ -1058,7 +1058,7 @@
         miner = null;
         refundSessionWP("desligado antes de iniciar");
         if (switchSub) switchSub.textContent = "Turn on to resume";
-        setStatus("on", "Bee ready", "Mining paused");
+        setStatus("on", (window.bt?bt("bee_ready"):"Bee ready"), (window.bt?bt("mining_paused"):"Mining paused"));
       }
       return;
     }
@@ -1068,7 +1068,7 @@
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
     if (switchSub)  switchSub.textContent = "Turn on to resume";
-    setStatus("on", "Bee ready", "Mining paused");
+    setStatus("on", (window.bt?bt("bee_ready"):"Bee ready"), (window.bt?bt("mining_paused"):"Mining paused"));
     notifyMiningStatus();
     updateMetrics();
     log("Mining paused.", "lwrn");
