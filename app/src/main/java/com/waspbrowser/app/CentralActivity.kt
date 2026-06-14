@@ -115,7 +115,6 @@ class CentralActivity : AppCompatActivity() {
         fun openWpAd() {
             android.util.Log.d(TAG, "openWpAd chamado!")
             handler.post {
-                // Cooldown controlado no nativo (não no JS): mais confiável.
                 val prefs = getSharedPreferences("wasp_ads", MODE_PRIVATE)
                 val last  = prefs.getLong("wp_ad_last", 0L)
                 val now   = System.currentTimeMillis()
@@ -129,6 +128,10 @@ class CentralActivity : AppCompatActivity() {
                 val i = android.content.Intent(this@CentralActivity, StartioAdActivity::class.java)
                 i.putExtra(StartioAdActivity.EXTRA_MODE, "wp")
                 startActivity(i)
+                // Fecha a central para o video aparecer na frente
+                finish()
+                @Suppress("DEPRECATION")
+                overridePendingTransition(0, 0)
             }
         }
 
