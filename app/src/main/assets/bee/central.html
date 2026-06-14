@@ -826,13 +826,13 @@
     };
     const LANG = (function () {
       try {
+        const p = new URLSearchParams(location.search).get("lang");
+        if (p) { var c = p.slice(0,2).toLowerCase(); return I18N[c] ? c : "en"; }
         if (window.WaspConfig && WaspConfig.getLang) {
           var l = WaspConfig.getLang().slice(0,2).toLowerCase();
           return I18N[l] ? l : "en";
         }
-        const p = new URLSearchParams(location.search).get("lang");
-        const code = (p || "en").slice(0, 2).toLowerCase();
-        return I18N[code] ? code : "en";
+        return "en";
       } catch (e) { return "en"; }
     })();
     function t(key, vars) {
