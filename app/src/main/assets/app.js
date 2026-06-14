@@ -1576,15 +1576,14 @@ function showToast(msg){
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Aplica traduções i18n após tudo carregar
-    setTimeout(function() {
+    // Aplica traduções i18n — repete para pegar quando Kotlin injetar HOME_LANG
+    function _applyI18n() {
         if (window.applyHomeI18n) applyHomeI18n();
-        const _savedTheme = localStorage.getItem(THEME_KEY) || "dark";
-        const _themeLabel = $("themeLabel");
-        if (_themeLabel && window.ht) {
-            _themeLabel.textContent = _savedTheme === "dark" ? "🌙" : "☀️";
-        }
-    }, 100);
+    }
+    _applyI18n();
+    setTimeout(_applyI18n, 300);
+    setTimeout(_applyI18n, 800);
+    setTimeout(_applyI18n, 1500);
 
     // sticky search removido
 

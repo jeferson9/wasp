@@ -393,7 +393,7 @@
       }
 // Auto-start removido — usuario deve ligar manualmente
     } else {
-      setStatus("warn", "Configure a Bee Engine", "Informe o wallet name e autorize na AN Wallet");
+      setStatus("warn", "Configure Bee Engine", "Enter your wallet name and authorize on AN Wallet");
       if (setupCard)    setupCard.classList.remove("hidden");
       if (walletInput && saved.walletName) walletInput.value = saved.walletName;
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = true; }
@@ -448,7 +448,7 @@
     }
     var walletName = walletInput ? walletInput.value.trim() : "";
     if (!walletName) {
-      log("Digite seu wallet name", "lerr");
+      log("Enter your wallet name", "lerr");
       if (walletInput) walletInput.focus();
       return;
     }
@@ -523,7 +523,7 @@
   // ─── CONFIRMAR AUTORIZAÇÃO ───────────────────────────────────────────────
   async function confirmAuthorization() {
     if (!wasmReady) { log("SDK não está pronto", "lwrn"); return; }
-    if (!saved.walletName) { log("Wallet name não informado", "lerr"); return; }
+    if (!saved.walletName) { log("Wallet name not provided", "lerr"); return; }
 
     if (btnSetup) {
       btnSetup.disabled = true;
