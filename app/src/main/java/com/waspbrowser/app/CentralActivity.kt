@@ -86,10 +86,6 @@ class CentralActivity : AppCompatActivity() {
         val bridge = Bridge()
         webView.addJavascriptInterface(bridge, "AndroidBee")
         webView.addJavascriptInterface(bridge, "Android")
-        webView.addJavascriptInterface(object {
-            @android.webkit.JavascriptInterface
-            fun getLang(): String = java.util.Locale.getDefault().language.lowercase()
-        }, "WaspConfig")
         // i18n: passa o idioma efetivo do app (escolha do usuário OU sistema) para o WebView.
         // Locale.getDefault() já reflete o que o SettingsActivity aplicou via setApplicationLocales().
         val lang = java.util.Locale.getDefault().language.lowercase()
