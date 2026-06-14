@@ -44,7 +44,7 @@
     <string name="perm_microphone">マイク</string>
     <string name="translate_title">ページを翻訳先：</string>
     <string name="translate_subtitle">テキストはページ内で直接置換されます</string>
-    <string name="translate_search_hint">🔍  言語を検索...</string>
+    <string name="translate_search_hint">言語を検索...</string>
     <string name="translate_not_found">言語が見つかりません</string>
     <string name="translate_done">ページを翻訳しました ✓</string>
     <string name="translate_done_to">翻訳先：%s</string>

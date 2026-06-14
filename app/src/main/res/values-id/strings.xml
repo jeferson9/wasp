@@ -44,7 +44,7 @@
     <string name="perm_microphone">microphone</string>
     <string name="translate_title">Terjemahkan halaman ke</string>
     <string name="translate_subtitle">Texts replaced directly on the page</string>
-    <string name="translate_search_hint">🔍  Cari bahasa...</string>
+    <string name="translate_search_hint">Cari bahasa...</string>
     <string name="translate_not_found">Bahasa tidak ditemukan</string>
     <string name="translate_done">Halaman diterjemahkan ✓</string>
     <string name="translate_done_to">Translated to: %s</string>

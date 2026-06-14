@@ -44,7 +44,7 @@
     <string name="perm_microphone">麦克风</string>
     <string name="translate_title">将页面翻译为</string>
     <string name="translate_subtitle">文本直接在页面内替换</string>
-    <string name="translate_search_hint">🔍  搜索语言...</string>
+    <string name="translate_search_hint">搜索语言...</string>
     <string name="translate_not_found">未找到语言</string>
     <string name="translate_done">页面已翻译 ✓</string>
     <string name="translate_done_to">已翻译为：%s</string>

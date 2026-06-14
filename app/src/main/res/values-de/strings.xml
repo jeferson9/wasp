@@ -44,7 +44,7 @@
     <string name="perm_microphone">Mikrofon</string>
     <string name="translate_title">Seite übersetzen nach</string>
     <string name="translate_subtitle">Texte direkt auf der Seite ersetzt</string>
-    <string name="translate_search_hint">🔍  Sprache suchen...</string>
+    <string name="translate_search_hint">Sprache suchen...</string>
     <string name="translate_not_found">Keine Sprache gefunden</string>
     <string name="translate_done">Seite übersetzt ✓</string>
     <string name="translate_done_to">Übersetzt nach: %s</string>

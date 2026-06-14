@@ -44,7 +44,7 @@
     <string name="perm_microphone">마이크</string>
     <string name="translate_title">페이지 번역 대상:</string>
     <string name="translate_subtitle">텍스트가 페이지에서 직접 교체됩니다</string>
-    <string name="translate_search_hint">🔍  언어 검색...</string>
+    <string name="translate_search_hint">언어 검색...</string>
     <string name="translate_not_found">언어를 찾을 수 없습니다</string>
     <string name="translate_done">페이지가 번역되었습니다 ✓</string>
     <string name="translate_done_to">번역 대상: %s</string>

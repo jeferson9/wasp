@@ -44,7 +44,7 @@
     <string name="perm_microphone">микрофон</string>
     <string name="translate_title">Перевести страницу на</string>
     <string name="translate_subtitle">Тексты заменяются прямо на странице</string>
-    <string name="translate_search_hint">🔍  Поиск языка...</string>
+    <string name="translate_search_hint">Поиск языка...</string>
     <string name="translate_not_found">Язык не найден</string>
     <string name="translate_done">Страница переведена ✓</string>
     <string name="translate_done_to">Переведено на: %s</string>

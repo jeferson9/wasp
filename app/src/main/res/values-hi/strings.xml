@@ -44,7 +44,7 @@
     <string name="perm_microphone">microphone</string>
     <string name="translate_title">पृष्ठ का अनुवाद करें</string>
     <string name="translate_subtitle">Texts replaced directly on the page</string>
-    <string name="translate_search_hint">🔍  भाषा खोजें...</string>
+    <string name="translate_search_hint">भाषा खोजें...</string>
     <string name="translate_not_found">कोई भाषा नहीं मिली</string>
     <string name="translate_done">पृष्ठ अनुवादित ✓</string>
     <string name="translate_done_to">Translated to: %s</string>
