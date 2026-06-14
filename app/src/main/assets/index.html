@@ -505,13 +505,14 @@
     };
     const HOME_LANG = (function () {
       try {
-        const p = new URLSearchParams(location.search).get("lang");
-        const code = (p || navigator.language || "en").slice(0, 2).toLowerCase();
-        return HOME_I18N[code] ? code : "en";
+        var lang = (window.WaspConfig && WaspConfig.getLang) ? WaspConfig.getLang() : null;
+        if (!lang) lang = new URLSearchParams(location.search).get("lang");
+        if (!lang) lang = (navigator.language || "en").slice(0, 2);
+        lang = lang.slice(0, 2).toLowerCase();
+        return HOME_I18N[lang] ? lang : "en";
       } catch (e) { return "en"; }
     })();
     window.HOME_LANG = HOME_LANG;
-    console.log("HOME_LANG detected:", HOME_LANG, "location.search:", location.search, "navigator.language:", navigator.language);
     function ht(key) {
       return (HOME_I18N[HOME_LANG] && HOME_I18N[HOME_LANG][key]) || HOME_I18N.en[key] || key;
     }
