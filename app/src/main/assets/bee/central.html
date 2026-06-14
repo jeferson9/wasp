@@ -570,8 +570,8 @@
 <!-- TOPBAR -->
 <div class="c-topbar">
     <div class="c-topbar-left">
-        <span class="c-badge" data-i18n="badge">Wasp Points</span>
-        <span class="c-title" data-i18n="central_title">WP Central ⚡</span>
+        <span class="c-badge" id="topBadge">Wasp Points</span>
+        <span class="c-title" id="topTitle">WP Central ⚡</span>
     </div>
     <button class="c-close-btn" onclick="closeCentral()">✕</button>
 </div>
@@ -644,8 +644,8 @@
 
 <!-- GAME CARDS -->
 <div class="c-section">
-    <span class="c-section-title" data-i18n="section_earn">🎮 Earn WP</span>
-    <span class="c-section-hint" data-i18n="section_earn_hint">Tap to play</span>
+    <span class="c-section-title" id="secEarn">🎮 Earn WP</span>
+    <span class="c-section-hint" id="secEarnHint">Tap to play</span>
 </div>
 
 <div class="c-game-grid">
@@ -653,10 +653,10 @@
     <!-- TAP GAME -->
     <div class="c-game-card card-tap" id="cardTap" onclick="openTap()">
         <div class="cgc-emoji">👆</div>
-        <div class="cgc-name" data-i18n="tap_name">Tap Game</div>
+        <div class="cgc-name" id="tapName">Tap Game</div>
         <div class="cgc-reward">+30 WP</div>
-        <div class="cgc-status" id="tapStatus" data-i18n="checking">Verificando...</div>
-        <button class="cgc-btn btn-yellow" id="tapBtn" data-i18n="play_now">Jogar agora</button>
+        <div class="cgc-status" id="tapStatus">Checking...</div>
+        <button class="cgc-btn btn-yellow" id="tapBtn">Play now</button>
     </div>
 
     <!-- ANÚNCIO -->
@@ -703,8 +703,8 @@
     <div class="tap-game-card">
         <div class="tap-game-head">
             <div>
-                <div class="tap-game-title" data-i18n="tap_game_title">⛏ Manual Mining</div>
-                <div class="tap-game-sub" data-i18n="tap_game_sub">100 taps register actions on the Merkle Tree</div>
+                <div class="tap-game-title" id="tapGameTitle">⛏ Manual Mining</div>
+                <div class="tap-game-sub" id="tapGameSub">100 taps register actions on the Merkle Tree</div>
             </div>
             <button class="tap-game-close" onclick="closeTap()">✕</button>
         </div>
@@ -946,6 +946,17 @@
       const total = getTotal();
       const ld    = getLevelData();
       const streak= getN(K.streak, 0);
+
+      // Topbar
+      if (el("topBadge")) el("topBadge").textContent = t("badge");
+      if (el("topTitle")) el("topTitle").textContent = t("central_title");
+      // Seção earn
+      if (el("secEarn")) el("secEarn").textContent = t("section_earn");
+      if (el("secEarnHint")) el("secEarnHint").textContent = t("section_earn_hint");
+      // Cards
+      if (el("tapName")) el("tapName").textContent = t("tap_name");
+      if (el("tapGameTitle")) el("tapGameTitle").textContent = t("tap_game_title");
+      if (el("tapGameSub")) el("tapGameSub").textContent = t("tap_game_sub");
 
       // Balance hero
       el("balValue").textContent = wp;
