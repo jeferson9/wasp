@@ -228,7 +228,7 @@ class SplashActivity : AppCompatActivity() {
                 steps.lastOrNull { it.first <= progress }?.let { tvStatus.text = it.second }
                 animateProgress()
             } else {
-                tvStatus.text = getString(R.string.splash_welcome)
+                tvStatus.text = getString(R.string.splash_welcome) + " \uD83D\uDC1D"
                 handler.postDelayed({
                     startActivity(Intent(this, MainActivity::class.java))
                     overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)

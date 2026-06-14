@@ -86,5 +86,5 @@
     <string name="splash_step3">Sincronizando Bee Engine...</string>
     <string name="splash_step4">Optimizando rendimiento...</string>
     <string name="splash_step5">Listo para navegar...</string>
-    <string name="splash_welcome">Bienvenido a Wasp 🐝</string>
+    <string name="splash_welcome">Bienvenido a Wasp</string>
 </resources>
