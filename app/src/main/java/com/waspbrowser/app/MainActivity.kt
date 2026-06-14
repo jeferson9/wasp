@@ -360,7 +360,8 @@ class MainActivity : AppCompatActivity() {
         webAppView.resumeTimers()
         if (::webAppView.isInitialized && webAppView.visibility == View.VISIBLE &&
             ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
-            webAppView.evaluateJavascript("setBottomTab('main')", null)
+            // Restaura o tab visual sem resetar para 'main'
+            webAppView.evaluateJavascript("if(window.restoreBottomTab) restoreBottomTab(); else setBottomTab('main')", null)
         }
         // Garante que a persistentBeeView está no container correto
         val beeContainer = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container)

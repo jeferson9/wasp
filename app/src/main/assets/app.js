@@ -829,10 +829,15 @@ function selectSuggestion(text){
 /* =========================
    ABAS / NAV
 ========================= */
+var _activeBottomTab = "main";
 function setBottomTab(mode){
+    _activeBottomTab = mode;
     document.querySelectorAll(".bottom-tab").forEach(tab => {
         tab.classList.toggle("active", tab.dataset.mode === mode);
     });
+}
+function restoreBottomTab(){
+    setBottomTab(_activeBottomTab || "main");
 }
 
 function openMarketTab(){
