@@ -118,4 +118,5 @@
     <string name="ad_starting_video">启动视频中...</string>
     <string name="ad_cant_show">无法显示广告</string>
     <string name="ad_none_available">暂无广告</string>
+    <string name="ad_wait_reward" formatted="false">请稍候 - 观看后您将获得%d WP</string>
 </resources>

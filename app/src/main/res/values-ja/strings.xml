@@ -118,4 +118,5 @@
     <string name="ad_starting_video">動画を開始中...</string>
     <string name="ad_cant_show">広告を表示できませんでした</string>
     <string name="ad_none_available">広告がありません</string>
+    <string name="ad_wait_reward" formatted="false">お待ちください - 視聴で%d WPを獲得します</string>
 </resources>

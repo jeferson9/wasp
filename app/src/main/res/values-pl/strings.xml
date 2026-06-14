@@ -118,4 +118,5 @@
     <string name="ad_starting_video">Uruchamianie wideo...</string>
     <string name="ad_cant_show">Nie można wyświetlić reklamy</string>
     <string name="ad_none_available">Brak dostępnych reklam</string>
+    <string name="ad_wait_reward" formatted="false">Poczekaj - otrzymasz %d WP za obejrzenie</string>
 </resources>

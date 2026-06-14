@@ -121,7 +121,7 @@
     <string name="ad_starting_video">Starting video...</string>
     <string name="ad_cant_show">Could not show ad</string>
     <string name="ad_none_available">No ad available</string>
-    <string name="ad_wait_reward">Wait - you will receive %d WP for watching</string>
+    <string name="ad_wait_reward" formatted="false">Wait - you will receive %d WP for watching</string>
     <string name="ad_next_in">Next ad in ~%d min</string>
     <string name="toast_translate_error">Не вдалося почати переклад</string>
     <string name="toast_no_page_translate">Немає сторінки для перекладу</string>

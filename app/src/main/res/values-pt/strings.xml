@@ -120,4 +120,5 @@
     <string name="ad_starting_video">Iniciando vídeo...</string>
     <string name="ad_cant_show">Não foi possível mostrar o anúncio</string>
     <string name="ad_none_available">Nenhum anúncio disponível</string>
+    <string name="ad_wait_reward" formatted="false">Aguarde - você receberá %d WP por assistir</string>
 </resources>

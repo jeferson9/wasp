@@ -118,4 +118,5 @@
     <string name="ad_starting_video">Video wird gestartet...</string>
     <string name="ad_cant_show">Anzeige konnte nicht angezeigt werden</string>
     <string name="ad_none_available">Keine Anzeige verfügbar</string>
+    <string name="ad_wait_reward" formatted="false">Warten - Sie erhalten %d WP fürs Anschauen</string>
 </resources>

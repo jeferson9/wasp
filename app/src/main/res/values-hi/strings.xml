@@ -118,4 +118,5 @@
     <string name="ad_starting_video">वीडियो शुरू हो रहा है...</string>
     <string name="ad_cant_show">विज्ञापन दिखाया नहीं जा सका</string>
     <string name="ad_none_available">कोई विज्ञापन उपलब्ध नहीं</string>
+    <string name="ad_wait_reward" formatted="false">प्रतीक्षा करें - देखने पर आपको %d WP मिलेंगे</string>
 </resources>

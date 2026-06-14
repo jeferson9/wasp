@@ -118,4 +118,5 @@
     <string name="ad_starting_video">동영상 시작 중...</string>
     <string name="ad_cant_show">광고를 표시할 수 없습니다</string>
     <string name="ad_none_available">사용 가능한 광고 없음</string>
+    <string name="ad_wait_reward" formatted="false">잠시 기다려주세요 - 시청 시 %d WP를 받습니다</string>
 </resources>

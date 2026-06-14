@@ -118,4 +118,5 @@
     <string name="ad_starting_video">Memulai video...</string>
     <string name="ad_cant_show">Tidak dapat menampilkan iklan</string>
     <string name="ad_none_available">Tidak ada iklan tersedia</string>
+    <string name="ad_wait_reward" formatted="false">Tunggu - Anda akan mendapatkan %d WP untuk menonton</string>
 </resources>

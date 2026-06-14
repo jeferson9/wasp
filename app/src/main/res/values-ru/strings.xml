@@ -118,4 +118,5 @@
     <string name="ad_starting_video">Запуск видео...</string>
     <string name="ad_cant_show">Не удалось показать рекламу</string>
     <string name="ad_none_available">Реклама недоступна</string>
+    <string name="ad_wait_reward" formatted="false">Подождите - вы получите %d WP за просмотр</string>
 </resources>

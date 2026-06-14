@@ -118,4 +118,5 @@
     <string name="ad_starting_video">Video başlatılıyor...</string>
     <string name="ad_cant_show">Reklam gösterilemedi</string>
     <string name="ad_none_available">Reklam mevcut değil</string>
+    <string name="ad_wait_reward" formatted="false">Bekleyin - izlediğiniz için %d WP alacaksınız</string>
 </resources>

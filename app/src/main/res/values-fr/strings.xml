@@ -118,4 +118,5 @@
     <string name="ad_starting_video">Démarrage de la vidéo...</string>
     <string name="ad_cant_show">Impossible d afficher la pub</string>
     <string name="ad_none_available">Aucune pub disponible</string>
+    <string name="ad_wait_reward" formatted="false">Attendez - vous recevrez %d WP pour avoir regardé</string>
 </resources>
