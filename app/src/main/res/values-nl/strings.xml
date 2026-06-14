@@ -114,4 +114,8 @@
     <string name="dl_empty">Geen downloads</string>
     <string name="dl_open">Openen</string>
     <string name="dl_size_unknown">Onbekende grootte</string>
+    <string name="ad_loading_video">Video laden...</string>
+    <string name="ad_starting_video">Video starten...</string>
+    <string name="ad_cant_show">Kan advertentie niet weergeven</string>
+    <string name="ad_none_available">Geen advertentie beschikbaar</string>
 </resources>

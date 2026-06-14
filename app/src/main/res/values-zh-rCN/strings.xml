@@ -114,4 +114,8 @@
     <string name="dl_empty">暂无下载</string>
     <string name="dl_open">打开</string>
     <string name="dl_size_unknown">未知大小</string>
+    <string name="ad_loading_video">加载视频中...</string>
+    <string name="ad_starting_video">启动视频中...</string>
+    <string name="ad_cant_show">无法显示广告</string>
+    <string name="ad_none_available">暂无广告</string>
 </resources>

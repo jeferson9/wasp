@@ -114,4 +114,8 @@
     <string name="dl_empty">ダウンロードなし</string>
     <string name="dl_open">開く</string>
     <string name="dl_size_unknown">不明なサイズ</string>
+    <string name="ad_loading_video">動画を読み込み中...</string>
+    <string name="ad_starting_video">動画を開始中...</string>
+    <string name="ad_cant_show">広告を表示できませんでした</string>
+    <string name="ad_none_available">広告がありません</string>
 </resources>

@@ -117,10 +117,10 @@
     <string name="tr_other_lang_sub">Choose from %d languages</string>
     <string name="tr_view_original">Переглянути оригінал</string>
     <string name="tr_view_original_sub">Перезавантажити сторінку без перекладу</string>
-    <string name="ad_loading_video">Завантаження відео...</string>
-    <string name="ad_starting_video">Запуск відео...</string>
-    <string name="ad_cant_show">Не вдалося показати рекламу</string>
-    <string name="ad_none_available">Реклама недоступна</string>
+    <string name="ad_loading_video">Loading video...</string>
+    <string name="ad_starting_video">Starting video...</string>
+    <string name="ad_cant_show">Could not show ad</string>
+    <string name="ad_none_available">No ad available</string>
     <string name="ad_wait_reward">Wait - you will receive %d WP for watching</string>
     <string name="ad_next_in">Next ad in ~%d min</string>
     <string name="toast_translate_error">Не вдалося почати переклад</string>

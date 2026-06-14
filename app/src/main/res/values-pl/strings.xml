@@ -114,4 +114,8 @@
     <string name="dl_empty">Brak pobranych</string>
     <string name="dl_open">Otwórz</string>
     <string name="dl_size_unknown">Nieznany rozmiar</string>
+    <string name="ad_loading_video">Ładowanie wideo...</string>
+    <string name="ad_starting_video">Uruchamianie wideo...</string>
+    <string name="ad_cant_show">Nie można wyświetlić reklamy</string>
+    <string name="ad_none_available">Brak dostępnych reklam</string>
 </resources>

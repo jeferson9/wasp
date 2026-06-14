@@ -114,4 +114,8 @@
     <string name="dl_empty">Henüz indirme yok</string>
     <string name="dl_open">Aç</string>
     <string name="dl_size_unknown">Bilinmeyen boyut</string>
+    <string name="ad_loading_video">Video yükleniyor...</string>
+    <string name="ad_starting_video">Video başlatılıyor...</string>
+    <string name="ad_cant_show">Reklam gösterilemedi</string>
+    <string name="ad_none_available">Reklam mevcut değil</string>
 </resources>

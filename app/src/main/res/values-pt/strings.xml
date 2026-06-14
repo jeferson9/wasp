@@ -116,4 +116,8 @@
     <string name="dl_empty">Sem downloads ainda</string>
     <string name="dl_open">Abrir</string>
     <string name="dl_size_unknown">Tamanho desconhecido</string>
+    <string name="ad_loading_video">Carregando vídeo...</string>
+    <string name="ad_starting_video">Iniciando vídeo...</string>
+    <string name="ad_cant_show">Não foi possível mostrar o anúncio</string>
+    <string name="ad_none_available">Nenhum anúncio disponível</string>
 </resources>

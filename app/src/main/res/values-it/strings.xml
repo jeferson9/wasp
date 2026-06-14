@@ -114,4 +114,8 @@
     <string name="dl_empty">Nessun download</string>
     <string name="dl_open">Apri</string>
     <string name="dl_size_unknown">Dimensione sconosciuta</string>
+    <string name="ad_loading_video">Caricamento video...</string>
+    <string name="ad_starting_video">Avvio video...</string>
+    <string name="ad_cant_show">Impossibile mostrare l annuncio</string>
+    <string name="ad_none_available">Nessun annuncio disponibile</string>
 </resources>

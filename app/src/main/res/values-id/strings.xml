@@ -114,4 +114,8 @@
     <string name="dl_empty">Belum ada unduhan</string>
     <string name="dl_open">Buka</string>
     <string name="dl_size_unknown">Ukuran tidak diketahui</string>
+    <string name="ad_loading_video">Memuat video...</string>
+    <string name="ad_starting_video">Memulai video...</string>
+    <string name="ad_cant_show">Tidak dapat menampilkan iklan</string>
+    <string name="ad_none_available">Tidak ada iklan tersedia</string>
 </resources>

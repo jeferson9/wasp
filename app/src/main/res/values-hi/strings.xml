@@ -114,4 +114,8 @@
     <string name="dl_empty">कोई डाउनलोड नहीं</string>
     <string name="dl_open">खोलें</string>
     <string name="dl_size_unknown">अज्ञात आकार</string>
+    <string name="ad_loading_video">वीडियो लोड हो रहा है...</string>
+    <string name="ad_starting_video">वीडियो शुरू हो रहा है...</string>
+    <string name="ad_cant_show">विज्ञापन दिखाया नहीं जा सका</string>
+    <string name="ad_none_available">कोई विज्ञापन उपलब्ध नहीं</string>
 </resources>

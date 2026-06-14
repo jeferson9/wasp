@@ -114,4 +114,8 @@
     <string name="dl_empty">Нет загрузок</string>
     <string name="dl_open">Открыть</string>
     <string name="dl_size_unknown">Неизвестный размер</string>
+    <string name="ad_loading_video">Загрузка видео...</string>
+    <string name="ad_starting_video">Запуск видео...</string>
+    <string name="ad_cant_show">Не удалось показать рекламу</string>
+    <string name="ad_none_available">Реклама недоступна</string>
 </resources>
