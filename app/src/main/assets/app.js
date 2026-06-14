@@ -114,7 +114,7 @@ function applyTheme(theme){
 
     const label = $("themeLabel");
     if(label){
-        label.textContent = theme === "dark" ? "Dark" : "Light";
+        label.textContent = theme === "dark" ? (window.ht ? ht("theme_dark") : "Dark") : (window.ht ? ht("theme_light") : "Light");
     }
 
     // Remove background no tema claro
@@ -141,7 +141,7 @@ function setTheme(theme){
 
     const label = $("themeLabel");
     if(label){
-        label.textContent = theme === "dark" ? "Dark" : "Light";
+        label.textContent = theme === "dark" ? (window.ht ? ht("theme_dark") : "Dark") : (window.ht ? ht("theme_light") : "Light");
     }
 
     const menu = $("themeOptions");
