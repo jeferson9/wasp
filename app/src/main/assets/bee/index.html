@@ -620,6 +620,7 @@
       try {
         var p = new URLSearchParams(location.search).get("lang");
         var code = (p || navigator.language || "en").slice(0, 2).toLowerCase();
+        console.log("BEE_LANG: search=" + location.search + " p=" + p + " nav=" + navigator.language + " code=" + code);
         return BEE_I18N[code] ? code : "en";
       } catch (e) { return "en"; }
     })();
