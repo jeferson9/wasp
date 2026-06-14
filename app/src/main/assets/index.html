@@ -128,7 +128,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f7c600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-bottom:2px">
                             <circle cx="12" cy="12" r="9"/>
                             <polyline points="12 7 12 12 15 15"/>
-                        </svg>Recent
+                        </svg><span data-i18n="recent_label">Recent</span>
                     </div>
                     <button class="panel-action" onclick="clearRecents()" data-i18n="clear">Clear</button>
                 </div>
@@ -483,9 +483,6 @@
     </button>
 </nav>
 
-<script src="feed.js"></script>
-<script src="app.js"></script>
-
 <script>
     const HOME_I18N = {
       en: { greeting: "Hello, Wasp", subtitle: "Web3 · Bee Engine · NACKL", scroll_hint: "Recent · Blog · NACKL", recent_label: "Recent", see_all: "See all", clear: "Clear", no_recents: "No recent sites yet…", daily_reset: "Resets automatically every day", market_label: "MARKET", top_assets: "TOP ASSETS", sentiment: "SENTIMENT", trending: "TRENDING", gainers: "GAINERS", losers: "LOSERS", loading: "Loading…", settings: "Settings", profile: "Profile", your_name: "Your name", appearance: "Appearance", search_engine: "Search engine", clear_cache: "🍪 Clear cache & cookies", cache_dialog_title: "Clear cache and cookies?", cache_dialog_sub: "WP balance and mining data will be preserved.", cancel: "Cancel", add_site: "Add site", add_btn: "Add", remove_dialog: "Remove this site from Hive?", remove_btn: "Remove", search_placeholder: "Search or type URL...", nav_panel: "Panel", nav_market: "Market", nav_home: "Home", nav_hive: "Hive", powered_by: "🛡 Powered by Wasp Browser", mkt_cap: "MKT CAP", pre_launch: "Pre-launch", bee_engine_label: "Bee Engine", wasp_blog: "Wasp Blog" },
@@ -526,5 +523,8 @@
     document.addEventListener("DOMContentLoaded", applyHomeI18n);
 
 </script>
+<script src="feed.js"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
