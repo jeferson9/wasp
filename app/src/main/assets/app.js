@@ -1581,6 +1581,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Reaplica tema para traduzir Dark/Light com ht() já disponível
     const _savedTheme = localStorage.getItem(THEME_KEY) || "dark";
     const _themeLabel = $("themeLabel");
+    console.log("i18n debug: ht=", !!window.ht, "lang=", window.HOME_LANG, "theme=", _savedTheme, "translated=", window.ht ? ht("theme_dark") : "N/A");
     if (_themeLabel && window.ht) {
         _themeLabel.textContent = _savedTheme === "dark" ? ht("theme_dark") : ht("theme_light");
     }
