@@ -618,9 +618,12 @@
     };
     const BEE_LANG = (function () {
       try {
+        if (window.WaspConfig && WaspConfig.getLang) {
+          var l = WaspConfig.getLang().slice(0,2).toLowerCase();
+          return BEE_I18N[l] ? l : "en";
+        }
         var p = new URLSearchParams(location.search).get("lang");
-        var code = (p || navigator.language || "en").slice(0, 2).toLowerCase();
-        console.log("BEE_LANG: search=" + location.search + " p=" + p + " nav=" + navigator.language + " code=" + code);
+        var code = (p || "en").slice(0,2).toLowerCase();
         return BEE_I18N[code] ? code : "en";
       } catch (e) { return "en"; }
     })();

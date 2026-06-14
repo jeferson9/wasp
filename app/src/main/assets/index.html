@@ -505,9 +505,13 @@
     };
     const HOME_LANG = (function () {
       try {
+        if (window.WaspConfig && WaspConfig.getLang) {
+          var l = WaspConfig.getLang().slice(0,2).toLowerCase();
+          return HOME_I18N[l] ? l : "en";
+        }
         var p = new URLSearchParams(location.search).get("lang");
-        var lang = (p || navigator.language || "en").slice(0, 2).toLowerCase();
-        return HOME_I18N[lang] ? lang : "en";
+        var code = (p || "en").slice(0,2).toLowerCase();
+        return HOME_I18N[code] ? code : "en";
       } catch (e) { return "en"; }
     })();
     window.HOME_LANG = HOME_LANG;
