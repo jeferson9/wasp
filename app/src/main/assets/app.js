@@ -1401,11 +1401,12 @@ function initGreeting(){
 
     const h = new Date().getHours();
     let saudacao, em;
+    const _ht = window.ht || function(k){ return k; };
 
-    if(h >= 5  && h < 12){ saudacao = "Good morning";    em = "☀️"; }
-    else if(h >= 12 && h < 18){ saudacao = "Good afternoon";  em = "🌤"; }
-    else if(h >= 18 && h < 23){ saudacao = "Good evening";  em = "🌙"; }
-    else                       { saudacao = "Hello";        em = "⭐"; }
+    if(h >= 5  && h < 12){ saudacao = _ht("greeting_morning");    em = "☀️"; }
+    else if(h >= 12 && h < 18){ saudacao = _ht("greeting_afternoon");  em = "🌤"; }
+    else if(h >= 18 && h < 23){ saudacao = _ht("greeting_evening");  em = "🌙"; }
+    else                       { saudacao = _ht("greeting_hello");   em = "⭐"; }
 
     const nome = getUserName();
     el.textContent = nome ? saudacao + ", " + nome : saudacao + ", Wasp";
