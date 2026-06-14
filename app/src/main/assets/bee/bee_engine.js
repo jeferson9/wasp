@@ -456,7 +456,7 @@
     setupRunning = true;
     if (btnSetup) {
       btnSetup.disabled = true;
-      btnSetup.innerHTML = '<span class="spinner"></span>Gerando chaves...';
+      btnSetup.innerHTML = '<span class="spinner"></span>Generating keys...';
     }
 
     try {
@@ -494,7 +494,7 @@
       log("Deep link: ✅", "lok");
 
       setStep(3);
-      setStatus("warn", "Abrindo AN Wallet...", "Confirme o registro das chaves");
+      setStatus("warn", "Opening AN Wallet...", "Confirm key registration");
       openDeepLink(rawDeepLink);
 
       if (btnSetup) {
@@ -656,7 +656,7 @@
       }
       _awaitingPropagation = true;
       log("🔑 First mining: confirming key registration on network before starting...", "lwrn");
-      setStatus("warn", "Registrando chaves...", "Aguardando a rede confirmar (pode levar ~1 min)");
+      setStatus("warn", "Registering keys...", "Waiting for network confirmation (may take ~1 min)");
       if (switchSub) switchSub.textContent = "Registering keys on network...";
       if (miningSwitch) miningSwitch.checked = true; // mantém intenção do usuário
       try {
@@ -906,7 +906,7 @@
         // Não propagado: tenta propagar rapidamente antes do claim.
         // Após reconexão/limpeza de dados a propagação demora mais, então
         // usamos mais tentativas para dar tempo da rede registrar as chaves.
-        log("🔄 Confirmando propagacao antes do get_reward()...", "linf");
+        log("🔄 Confirming propagation before get_reward()...", "linf");
         window.BeeSDK.ensure_mining_keys_propagated({
           client_config: { network: { endpoints: ENDPOINTS } },
           miner_address: saved.minerAddress,
@@ -1229,7 +1229,7 @@
   };
 
   window.onAppResume = function() {
-    log("App voltou ao foco", "linf");
+    log("App returned to focus", "linf");
     if (!wasmReady || !saved.authorized || !saved.minerAddress) return;
 
 // Auto-start no resume removido — usuario relliga manualmente
