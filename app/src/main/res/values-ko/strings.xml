@@ -46,13 +46,13 @@
     <string name="translate_subtitle">텍스트가 페이지에서 직접 교체됩니다</string>
     <string name="translate_search_hint">언어 검색...</string>
     <string name="translate_not_found">언어를 찾을 수 없습니다</string>
-    <string name="translate_done">페이지가 번역되었습니다 ✓</string>
+    <string name="translate_done">페이지가 번역되었습니다 </string>
     <string name="translate_done_to">번역 대상: %s</string>
     <string name="translate_change">다른 언어로 번역</string>
     <string name="translate_change_sub">%d개 언어 중 선택</string>
     <string name="translate_revert">원본 보기</string>
     <string name="translate_revert_sub">번역 없이 페이지 다시 로드</string>
-    <string name="translate_loading">⟳ 번역 중...</string>
+    <string name="translate_loading"> 번역 중...</string>
     <string name="translate_error">번역 시작 중 오류가 발생했습니다</string>
     <string name="translate_none">번역할 페이지가 없습니다</string>
     <string name="settings_title">설정</string>

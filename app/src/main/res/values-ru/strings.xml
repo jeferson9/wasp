@@ -46,13 +46,13 @@
     <string name="translate_subtitle">Тексты заменяются прямо на странице</string>
     <string name="translate_search_hint">Поиск языка...</string>
     <string name="translate_not_found">Язык не найден</string>
-    <string name="translate_done">Страница переведена ✓</string>
+    <string name="translate_done">Страница переведена </string>
     <string name="translate_done_to">Переведено на: %s</string>
     <string name="translate_change">Перевести на другой язык</string>
     <string name="translate_change_sub">Выбрать из %d языков</string>
     <string name="translate_revert">Показать оригинал</string>
     <string name="translate_revert_sub">Перезагрузить страницу без перевода</string>
-    <string name="translate_loading">⟳ Перевод...</string>
+    <string name="translate_loading"> Перевод...</string>
     <string name="translate_error">Ошибка запуска перевода</string>
     <string name="translate_none">Нет страницы для перевода</string>
     <string name="settings_title">Настройки</string>

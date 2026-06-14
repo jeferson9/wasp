@@ -46,13 +46,13 @@
     <string name="translate_subtitle">文本直接在页面内替换</string>
     <string name="translate_search_hint">搜索语言...</string>
     <string name="translate_not_found">未找到语言</string>
-    <string name="translate_done">页面已翻译 ✓</string>
+    <string name="translate_done">页面已翻译 </string>
     <string name="translate_done_to">已翻译为：%s</string>
     <string name="translate_change">翻译为其他语言</string>
     <string name="translate_change_sub">从 %d 种语言中选择</string>
     <string name="translate_revert">查看原文</string>
     <string name="translate_revert_sub">无翻译重新加载页面</string>
-    <string name="translate_loading">⟳ 翻译中...</string>
+    <string name="translate_loading"> 翻译中...</string>
     <string name="translate_error">启动翻译时出错</string>
     <string name="translate_none">没有要翻译的页面</string>
     <string name="settings_title">设置</string>

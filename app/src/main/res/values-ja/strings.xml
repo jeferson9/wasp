@@ -46,13 +46,13 @@
     <string name="translate_subtitle">テキストはページ内で直接置換されます</string>
     <string name="translate_search_hint">言語を検索...</string>
     <string name="translate_not_found">言語が見つかりません</string>
-    <string name="translate_done">ページを翻訳しました ✓</string>
+    <string name="translate_done">ページを翻訳しました </string>
     <string name="translate_done_to">翻訳先：%s</string>
     <string name="translate_change">別の言語に翻訳</string>
     <string name="translate_change_sub">%d言語から選択</string>
     <string name="translate_revert">原文を表示</string>
     <string name="translate_revert_sub">翻訳なしでページを再読み込み</string>
-    <string name="translate_loading">⟳ 翻訳中...</string>
+    <string name="translate_loading"> 翻訳中...</string>
     <string name="translate_error">翻訳の開始中にエラーが発生しました</string>
     <string name="translate_none">翻訳するページがありません</string>
     <string name="settings_title">設定</string>

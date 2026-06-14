@@ -46,13 +46,13 @@
     <string name="translate_subtitle">Textes remplacés directement dans la page</string>
     <string name="translate_search_hint">Rechercher une langue...</string>
     <string name="translate_not_found">Aucune langue trouvée</string>
-    <string name="translate_done">Page traduite ✓</string>
+    <string name="translate_done">Page traduite </string>
     <string name="translate_done_to">Traduite en : %s</string>
     <string name="translate_change">Traduire dans une autre langue</string>
     <string name="translate_change_sub">Choisir parmi %d langues</string>
     <string name="translate_revert">Voir l&apos;original</string>
     <string name="translate_revert_sub">Recharger la page sans traduction</string>
-    <string name="translate_loading">⟳ Traduction...</string>
+    <string name="translate_loading"> Traduction...</string>
     <string name="translate_error">Erreur au démarrage de la traduction</string>
     <string name="translate_none">Aucune page à traduire</string>
     <string name="settings_title">Paramètres</string>

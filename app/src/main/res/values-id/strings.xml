@@ -46,13 +46,13 @@
     <string name="translate_subtitle">Texts replaced directly on the page</string>
     <string name="translate_search_hint">Cari bahasa...</string>
     <string name="translate_not_found">Bahasa tidak ditemukan</string>
-    <string name="translate_done">Halaman diterjemahkan ✓</string>
+    <string name="translate_done">Halaman diterjemahkan </string>
     <string name="translate_done_to">Translated to: %s</string>
     <string name="translate_change">Translate to another language</string>
     <string name="translate_change_sub">Choose from %d languages</string>
     <string name="translate_revert">View original</string>
     <string name="translate_revert_sub">Reload page without translation</string>
-    <string name="translate_loading">⟳ Menerjemahkan...</string>
+    <string name="translate_loading"> Menerjemahkan...</string>
     <string name="translate_error">Error starting translation</string>
     <string name="translate_none">Tidak ada halaman untuk diterjemahkan</string>
     <string name="settings_title">Pengaturan</string>
