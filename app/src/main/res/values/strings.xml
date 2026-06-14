@@ -134,7 +134,7 @@
     <string name="nav_back">Назад</string>
     <string name="nav_home">Головна</string>
     <string name="nav_menu">Меню</string>
-    <string name="secure_connecting">Відкриття захищеного з\\'єднання...</string>
+    <string name="secure_connecting">Відкриття захищеного з&apos;єднання...</string>
     <string name="web3_coming_soon">Web3 у розробці</string>
     <string name="splash_tagline">Web3-браузер із Bee Engine</string>
     <string name="splash_footer">v1.0 • Powered by Wasp</string>
