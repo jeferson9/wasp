@@ -863,6 +863,10 @@ function openHiveTab(){
 
 function openBeePanel(){
     if(window.Android && Android.openBeePanel){
+        // Marca visualmente sem salvar — ao voltar do painel, restaura a tab anterior
+        document.querySelectorAll(".bottom-tab").forEach(tab => {
+            tab.classList.toggle("active", tab.dataset.mode === "browser");
+        });
         Android.openBeePanel();
     } else {
         openScreen("browser");
