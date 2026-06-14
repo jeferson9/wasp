@@ -105,7 +105,7 @@ class BeeBackgroundService : Service() {
         // Ignora epoch actions — o JS controla internamente
         if (intent?.action == ACTION_EPOCH_ENDED ||
             intent?.action == "com.waspbrowser.app.BEE_EPOCH_STARTED") {
-            Log.d(TAG, "Epoch event recebido — ignorado (JS controla o restart)")
+            Log.d(TAG, "Epoch event received — ignored (JS controls restart)")
             return START_STICKY
         }
 
@@ -126,7 +126,7 @@ class BeeBackgroundService : Service() {
     override fun onDestroy() {
         tickRunnable?.let { handler.removeCallbacks(it) }
         stopMining()
-        Log.d(TAG, "Service destruído")
+        Log.d(TAG, "Service destroyed")
         super.onDestroy()
     }
 

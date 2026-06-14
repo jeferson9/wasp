@@ -64,7 +64,7 @@ class BeeBridge(
     fun startBgMining(durationMs: Long, walletName: String) {
         try {
             if (durationMs <= 0L) {
-                Log.w("BeeBridge", "startBgMining: duração inválida $durationMs")
+                Log.w("BeeBridge", "startBgMining: invalid duration $durationMs")
                 return
             }
             val intent = BeeBackgroundService.buildStartIntent(context, walletName)

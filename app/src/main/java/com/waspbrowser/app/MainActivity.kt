@@ -1386,7 +1386,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
-                android.util.Log.d("PersistentBee", "Página carregada — Bee persistente pronta")
+                android.util.Log.d("PersistentBee", "Page loaded — persistent Bee ready")
                 BeeActivity.setPersistentWebView(wv)
             }
         }

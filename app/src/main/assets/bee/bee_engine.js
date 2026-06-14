@@ -504,7 +504,7 @@
       }
       if (btnOpenAgain) btnOpenAgain.classList.remove("hidden");
       if (btnReset)     btnReset.classList.remove("hidden");
-      setStatus("warn", "Aguardando confirmação", "Autorize na AN Wallet e toque em continuar");
+      setStatus("warn", "Waiting for confirmation", "Authorize on AN Wallet and tap continue");
       log("Confirme na AN Wallet e volte aqui", "lwrn");
 
     } catch (e) {
@@ -556,7 +556,7 @@
 
       // Libera o usuário imediatamente — propagação roda em background
       saved.authorized = true; saveSaved();
-      setStatus("on", "Bee autorizada ✅", "Wallet: " + saved.walletName);
+      setStatus("on", "Bee authorized ✅", "Wallet: " + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow2 = getWP();
@@ -567,7 +567,7 @@
       setStep(5); updateMetrics();
       log("Bee autorizada! Ligue a mineração.", "lok");
       log("⚠️ IMPORTANTE: Para receber rewards, ative o Mambaboard em Batteries ou Ludo (Telegram).", "lwrn");
-      toast("Bee Engine autorizada! ✅");
+      toast("Bee Engine authorized! ✅");
 
       // Propagação em background — não bloqueia o usuário
       // O SDK faz o poll internamente com max_attempts=60 e interval_ms=3000 (~3 min total)
@@ -599,7 +599,7 @@
     } catch (e) {
       var em2 = e && e.message ? e.message : String(e);
       log("Erro na confirmação: " + em2, "lerr");
-      setStatus("err", "Falha na confirmação", em2.substring(0,120));
+      setStatus("err", "Confirmation failed", em2.substring(0,120));
       if (btnSetup) {
         btnSetup.disabled = false;
         btnSetup.textContent = "Tentar verificar novamente";
@@ -691,7 +691,7 @@
       // Sem WP — bloqueia e avisa
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = false; }
       if (switchSub) switchSub.textContent = "Need " + WP_MINING_COST + " WP to mine";
-      setStatus("err", "WP insuficiente", "Ganhe " + WP_MINING_COST + " WP na Central WP para iniciar mineração");
+      setStatus("err", "Insufficient WP", "Earn " + WP_MINING_COST + " WP at WP Central to start mining");
       log("❌ WP insuficiente para iniciar mineração. Saldo: " + wp + " WP. Necessário: " + WP_MINING_COST + " WP", "lerr");
       updateWpDisplay();
       return;
@@ -712,7 +712,7 @@
     window._tapCount = 0;
     window._epochCount = (window._epochCount || 0) + 1;
     try {
-      setStatus("warn", "Conectando ao Miner...", "Inicializando sessão");
+      setStatus("warn", "Connecting to Miner...", "Initializing session");
 
       // Retry com backoff para error 410 (stale session)
       var minerCreated = false;
@@ -720,7 +720,7 @@
       for (var ri = 0; ri < retryDelays.length; ri++) {
         if (retryDelays[ri] > 0) {
           log("⏳ Aguardando " + (retryDelays[ri]/1000) + "s para sessão expirar... (" + (ri+1) + "/5)", "lwrn");
-          setStatus("warn", "Aguardando sessão expirar...", "Tentativa " + (ri+1) + " de 5");
+          setStatus("warn", "Waiting for session to expire...", "Attempt " + (ri+1) + " of 5");
           await sleep(retryDelays[ri]);
         }
         try {
@@ -750,7 +750,7 @@
       if (!canStart) {
         // Meio de epoch — aguarda próximo (até 6 min)
         log("⏳ Aguardando próximo epoch... can_start() vai virar true", "lwrn");
-        setStatus("warn", "Aguardando epoch...", "Próximo epoch em até 5.5 minutos");
+        setStatus("warn", "Waiting for epoch...", "Next epoch in up to 5.5 minutes");
         if (miningSwitch) miningSwitch.checked = true;
 
         var epochWait = 0;
@@ -773,7 +773,7 @@
               if (epochWait >= 360) {
                 clearInterval(epochCheck); window._epochCheckTimer = null;
                 log("❌ Epoch não iniciou em 6 minutos. Tente resetar.", "lerr");
-                setStatus("err", "Timeout de epoch", "Tente resetar a configuração");
+                setStatus("err", "Epoch timeout", "Try resetting the setup");
                 if (miningSwitch) miningSwitch.checked = false;
                 miner = null;
                 refundSessionWP("epoch não iniciou");
@@ -795,7 +795,7 @@
       if (isFetch) {
         // Nó instável — reembolsa WP e tenta novamente em 60s sem desistir
         log("⚠️ Nó instável (fetch error) — tentando novamente em 60s...", "lwrn");
-        setStatus("warn", "Nó instável — reconectando...", "Próxima tentativa em 60s");
+        setStatus("warn", "Unstable node — reconnecting...", "Next attempt in 60s");
         miner = null;
         refundSessionWP("nó instável");
         setTimeout(function() {
@@ -885,9 +885,9 @@
               log("❌ get_reward() falhou após 3 tentativas. Causas: chaves de mineração não propagadas, Mambaboard inativo, ou rede instável.", "lerr");
               if (!saved.propagated) {
                 log("⚠️ AÇÃO NECESSÁRIA: as chaves de mineração ainda não estão registradas na sua AN Wallet. Toque em \"Reautorizar chaves\" e confirme na wallet.", "lerr");
-                setStatus("err", "Reautorize na AN Wallet", "Chaves de mineração não propagadas — toque em Reautorizar");
+                setStatus("err", "Reauthorize on AN Wallet", "Mining keys not propagated — tap Reauthorize");
                 showReauthPrompt();
-                toast("Reautorize as chaves de mineração na AN Wallet");
+                toast("Reauthorize mining keys on AN Wallet");
               }
               try { claimMiner.stop(); } catch(_) {}
               claiming = false;
