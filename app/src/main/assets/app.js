@@ -1578,6 +1578,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Aplica traduções i18n
     if (window.applyHomeI18n) applyHomeI18n();
+    // Reaplica tema para traduzir Dark/Light com ht() já disponível
+    const _savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+    const _themeLabel = $("themeLabel");
+    if (_themeLabel && window.ht) {
+        _themeLabel.textContent = _savedTheme === "dark" ? ht("theme_dark") : ht("theme_light");
+    }
 
     // sticky search removido
 
