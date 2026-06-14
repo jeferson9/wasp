@@ -947,6 +947,13 @@
        RENDER ALL
     ══════════════════════════════════════════ */
     function renderAll() {
+      // Garante tradução dos elementos estáticos a cada render
+      document.querySelectorAll("[data-i18n]").forEach(function(node) {
+        var key = node.getAttribute("data-i18n");
+        var val = t(key);
+        if (node.innerHTML !== val) node.innerHTML = val;
+      });
+
       const wp    = getWP();
       const total = getTotal();
       const ld    = getLevelData();
