@@ -626,9 +626,11 @@
       } catch (e) { return "en"; }
     })();
     function bt(key) {
-      return (BEE_I18N[BEE_LANG] && BEE_I18N[BEE_LANG][key]) || BEE_I18N.en[key] || key;
+      var lang = window.BEE_LANG_OVERRIDE || BEE_LANG;
+      return (BEE_I18N[lang] && BEE_I18N[lang][key]) || BEE_I18N.en[key] || key;
     }
     function applyBeeI18n() {
+      var lang = window.BEE_LANG_OVERRIDE || BEE_LANG;
       document.querySelectorAll("[data-i18n]").forEach(function (node) {
         node.innerHTML = bt(node.getAttribute("data-i18n"));
       });

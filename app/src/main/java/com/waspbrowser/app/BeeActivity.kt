@@ -474,6 +474,12 @@ class BeeActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                // Injeta idioma e aplica i18n
+                val lang = java.util.Locale.getDefault().language.lowercase()
+                view?.evaluateJavascript(
+                    "(function(){ try { window.BEE_LANG_OVERRIDE='$lang'; if(window.applyBeeI18n) applyBeeI18n(); } catch(e){} })();",
+                    null
+                )
                 // Aplica tema
                 val theme = intent.getStringExtra("wasp_theme")
                     ?: getSharedPreferences("wasp_settings", android.content.Context.MODE_PRIVATE)

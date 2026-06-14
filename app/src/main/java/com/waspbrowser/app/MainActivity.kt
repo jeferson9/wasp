@@ -721,10 +721,14 @@ class MainActivity : AppCompatActivity() {
                 )
                 // Injeta idioma e aplica traduções
                 val lang = java.util.Locale.getDefault().language.lowercase()
-                view?.evaluateJavascript(
-                    "(function(){ try { window.HOME_LANG='$lang'; if(window.applyHomeI18n) applyHomeI18n(); } catch(e){} })();",
-                    null
-                )
+                view?.evaluateJavascript("""
+                    (function(){
+                        try {
+                            window.HOME_LANG = '$lang';
+                            if(window.applyHomeI18n) applyHomeI18n();
+                        } catch(e){}
+                    })();
+                """.trimIndent(), null)
             }
         }
         webAppView.webChromeClient = WebChromeClient()
