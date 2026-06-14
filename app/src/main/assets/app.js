@@ -379,7 +379,7 @@ function renderRecents(){
   const list = getRecents().slice(0, 7);
 
   if(list.length === 0){
-    container.innerHTML = `<div style="opacity:.6;padding:10px;">No recent sites yet…</div>`;
+    container.innerHTML = `<div style="opacity:.6;padding:10px;">${window.ht ? ht("no_recents") : "No recent sites yet…"}</div>`;
     return;
   }
 
@@ -901,7 +901,7 @@ window.clearRecents = function(){
 
     const list = $("recentList");
     if(list){
-      list.innerHTML = `<div style="opacity:.6;padding:10px;">No recent sites yet…</div>`;
+      list.innerHTML = `<div style="opacity:.6;padding:10px;">${window.ht ? ht("no_recents") : "No recent sites yet…"}</div>`;
     }
   } catch(e){
     console.error("Erro ao limpar recents", e);
