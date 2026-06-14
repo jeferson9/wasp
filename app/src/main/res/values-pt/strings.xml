@@ -82,4 +82,11 @@
     </string-array>
     <string name="menu_coming_soon">EM BREVE</string>
     <string name="menu_bee_sub_inactive">Mineração inativa</string>
+    <string name="splash_step0">Inicializando motor...</string>
+    <string name="splash_step1">Carregando engine Web3...</string>
+    <string name="splash_step2">Verificando segurança...</string>
+    <string name="splash_step3">Sincronizando Bee Engine...</string>
+    <string name="splash_step4">Otimizando desempenho...</string>
+    <string name="splash_step5">Pronto para navegar...</string>
+    <string name="splash_welcome">Bem-vindo ao Wasp 🐝</string>
 </resources>

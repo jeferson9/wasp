@@ -80,4 +80,11 @@
         <item>Bing</item>
         <item>DuckDuckGo</item>
     </string-array>
+    <string name="splash_step0">엔진 초기화 중...</string>
+    <string name="splash_step1">Web3 엔진 로딩 중...</string>
+    <string name="splash_step2">보안 확인 중...</string>
+    <string name="splash_step3">Bee Engine 동기화 중...</string>
+    <string name="splash_step4">성능 최적화 중...</string>
+    <string name="splash_step5">브라우징 준비 완료...</string>
+    <string name="splash_welcome">Wasp에 오신 것을 환영합니다 🐝</string>
 </resources>

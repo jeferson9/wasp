@@ -138,4 +138,11 @@
     <string name="web3_coming_soon">Web3 у розробці</string>
     <string name="splash_tagline">Web3-браузер із Bee Engine</string>
     <string name="splash_footer">v1.0 • Powered by Wasp</string>
+    <string name="splash_step0">Initializing engine...</string>
+    <string name="splash_step1">Loading Web3 engine...</string>
+    <string name="splash_step2">Checking security...</string>
+    <string name="splash_step3">Syncing Bee Engine...</string>
+    <string name="splash_step4">Optimizing performance...</string>
+    <string name="splash_step5">Ready to browse...</string>
+    <string name="splash_welcome">Welcome to Wasp 🐝</string>
 </resources>

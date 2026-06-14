@@ -80,4 +80,11 @@
         <item>Bing</item>
         <item>DuckDuckGo</item>
     </string-array>
+    <string name="splash_step0">エンジンを初期化中...</string>
+    <string name="splash_step1">Web3エンジンを読み込み中...</string>
+    <string name="splash_step2">セキュリティを確認中...</string>
+    <string name="splash_step3">Bee Engineを同期中...</string>
+    <string name="splash_step4">パフォーマンスを最適化中...</string>
+    <string name="splash_step5">ブラウジングの準備完了...</string>
+    <string name="splash_welcome">Waspへようこそ 🐝</string>
 </resources>

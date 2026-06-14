@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="splash_step0">تهيئة المحرك...</string>
+    <string name="splash_step1">تحميل محرك Web3...</string>
+    <string name="splash_step2">التحقق من الأمان...</string>
+    <string name="splash_step3">مزامنة Bee Engine...</string>
+    <string name="splash_step4">تحسين الأداء...</string>
+    <string name="splash_step5">جاهز للتصفح...</string>
+    <string name="splash_welcome">مرحباً بك في Wasp 🐝</string>
+</resources>
