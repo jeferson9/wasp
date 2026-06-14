@@ -87,8 +87,17 @@ class StartioAdActivity : AppCompatActivity() {
         })
 
         diag(getString(R.string.ad_loading_video))
+
+        // Timeout: se o ad não carregar em 15s, fecha a tela
+        val timeoutRunnable = Runnable {
+            diag(getString(R.string.ad_none_available))
+            handler.postDelayed({ safeFinish() }, 900)
+        }
+        handler.postDelayed(timeoutRunnable, 15_000)
+
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(p: Ad) {
+                handler.removeCallbacks(timeoutRunnable)
                 diag(getString(R.string.ad_starting_video))
                 // Sem delay artificial: exibimos assim que o video esta pronto.
                 ad.showAd(object : AdDisplayListener {
@@ -110,6 +119,7 @@ class StartioAdActivity : AppCompatActivity() {
             }
 
             override fun onFailedToReceiveAd(p: Ad?) {
+                handler.removeCallbacks(timeoutRunnable)
                 diag(getString(R.string.ad_none_available))
                 handler.postDelayed({ safeFinish() }, 900)
             }
