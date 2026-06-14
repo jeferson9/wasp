@@ -842,7 +842,12 @@
         node.innerHTML = t(node.getAttribute("data-i18n"));
       });
     }
-    document.addEventListener("DOMContentLoaded", applyI18n);
+    // Aplica imediatamente (script está após o HTML) e também no DOMContentLoaded
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", applyI18n);
+    } else {
+      applyI18n();
+    }
 
     /* ══════════════════════════════════════════
        STORAGE KEYS (mesmos do tap.js para compartilhar localStorage)
@@ -1350,6 +1355,7 @@
        INIT
     ══════════════════════════════════════════ */
     document.addEventListener("DOMContentLoaded", () => {
+      if (window.applyI18n) applyI18n();
       checkDaily();
       renderAll();
       // Atualiza cooldowns a cada segundo
