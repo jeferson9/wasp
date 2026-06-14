@@ -324,7 +324,7 @@ class MainActivity : AppCompatActivity() {
         setupTopBar()
         setupUrlInput()
         setupPersistentBee()
-        webAppView.loadUrl("file:///android_asset/index.html?lang=" + java.util.Locale.getDefault().language.lowercase())
+        webAppView.loadUrl("file:///android_asset/index.html")
         webAppView.post { webAppView.requestFocus(View.FOCUS_DOWN) }
 
         // Start with toolbar hidden - home has no toolbar
@@ -706,6 +706,12 @@ class MainActivity : AppCompatActivity() {
             setOnTouchListener { v, _ -> if (!v.hasFocus()) v.requestFocus(View.FOCUS_DOWN); false }
         }
         webAppView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                val lang = java.util.Locale.getDefault().language.lowercase()
+                view?.evaluateJavascript("window.WASP_LANG_CODE='$lang';", null)
+            }
+
             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 // Inject system bar heights so CSS var(--safe-top/--safe-bottom) work correctly

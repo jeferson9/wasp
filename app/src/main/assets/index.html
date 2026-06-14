@@ -509,8 +509,8 @@
           var l = WaspConfig.getLang().slice(0,2).toLowerCase();
           return HOME_I18N[l] ? l : "en";
         }
-        var p = new URLSearchParams(location.search).get("lang");
-        var code = (p || "en").slice(0,2).toLowerCase();
+        var p = window.WASP_LANG_CODE || new URLSearchParams(location.search).get("lang") || "en";
+        var code = p.slice(0,2).toLowerCase();
         return HOME_I18N[code] ? code : "en";
       } catch (e) { return "en"; }
     })();
