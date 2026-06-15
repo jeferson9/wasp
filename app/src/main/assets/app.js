@@ -1058,7 +1058,7 @@ function renderHive(){
 
     // ── 4. Lista completa em ordem alfabética (todos os sites + fixos) ─────────
     const alpha = [...list].sort((a,b) =>
-        a.name.localeCompare(b.name, "pt-BR", { sensitivity:"base" })
+        a.name.localeCompare(b.name, navigator.language || "en", { sensitivity:"base" })
     );
 
     // ── 5. Renderiza ──────────────────────────────────────────────────────────
@@ -1086,7 +1086,7 @@ function renderHive(){
     if(top.length > 0){
         const title = document.createElement("div");
         title.className = "hive-title";
-        title.textContent = "MAIS USADOS";
+        title.textContent = window.ht ? ht("hive_most_used") : "MOST USED";
         grid.appendChild(title);
         top.forEach(item => grid.appendChild(cell(item)));
 
