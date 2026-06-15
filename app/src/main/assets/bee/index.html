@@ -339,19 +339,19 @@
 </head>
 <body>
 
-<!-- ── MINI BAR (sempre visível — mantém painel aberto) ── -->
-<div id="beeMiniBar" style="
-    position:fixed; top:0; left:0; right:0; height:56px; z-index:100;
+<!-- ── HEADER FIXO ── -->
+<div id="bee-header" style="
+    position:fixed; top:0; left:0; right:0; height:56px;
     background:#0b0b0d; border-bottom:1px solid rgba(255,193,7,0.15);
     display:flex; align-items:center; padding:0 14px; gap:10px;
-    font-family:Arial,sans-serif;
+    z-index:1000; font-family:Arial,sans-serif;
 ">
     <!-- Ícone hex tech -->
     <svg width="22" height="22" viewBox="0 0 28 28" fill="none" style="flex-shrink:0">
         <path d="M14,2 L24.39,8 L24.39,20 L14,26 L3.61,20 L3.61,8 Z" fill="none" stroke="#ffc107" stroke-width="1.4"/>
-        <path d="M14,6.5 L20.5,10.25 L20.5,17.75 L14,21.5 L7.5,17.75 L7.5,10.25 Z" fill="#1affc107" stroke="#ffc10755" stroke-width="0.8"/>
-        <path d="M7.5,10.25 L3,7" stroke="#ffc10788" stroke-width="1.0" stroke-linecap="round"/>
-        <path d="M20.5,10.25 L25,7" stroke="#ffc10788" stroke-width="1.0" stroke-linecap="round"/>
+        <path d="M14,6.5 L20.5,10.25 L20.5,17.75 L14,21.5 L7.5,17.75 L7.5,10.25 Z" fill="rgba(255,193,7,0.08)" stroke="rgba(255,193,7,0.3)" stroke-width="0.8"/>
+        <path d="M7.5,10.25 L3,7" stroke="rgba(255,193,7,0.5)" stroke-width="1.0" stroke-linecap="round"/>
+        <path d="M20.5,10.25 L25,7" stroke="rgba(255,193,7,0.5)" stroke-width="1.0" stroke-linecap="round"/>
         <circle cx="3" cy="7" r="1.2" fill="#ffc107"/>
         <circle cx="25" cy="7" r="1.2" fill="#ffc107"/>
         <path d="M11.5,10 L11.5,18 M11.5,10 L15,10 Q17.5,10 17.5,12.5 Q17.5,14 15.5,14 M11.5,14 L15.5,14 Q18,14 18,16 Q18,18 15,18 L11.5,18" stroke="#ffc107" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -359,53 +359,21 @@
         <circle cx="14" cy="26" r="1" fill="#ffc107"/>
     </svg>
 
-    <!-- Info de mineração -->
+    <!-- Info -->
     <div style="flex:1; min-width:0;">
-        <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
-            <span id="miniDot" style="width:7px;height:7px;border-radius:50%;background:#555;flex-shrink:0;transition:background 0.5s;"></span>
-            <span id="miniWallet" style="font-size:12px;font-weight:700;color:#c8d0e0;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Bee Engine</span>
-            <span id="miniStatus" style="font-size:10px;color:#555;margin-left:2px;white-space:nowrap;"></span>
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <div id="hdr-dot" style="width:7px;height:7px;border-radius:50%;background:#444;flex-shrink:0;transition:background 0.5s;"></div>
+            <div id="hdr-wallet" style="font-size:12px;font-weight:700;color:#c8d0e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">—</div>
+            <div id="hdr-status" style="font-size:10px;color:#555;white-space:nowrap;" data-i18n="bee_engine_hdr">· Bee Engine</div>
         </div>
-        <!-- Barra de progresso epoch -->
+        <!-- Progress bar suave -->
         <div style="height:3px;background:rgba(255,193,7,0.12);border-radius:2px;overflow:hidden;">
-            <div id="miniProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#ffc107,#ff9800);border-radius:2px;transition:width 1s linear;"></div>
+            <div id="hdr-epoch-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#ffc107,#ff9800);border-radius:2px;transition:width 1s linear;"></div>
         </div>
     </div>
 
-    <!-- Epoch counter -->
-    <div id="miniEpoch" style="font-size:10px;color:#ffc107;font-weight:700;letter-spacing:0.5px;flex-shrink:0;opacity:0.7;"></div>
-</div>
-
-<!-- PiP MODE OVERLAY -->
-<div id="pipOverlay">
-    <div class="pip-status-dot" id="pipDot"></div>
-    <div class="pip-label">WASP · MINING</div>
-    <div class="pip-divider"></div>
-    <div class="pip-value" id="pipCounter">──────</div>
-    <div class="pip-epoch" id="pipEpoch">EPOCH ···</div>
-    <div class="pip-prog-wrap">
-        <div class="pip-prog-fill" id="pipProgFill"></div>
-    </div>
-</div>
-
-<!-- ── HEADER FIXO ── -->
-<div id="bee-header" style="
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    background: rgba(11,11,13,0.95);
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    padding: 7px 14px;
-    z-index: 1000;
-">
-    <div style="display:flex;align-items:center;gap:8px;">
-        <div id="hdr-dot" style="width:5px;height:5px;border-radius:50%;background:#444;flex-shrink:0;"></div>
-        <div id="hdr-wallet" style="font-size:11px;font-weight:600;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">—</div>
-        <div id="hdr-status" style="font-size:10px;color:#444;white-space:nowrap;" data-i18n="bee_engine_hdr">· Bee Engine</div>
-        <div style="display:flex;align-items:center;gap:3px;flex:1;margin-left:4px;">
-            <div id="hdr-epoch-bar" style="display:flex;gap:1px;flex:1;"></div>
-            <div id="hdr-epoch-label" style="font-size:9px;font-weight:600;color:#888;flex-shrink:0;white-space:nowrap;margin-left:4px;">—</div>
-        </div>
-    </div>
+    <!-- Epoch -->
+    <div id="hdr-epoch-label" style="font-size:10px;color:#ffc107;font-weight:700;letter-spacing:0.5px;flex-shrink:0;opacity:0.7;"></div>
 </div>
 
 <!-- ── BOTÃO CENTRAL WP ── -->
@@ -790,66 +758,15 @@ initSDK();
 <script>
 // Atualiza o header fixo com estado de mineracao
 (function() {
-    var SQUARES = 20;
-
-    function initBar() {
-        var bar = document.getElementById('hdr-epoch-bar');
-        if (!bar || bar.children.length === SQUARES) return;
-        bar.innerHTML = '';
-        for (var i = 0; i < SQUARES; i++) {
-            var sq = document.createElement('div');
-            sq.style.cssText = 'width:' + (100/SQUARES - 0.5) + '%;height:6px;border-radius:2px;background:#222;transition:background 0.3s;flex-shrink:0;';
-            sq.id = 'sq-' + i;
-            bar.appendChild(sq);
-        }
-    }
-
-    function updateMiniBar(state) {
-        try {
-            var dot = document.getElementById('miniDot');
-            var wallet = document.getElementById('miniWallet');
-            var status = document.getElementById('miniStatus');
-            var progress = document.getElementById('miniProgress');
-            var epoch = document.getElementById('miniEpoch');
-            if (!dot || !wallet) return;
-
-            var mining = state && state.mining;
-            var w = (state && state.wallet) ? state.wallet : 'Bee Engine';
-            var taps = (state && state.tapCount) ? state.tapCount : 0;
-            var total = (state && state.tapTotal) ? state.tapTotal : 100;
-            var ep = (state && state.epochCount) ? state.epochCount : 0;
-
-            wallet.textContent = w;
-            if (mining) {
-                dot.style.background = '#31c46d';
-                dot.style.boxShadow = '0 0 6px #31c46d';
-                status.textContent = '· Acki Nacki';
-                status.style.color = '#31c46d';
-                progress.style.width = Math.round((taps / total) * 100) + '%';
-            } else {
-                dot.style.background = '#444';
-                dot.style.boxShadow = 'none';
-                status.textContent = '· idle';
-                status.style.color = '#333';
-                progress.style.width = '0%';
-            }
-            if (epoch.textContent !== (ep > 0 ? 'Epoch ' + ep : '')) {
-                epoch.textContent = ep > 0 ? 'Epoch ' + ep : '';
-            }
-        } catch(e) {}
-    }
-
     function updateHeader() {
         try {
             var state = window.getMiningState ? window.getMiningState() : null;
-            updateMiniBar(state);
             var hdrStatus = document.getElementById('hdr-status');
             var hdrWallet = document.getElementById('hdr-wallet');
             var hdrDot    = document.getElementById('hdr-dot');
             var hdrLabel  = document.getElementById('hdr-epoch-label');
-            if (!hdrStatus || !hdrWallet) return;
-
-            initBar();
+            var hdrBar    = document.getElementById('hdr-epoch-bar');
+            if (!hdrWallet) return;
 
             var mining = state && state.mining;
             var wallet = (state && state.wallet) ? state.wallet : '—';
@@ -860,26 +777,15 @@ initSDK();
             hdrWallet.textContent = wallet;
 
             if (mining) {
-                hdrStatus.style.color = '#31c46d';
-                hdrStatus.textContent = '· Acki Nacki';
-                hdrDot.style.background = '#31c46d';
-                hdrDot.style.boxShadow = 'none';
+                if (hdrStatus) { hdrStatus.style.color = '#31c46d'; hdrStatus.textContent = '· Acki Nacki'; }
+                if (hdrDot)    { hdrDot.style.background = '#31c46d'; hdrDot.style.boxShadow = '0 0 6px #31c46d'; }
+                if (hdrBar)    hdrBar.style.width = Math.min(100, Math.round((taps / total) * 100)) + '%';
             } else {
-                hdrStatus.style.color = '#444';
-                hdrStatus.textContent = '· Bee Engine';
-                hdrDot.style.background = '#333';
-                hdrDot.style.boxShadow = 'none';
+                if (hdrStatus) { hdrStatus.style.color = '#555'; hdrStatus.textContent = '· Bee Engine'; }
+                if (hdrDot)    { hdrDot.style.background = '#444'; hdrDot.style.boxShadow = 'none'; }
+                if (hdrBar)    hdrBar.style.width = '0%';
             }
-
-            if (hdrLabel) hdrLabel.textContent = epoch > 0 ? 'Epoch ' + epoch : '—';
-
-            // Progress bar — usa tapCount direto do engine (ja zerou no startMining)
-            var filled = mining ? Math.min(SQUARES, Math.round((taps / total) * SQUARES)) : 0;
-            for (var i = 0; i < SQUARES; i++) {
-                var sq = document.getElementById('sq-' + i);
-                if (!sq) continue;
-                sq.style.background = i < filled ? '#ffc107' : '#222';
-            }
+            if (hdrLabel) hdrLabel.textContent = epoch > 0 ? 'Epoch ' + epoch : '';
         } catch(e) {}
     }
 
