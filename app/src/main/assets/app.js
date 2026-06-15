@@ -1169,7 +1169,8 @@ function openRemoveDialog(id){
     if(!item) return;
     hiveRemoveTarget = item;
     const txt = document.querySelector("#removeDialog .remove-text");
-    if(txt) txt.textContent = 'Remover "' + (item.name || "este site") + '" do Hive?';
+    const siteName = item.name || "this site";
+    if(txt) txt.innerHTML = (window.ht ? ht("remove_dialog") : "Remove this site from Hive?") + '<br><small style="opacity:0.6">' + siteName + '</small>';
     const dialog = $("removeDialog");
     if(dialog) dialog.style.display = "flex";
 }
