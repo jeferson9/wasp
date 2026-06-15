@@ -1313,9 +1313,6 @@ class MainActivity : AppCompatActivity() {
                 if (window._miniBarInterval) { clearInterval(window._miniBarInterval); window._miniBarInterval = null; }
                 var overlay = document.getElementById('wasp-tap-overlay');
                 if (overlay) overlay.style.display = 'none';
-                // Esconder mini-barra quando painel expande
-                var mb = document.getElementById('beeMiniBar');
-                if (mb) mb.style.display = 'none';
                 document.body.style.overflow = '';
                 document.documentElement.style.overflow = '';
                 window.scrollTo(0, 0);
@@ -1351,9 +1348,6 @@ class MainActivity : AppCompatActivity() {
                     document.body.appendChild(overlay);
                 }
                 overlay.style.display = 'block';
-                // Mostrar mini-barra
-                var mb = document.getElementById('beeMiniBar');
-                if (mb) mb.style.display = 'flex';
                 window.scrollTo(0, 0);
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
