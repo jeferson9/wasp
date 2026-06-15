@@ -119,4 +119,8 @@
     <string name="ad_cant_show">Nie można wyświetlić reklamy</string>
     <string name="ad_none_available">Brak dostępnych reklam</string>
     <string name="ad_wait_reward" formatted="false">Poczekaj - otrzymasz %d WP za obejrzenie</string>
+    <string name="hive_manager_title">Zarządzaj Hive</string>
+    <string name="hive_no_sites" formatted="false">Brak zapisanych stron</string>
+    <string name="hive_tap_remove" formatted="false">%d strona(y) · dotknij aby usunąć</string>
+    <string name="hive_remove_btn" formatted="false">Usuń</string>
 </resources>

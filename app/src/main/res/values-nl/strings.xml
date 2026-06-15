@@ -119,4 +119,8 @@
     <string name="ad_cant_show">Kan advertentie niet weergeven</string>
     <string name="ad_none_available">Geen advertentie beschikbaar</string>
     <string name="ad_wait_reward" formatted="false">Wacht - u ontvangt %d WP voor het kijken</string>
+    <string name="hive_manager_title">Hive beheren</string>
+    <string name="hive_no_sites" formatted="false">Geen opgeslagen sites</string>
+    <string name="hive_tap_remove" formatted="false">%d site(s) · tik om te verwijderen</string>
+    <string name="hive_remove_btn" formatted="false">Verwijderen</string>
 </resources>

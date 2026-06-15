@@ -119,4 +119,8 @@
     <string name="ad_cant_show">Anzeige konnte nicht angezeigt werden</string>
     <string name="ad_none_available">Keine Anzeige verfügbar</string>
     <string name="ad_wait_reward" formatted="false">Warten - Sie erhalten %d WP fürs Anschauen</string>
+    <string name="hive_manager_title">Hive verwalten</string>
+    <string name="hive_no_sites" formatted="false">Keine Sites gespeichert</string>
+    <string name="hive_tap_remove" formatted="false">%d Site(s) · zum Entfernen tippen</string>
+    <string name="hive_remove_btn" formatted="false">Entfernen</string>
 </resources>

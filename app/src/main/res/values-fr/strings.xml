@@ -119,4 +119,8 @@
     <string name="ad_cant_show">Impossible d afficher la pub</string>
     <string name="ad_none_available">Aucune pub disponible</string>
     <string name="ad_wait_reward" formatted="false">Attendez - vous recevrez %d WP pour avoir regardé</string>
+    <string name="hive_manager_title">Gérer le Hive</string>
+    <string name="hive_no_sites" formatted="false">Aucun site sauvegardé</string>
+    <string name="hive_tap_remove" formatted="false">%d site(s) · appuyer pour supprimer</string>
+    <string name="hive_remove_btn" formatted="false">Supprimer</string>
 </resources>

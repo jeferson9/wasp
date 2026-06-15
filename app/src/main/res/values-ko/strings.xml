@@ -119,4 +119,8 @@
     <string name="ad_cant_show">광고를 표시할 수 없습니다</string>
     <string name="ad_none_available">사용 가능한 광고 없음</string>
     <string name="ad_wait_reward" formatted="false">잠시 기다려주세요 - 시청 시 %d WP를 받습니다</string>
+    <string name="hive_manager_title">Hive 관리</string>
+    <string name="hive_no_sites" formatted="false">저장된 사이트 없음</string>
+    <string name="hive_tap_remove" formatted="false">%d 사이트 · 탭하여 제거</string>
+    <string name="hive_remove_btn" formatted="false">제거</string>
 </resources>

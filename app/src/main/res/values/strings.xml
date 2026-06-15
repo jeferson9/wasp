@@ -145,4 +145,8 @@
     <string name="splash_step4">Optimizing performance...</string>
     <string name="splash_step5">Ready to browse...</string>
     <string name="splash_welcome">Welcome to Wasp</string>
+    <string name="hive_manager_title">Manage Hive</string>
+    <string name="hive_no_sites" formatted="false">No saved sites</string>
+    <string name="hive_tap_remove" formatted="false">%d site(s) · tap to remove</string>
+    <string name="hive_remove_btn" formatted="false">Remove</string>
 </resources>

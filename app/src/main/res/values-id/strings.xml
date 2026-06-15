@@ -119,4 +119,8 @@
     <string name="ad_cant_show">Tidak dapat menampilkan iklan</string>
     <string name="ad_none_available">Tidak ada iklan tersedia</string>
     <string name="ad_wait_reward" formatted="false">Tunggu - Anda akan mendapatkan %d WP untuk menonton</string>
+    <string name="hive_manager_title">Kelola Hive</string>
+    <string name="hive_no_sites" formatted="false">Tidak ada situs tersimpan</string>
+    <string name="hive_tap_remove" formatted="false">%d situs · ketuk untuk hapus</string>
+    <string name="hive_remove_btn" formatted="false">Hapus</string>
 </resources>

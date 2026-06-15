@@ -81,14 +81,14 @@ class HiveManagerActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             addView(TextView(this@HiveManagerActivity).apply {
-                text = "Gerenciar Hive"
+                text = getString(R.string.hive_manager_title)
                 textSize = 19f
                 setTextColor(Color.WHITE)
                 typeface = Typeface.DEFAULT_BOLD
             })
             addView(TextView(this@HiveManagerActivity).apply {
-                text = if (sites.isEmpty()) "Nenhum site salvo"
-                       else "${sites.size} site(s) • toque em remover"
+                text = if (sites.isEmpty()) getString(R.string.hive_no_sites)
+                       else getString(R.string.hive_tap_remove, sites.size)
                 textSize = 12f
                 setTextColor(WASP_TEXT_DIM)
                 setPadding(0, dp(2), 0, 0)
@@ -171,7 +171,7 @@ class HiveManagerActivity : AppCompatActivity() {
                 })
                 // Botão remover (lixeira) — pílula vermelha discreta
                 card.addView(TextView(this).apply {
-                    text = "🗑  Remover"
+                    text = "🗑  ${getString(R.string.hive_remove_btn)}"
                     textSize = 12.5f
                     setTextColor(WASP_RED)
                     gravity = Gravity.CENTER

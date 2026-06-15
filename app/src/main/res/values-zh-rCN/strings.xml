@@ -119,4 +119,8 @@
     <string name="ad_cant_show">无法显示广告</string>
     <string name="ad_none_available">暂无广告</string>
     <string name="ad_wait_reward" formatted="false">请稍候 - 观看后您将获得%d WP</string>
+    <string name="hive_manager_title">管理Hive</string>
+    <string name="hive_no_sites" formatted="false">没有保存的网站</string>
+    <string name="hive_tap_remove" formatted="false">%d 个网站 · 点击删除</string>
+    <string name="hive_remove_btn" formatted="false">删除</string>
 </resources>

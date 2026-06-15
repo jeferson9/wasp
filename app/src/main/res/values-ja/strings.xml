@@ -119,4 +119,8 @@
     <string name="ad_cant_show">広告を表示できませんでした</string>
     <string name="ad_none_available">広告がありません</string>
     <string name="ad_wait_reward" formatted="false">お待ちください - 視聴で%d WPを獲得します</string>
+    <string name="hive_manager_title">Hive管理</string>
+    <string name="hive_no_sites" formatted="false">保存済みサイトなし</string>
+    <string name="hive_tap_remove" formatted="false">%d サイト · タップして削除</string>
+    <string name="hive_remove_btn" formatted="false">削除</string>
 </resources>

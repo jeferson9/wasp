@@ -121,4 +121,8 @@
     <string name="ad_cant_show">Não foi possível mostrar o anúncio</string>
     <string name="ad_none_available">Nenhum anúncio disponível</string>
     <string name="ad_wait_reward" formatted="false">Aguarde - você receberá %d WP por assistir</string>
+    <string name="hive_manager_title">Gerenciar Hive</string>
+    <string name="hive_no_sites" formatted="false">Nenhum site salvo</string>
+    <string name="hive_tap_remove" formatted="false">%d site(s) · toque para remover</string>
+    <string name="hive_remove_btn" formatted="false">Remover</string>
 </resources>

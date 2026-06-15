@@ -119,4 +119,8 @@
     <string name="ad_cant_show">विज्ञापन दिखाया नहीं जा सका</string>
     <string name="ad_none_available">कोई विज्ञापन उपलब्ध नहीं</string>
     <string name="ad_wait_reward" formatted="false">प्रतीक्षा करें - देखने पर आपको %d WP मिलेंगे</string>
+    <string name="hive_manager_title">Hive प्रबंधित करें</string>
+    <string name="hive_no_sites" formatted="false">कोई सहेजी साइट नहीं</string>
+    <string name="hive_tap_remove" formatted="false">%d साइट · हटाने के लिए टैप करें</string>
+    <string name="hive_remove_btn" formatted="false">हटाएं</string>
 </resources>

@@ -160,4 +160,8 @@
     <string name="dl_empty">Немає завантажень</string>
     <string name="dl_open">Відкрити</string>
     <string name="dl_size_unknown">Невідомий розмір</string>
+    <string name="hive_manager_title">Керувати Hive</string>
+    <string name="hive_no_sites" formatted="false">Немає збережених сайтів</string>
+    <string name="hive_tap_remove" formatted="false">%d сайт(ів) · торкніться для видалення</string>
+    <string name="hive_remove_btn" formatted="false">Видалити</string>
 </resources>

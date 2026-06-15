@@ -119,4 +119,8 @@
     <string name="ad_cant_show">Не удалось показать рекламу</string>
     <string name="ad_none_available">Реклама недоступна</string>
     <string name="ad_wait_reward" formatted="false">Подождите - вы получите %d WP за просмотр</string>
+    <string name="hive_manager_title">Управление Hive</string>
+    <string name="hive_no_sites" formatted="false">Нет сохранённых сайтов</string>
+    <string name="hive_tap_remove" formatted="false">%d сайт(ов) · нажмите для удаления</string>
+    <string name="hive_remove_btn" formatted="false">Удалить</string>
 </resources>
