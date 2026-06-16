@@ -1156,33 +1156,8 @@ function bindHiveDialogButtons(){
     // Aqui só garantimos o fechamento ao tocar no fundo escuro.
     if(_hiveDialogsBound) return;
     _hiveDialogsBound = true;
-    const rd = $("removeDialog");
-    if(rd) rd.addEventListener("click", function(e){ if(e.target === rd) closeRemoveDialog(); });
     const ad = $("addDialog");
     if(ad) ad.addEventListener("click", function(e){ if(e.target === ad) closeAddDialog(); });
-}
-
-function openRemoveDialog(id){
-    // Painel e Config são acesso essencial — não podem ser removidos
-    if(id === "__panel__" || id === "__config__") return;
-    const item = hiveFindItemById(id);
-    if(!item) return;
-    hiveRemoveTarget = item;
-    const txt = document.querySelector("#removeDialog .remove-text");
-    const siteName = item.name || "this site";
-    if(txt) txt.innerHTML = (window.ht ? ht("remove_dialog") : "Remove this site from Hive?") + '<br><small style="opacity:0.6">' + siteName + '</small>';
-    const dialog = $("removeDialog");
-    if(dialog) dialog.style.display = "flex";
-}
-
-function closeRemoveDialog(){
-    const dialog = $("removeDialog");
-    if(dialog){
-        dialog.style.display = "none";
-        dialog.style.pointerEvents = "";
-    }
-    if(hiveRemoveDiv){ hiveRemoveDiv.style.opacity = ""; hiveRemoveDiv = null; }
-    hiveRemoveTarget = null;
 }
 
 function openAddDialog(){
@@ -1204,7 +1179,7 @@ function confirmAddSite(){
     const urlInput  = $("addUrl");
     const name = nameInput ? nameInput.value.trim() : "";
     let url = urlInput ? urlInput.value.trim() : "";
-    if(!name || !url){ if(typeof toast==="function") toast("Preencha nome e URL"); else alert("Preencha nome e URL"); return; }
+    if(!name || !url){ if(typeof toast==="function") toast("Enter name and URL"); else alert("Enter name and URL"); return; }
     if(!url.startsWith("http://") && !url.startsWith("https://")) url = "https://" + url;
 
     let list = loadHive();
@@ -1215,17 +1190,6 @@ function confirmAddSite(){
     });
     saveHive(list);
     closeAddDialog();
-    renderHive();
-}
-
-function confirmRemove(){
-    if(!hiveRemoveTarget){ closeRemoveDialog(); return; }
-    const target = hiveRemoveTarget;
-    if(target.pinned){ closeRemoveDialog(); return; } // proteção extra
-    let list = loadHive();
-    list = list.filter(i => i.id !== target.id);
-    saveHive(list);
-    closeRemoveDialog();
     renderHive();
 }
 
@@ -1291,14 +1255,12 @@ document.addEventListener("click", (e) => {
 // Único handler de pointerdown — engine menu, suggestions, hive
 document.addEventListener("pointerdown", function(e){
     const addDialog     = $("addDialog");
-    const removeDialog  = $("removeDialog");
     const clearCacheDialog = $("clearCacheDialog");
     const settingsPanel = $("settingsPanel");
     const bottomNav     = document.querySelector(".bottom-nav");
 
     // Não fechar nada se estiver em dialog/settings/nav
     if(addDialog     && addDialog.contains(e.target))     return;
-    if(removeDialog  && removeDialog.contains(e.target))  return;
     if(clearCacheDialog && clearCacheDialog.contains(e.target)) return;
     if(bottomNav     && bottomNav.contains(e.target))     return;
     if(settingsPanel && settingsPanel.classList.contains("active") && settingsPanel.contains(e.target)) return;
@@ -1336,8 +1298,8 @@ document.addEventListener("pointerdown", function(e){
 
 // Swipe para fechar o Hive (só fecha, nunca abre por gesto)
 function _hiveDialogOpen(){
-    const rd = $("removeDialog"), ad = $("addDialog");
-    return (rd && rd.style.display === "flex") || (ad && ad.style.display === "flex");
+    const ad = $("addDialog");
+    return (ad && ad.style.display === "flex");
 }
 document.addEventListener("touchstart", function(e){
     const panel = $("hivePanel");
