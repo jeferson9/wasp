@@ -424,7 +424,7 @@
       });
       // ✅ Confirmada — só a partir daqui o get_reward() será chamado com segurança
       saved.propagated = true; saveSaved();
-      log("✅ Propagation confirmed", "lok");
+      log(window.bt?bt("log_propagation_ok"):"✅ Propagation confirmed", "lok");
       var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
     } catch(e) {
       var em = e && e.message ? e.message.substring(0, 80) : String(e);
@@ -692,7 +692,7 @@
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = false; }
       if (switchSub) switchSub.textContent = "Need " + WP_MINING_COST + " WP to mine";
       setStatus("err", "Insufficient WP", "Earn " + WP_MINING_COST + " WP at WP Central to start mining");
-      log("❌ Insufficient WP to start mining. Balance: " + wp + " WP. Required: " + WP_MINING_COST + " WP", "lerr");
+      log((window.bt?bt("log_insufficient_wp"):"❌ Insufficient WP.") + " Balance: " + wp + " / Required: " + WP_MINING_COST, "lerr");
       updateWpDisplay();
       return;
     }
@@ -766,7 +766,7 @@
             if (cs) {
               clearInterval(epochCheck); window._epochCheckTimer = null;
               miner = tmpMiner;
-              log("✅ New epoch! Starting mining...", "lok");
+              log(window.bt?bt("log_new_epoch"):"✅ New epoch! Starting mining...", "lok");
               doStartMiner();
             } else {
               try { tmpMiner.stop(); } catch(_) {}
@@ -794,7 +794,7 @@
       var isFetch = em.indexOf("205") !== -1 || em.indexOf("Failed to fetch") !== -1 || em.indexOf("fetch") !== -1;
       if (isFetch) {
         // Nó instável — reembolsa WP e tenta novamente em 60s sem desistir
-        log("⚠️ Unstable node (fetch error) — retrying in 60s...", "lwrn");
+        log(window.bt?bt("log_unstable_node"):"⚠️ Unstable node — retrying in 60s...", "lwrn");
         setStatus("warn", "Unstable node — reconnecting...", "Next attempt in 60s");
         miner = null;
         refundSessionWP("unstable node");
@@ -845,7 +845,7 @@
       window._epochTimer = null;
       if (epochDone) return;
       epochDone = true;
-      log("⏱️ 5-minute epoch completed — starting reward claim...", "lwrn");
+      log(window.bt?bt("log_reward_start"):"⏱️ Epoch completed — claiming reward...", "lwrn");
       handleEpochEnd("timeout");
     }, MINING_DURATION_MS + 3000); // +3s de margem após a sessão terminar
 
@@ -882,9 +882,9 @@
               log("🔄 Tentando novamente em " + (delay/1000) + "s...", "lwrn");
               setTimeout(function() { doGetReward(attempt + 1); }, delay);
             } else {
-              log("❌ get_reward() failed after 3 attempts. Causes: mining keys not propagated, Mambaboard inactive, or unstable network.", "lerr");
+              log(window.bt?bt("log_reward_fail"):"❌ Reward claim failed after 3 attempts.", "lerr");
               if (!saved.propagated) {
-                log("⚠️ ACTION REQUIRED: mining keys are not yet registered in your AN Wallet. Tap \"Reauthorize keys\" and confirm in wallet.", "lerr");
+                log(window.bt?bt("log_reauth_needed"):"⚠️ Keys not registered — tap Reauthorize.", "lerr");
                 setStatus("err", "Reauthorize on AN Wallet", "Mining keys not propagated — tap Reauthorize");
                 showReauthPrompt();
                 toast("Reauthorize mining keys on AN Wallet");
@@ -943,7 +943,7 @@
       // Slashing period: aguardar ~16s antes do claim
       setTimeout(function() {
         if (!claimMiner) {
-          log("⚠️ Miner instance lost — reward could not be collected", "lerr");
+          log(window.bt?bt("log_miner_lost"):"⚠️ Miner instance lost.", "lerr");
           scheduleRestart();
           return;
         }
@@ -1007,7 +1007,7 @@
     if (switchSub)  switchSub.textContent = "Mining NACKL ⚡";
     setStatus("on", "Mining NACKL ⚡", (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
     updateMetrics();
-    log("✅ Mining started — epoch active", "lok");
+    log(window.bt?bt("log_mining_started"):"✅ Mining started — epoch active", "lok");
     toast("NACKL Mining started! ⚡");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────
@@ -1071,7 +1071,7 @@
     setStatus("on", (window.bt?bt("bee_ready"):"Bee ready"), (window.bt?bt("mining_paused"):"Mining paused"));
     notifyMiningStatus();
     updateMetrics();
-    log("Mining paused.", "lwrn");
+    log(window.bt?bt("log_mining_paused"):"Mining paused.", "lwrn");
   }
 
   // ─── TAP ─────────────────────────────────────────────────────────────────
