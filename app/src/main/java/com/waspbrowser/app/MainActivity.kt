@@ -475,7 +475,7 @@ class MainActivity : AppCompatActivity() {
                 """.trimIndent(), null)
             }
         } else {
-            // Voltou do PiP — restaura UI e mantém painel aberto
+            // Voltou do PiP — restaura UI
             webAppView.visibility = android.view.View.VISIBLE
             topBar.visibility = android.view.View.GONE
             // Restaura altura do container
@@ -486,7 +486,13 @@ class MainActivity : AppCompatActivity() {
                 params.height = dp56
                 it.layoutParams = params
             }
-            openBeePanel()
+            // Só abre painel se não há uma página aberta no browser
+            if (geckoView.visibility == android.view.View.VISIBLE) {
+                // Estava no browser — não abre painel, colapsa apenas
+                collapseBeePanel()
+            } else {
+                openBeePanel()
+            }
             persistentBeeView?.post {
                 persistentBeeView?.evaluateJavascript("""
                     (function(){
