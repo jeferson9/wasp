@@ -385,14 +385,18 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         // Não pausa timers em modo PiP — mineração deve continuar
+        // Não pausa no onPause pois afeta SDK de anúncios — pausamos no onStop
         if (!isInPictureInPictureMode) {
             webAppView.onPause()
-            webAppView.pauseTimers()
         }
     }
 
     override fun onStop() {
         super.onStop()
+        // Pausa timers só quando app vai para background completamente
+        if (!isInPictureInPictureMode) {
+            webAppView.pauseTimers()
+        }
     }
 
     override fun onUserLeaveHint() {
