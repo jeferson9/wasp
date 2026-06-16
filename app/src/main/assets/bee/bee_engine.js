@@ -164,12 +164,12 @@
     try {
       var r = localStorage.getItem(KEY_STATE);
       if (r) Object.assign(saved, JSON.parse(r));
-    } catch (e) { log("Falha ao ler estado: " + e.message, "lwrn"); }
+    } catch (e) { log((window.bt?bt("log_read_state_fail"):"Failed to read state: ") + e.message, "lwrn"); }
   }
 
   function saveSaved() {
     try { localStorage.setItem(KEY_STATE, JSON.stringify(saved)); }
-    catch (e) { log("Falha ao salvar estado: " + e.message, "lwrn"); }
+    catch (e) { log((window.bt?bt("log_save_state_fail"):"Failed to save state: ") + e.message, "lwrn"); }
   }
 
   function clearSaved() {
@@ -189,12 +189,12 @@
 
   function openDeepLink(url) {
     if (!url) { log("ERRO: deep link vazio", "lerr"); return; }
-    log("Abrindo AN Wallet...", "linf");
+    log(window.bt?bt("log_opening_wallet"):"Opening AN Wallet...", "linf");
     try {
       if (window.AndroidBee && window.AndroidBee.openDeepLink)    { window.AndroidBee.openDeepLink(url); return; }
       if (window.AndroidBee && window.AndroidBee.openExternalUrl) { window.AndroidBee.openExternalUrl(url); return; }
       window.location.href = url;
-    } catch (e) { log("Falha ao abrir wallet: " + e.message, "lerr"); }
+    } catch (e) { log((window.bt?bt("log_wallet_fail"):"Failed to open wallet: ") + e.message, "lerr"); }
   }
 
   // Notifica MainActivity para atualizar o indicador de mining na toolbar
@@ -388,7 +388,7 @@
         if (mambaEl && !mambaDismissed) mambaEl.classList.remove("hidden");
       } catch(_) {}
       if (!saved.propagated) {
-        log("Propagation pending — trying to confirm in background...", "lwrn");
+        log(window.bt?bt("log_prop_pending"):"Propagation pending...", "lwrn");
         setTimeout(tryPropagateBackground, 3000);
       }
 // Auto-start removido — usuario deve ligar manualmente
@@ -411,7 +411,7 @@
   async function tryPropagateBackground() {
     if (saved.propagated || !saved.minerAddress || !saved.publicKey) return;
     _propagateAttempts++;
-    log("🔍 Checking propagation in background... (attempt " + _propagateAttempts + "/" + _propagateMaxAttempts + ")", "linf");
+    log((window.bt?bt("log_prop_checking"):"🔍 Checking propagation (attempt ") + _propagateAttempts + "/" + _propagateMaxAttempts + ")", "linf");
 
     try {
       await window.BeeSDK.ensure_mining_keys_propagated({
@@ -433,7 +433,7 @@
         log("🔁 Retrying in " + (_propagateRetryMs/1000) + "s...", "linf");
         setTimeout(tryPropagateBackground, _propagateRetryMs);
       } else {
-        log("⚠️ Propagation not confirmed after " + _propagateMaxAttempts + " attempts — mining may fail on claim.", "lwrn");
+        log(window.bt?bt("log_prop_not_confirmed"):"⚠️ Propagation not confirmed — mining may fail.", "lwrn");
       }
     }
   }
@@ -462,7 +462,7 @@
     try {
       setStep(2);
       setStatus("warn", "Generating keys...", "Creating mining identity");
-      log("Calling gen_mining_keys...", "linf");
+      log(window.bt?bt("log_gen_keys"):"Generating mining keys...", "linf");
 
       // FIX: walletName precisa ser definido ANTES de gen_mining_keys.
       // Antes, gen_mining_keys recebia saved.walletName ainda vazio na 1ª
@@ -480,7 +480,7 @@
       saved.secretKey  = result.secret;
       saveSaved();
 
-      log("Keys generated ✅ pub=" + result.public.substring(0,20)+"...", "lok");
+      log((window.bt?bt("log_keys_generated"):"Keys generated ✅") + " pub=" + result.public.substring(0,20)+"...", "lok");
 
       // Construir deep link manualmente — formato /set-mining-keys
       // (o result.deep_link do SDK usa path legado /wallet/connect)
@@ -505,11 +505,11 @@
       if (btnOpenAgain) btnOpenAgain.classList.remove("hidden");
       if (btnReset)     btnReset.classList.remove("hidden");
       setStatus("warn", "Waiting for confirmation", "Authorize on AN Wallet and tap continue");
-      log("Confirme na AN Wallet e volte aqui", "lwrn");
+      log(window.bt?bt("log_confirm_wallet"):"Confirm on AN Wallet and return here", "lwrn");
 
     } catch (e) {
       var em = e && e.message ? e.message : String(e);
-      log("Erro no setup: " + em, "lerr");
+      log((window.bt?bt("log_setup_error"):"Setup error: ") + em, "lerr");
       setStatus("err", "Erro no setup", em.substring(0,100));
       if (btnSetup) {
         btnSetup.disabled = false;
@@ -536,14 +536,14 @@
       var minerAddr = null;
       for (var i = 1; i <= 20; i++) {
         try {
-          log("Buscando miner address " + i + "/20...", "linf");
+          log((window.bt?bt("log_fetching_miner"):"Fetching miner address ") + i + "/20...", "linf");
           minerAddr = await window.BeeSDK.get_miner_address_by_wallet_name({
             client_config: { network: { endpoints: ENDPOINTS } },
             wallet_name: saved.walletName
           });
           if (minerAddr) break;
         } catch (e) {
-          log("Tentativa " + i + " falhou: " + (e.message||String(e)), "lwrn");
+          log((window.bt?bt("log_attempt_failed"):"Attempt ") + i + " failed: " + (e.message||String(e)), "lwrn");
           if (i < 20) await sleep(3000); else throw e;
         }
       }
@@ -565,8 +565,8 @@
         : "Need " + WP_MINING_COST + " WP to start (you have " + _wpNow2 + ")";
       updateWpDisplay();
       setStep(5); updateMetrics();
-      log("Bee authorized! Turn on mining.", "lok");
-      log("⚠️ IMPORTANT: To receive rewards, activate Mambaboard in Batteries or Ludo (Telegram).", "lwrn");
+      log(window.bt?bt("log_bee_authorized"):"Bee authorized! Turn on mining.", "lok");
+      log(window.bt?bt("log_mambaboard_warning"):"⚠️ Activate Mambaboard to receive rewards.", "lwrn");
       toast("Bee Engine authorized! ✅");
 
       // Propagação em background — não bloqueia o usuário
@@ -626,7 +626,7 @@
       hist.unshift("[" + new Date().toLocaleString("en-US") + "] -" + WP_MINING_COST + " WP • Refund (" + (reason || "session aborted") + ")");
       localStorage.setItem(KEY_WP_HISTORY, JSON.stringify(hist.slice(0, 100)));
     } catch(_) {}
-    log("↩️ " + WP_MINING_COST + " WP refunded (" + (reason || "session aborted") + "). Balance: " + getWP() + " WP", "lwrn");
+    log((window.bt?bt("log_wp_refunded"):"↩️ WP refunded. Balance: ") + getWP() + " WP (" + (reason||"aborted") + ")", "lwrn");
     updateWpDisplay();
   }
 
@@ -637,7 +637,7 @@
     //    abortar silenciosamente (isso perdia a epoch). Reagenda e tenta
     //    de novo quando o claim terminar.
     if (claiming) {
-      log("⏳ Previous reward claim in progress — rescheduling start in 10s...", "lwrn");
+      log(window.bt?bt("log_claim_in_progress"):"⏳ Previous reward claim in progress...", "lwrn");
       setTimeout(function() {
         if (miningSwitch && miningSwitch.checked) startMining();
       }, 10000);
@@ -651,11 +651,11 @@
     //    não caía — só caía ao desligar/religar (quando já havia propagado).
     if (!saved.propagated && saved.minerAddress && saved.publicKey) {
       if (_awaitingPropagation) {
-        log("⏳ Already waiting for key propagation — please wait...", "linf");
+        log(window.bt?bt("log_waiting_propagation"):"⏳ Waiting for key propagation...", "linf");
         return;
       }
       _awaitingPropagation = true;
-      log("🔑 First mining: confirming key registration on network before starting...", "lwrn");
+      log(window.bt?bt("log_first_mining"):"🔑 First mining: confirming key registration...", "lwrn");
       setStatus("warn", "Registering keys...", "Waiting for network confirmation (may take ~1 min)");
       if (switchSub) switchSub.textContent = "Registering keys on network...";
       if (miningSwitch) miningSwitch.checked = true; // mantém intenção do usuário
@@ -669,7 +669,7 @@
           interval_ms: 2000
         });
         saved.propagated = true; saveSaved();
-        log("✅ Keys confirmed on network! Starting mining — reward for this epoch will arrive.", "lok");
+        log(window.bt?bt("log_keys_confirmed"):"✅ Keys confirmed! Reward will arrive.", "lok");
         var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
       } catch (e) {
         log("⚠️ Propagation not confirmed after ~2 min. Starting anyway; if reward does not arrive, tap Reauthorize keys.", "lwrn");
@@ -705,7 +705,7 @@
       return;
     }
     _wpDebited = true;
-    log("✅ " + WP_MINING_COST + " WP deducted. Remaining balance: " + getWP() + " WP", "lok");
+    log((window.bt?bt("log_wp_deducted"):"✅ WP deducted. Remaining: ") + getWP() + " WP", "lok");
     updateWpDisplay();
 
     // Reseta taps e incrementa epoch a cada novo inicio
@@ -719,7 +719,7 @@
       var retryDelays = [0, 15000, 20000, 25000, 30000];
       for (var ri = 0; ri < retryDelays.length; ri++) {
         if (retryDelays[ri] > 0) {
-          log("⏳ Waiting " + (retryDelays[ri]/1000) + "s for session to expire... (" + (ri+1) + "/5)", "lwrn");
+          log((window.bt?bt("log_waiting_session"):"⏳ Waiting for session to expire... (") + (ri+1) + "/5) " + (retryDelays[ri]/1000) + "s", "lwrn");
           setStatus("warn", "Waiting for session to expire...", "Attempt " + (ri+1) + " of 5");
           await sleep(retryDelays[ri]);
         }
@@ -728,7 +728,7 @@
             ENDPOINTS, APP_ID, saved.minerAddress, saved.publicKey, saved.secretKey
           );
           minerCreated = true;
-          log("Miner created ✅ (attempt " + (ri+1) + ")", "lok");
+          log((window.bt?bt("log_miner_created"):"Miner created ✅ (attempt ") + (ri+1) + ")", "lok");
           break;
         } catch(retryErr) {
           var retryMsg = retryErr && retryErr.message ? retryErr.message : String(retryErr);
@@ -772,7 +772,7 @@
               try { tmpMiner.stop(); } catch(_) {}
               if (epochWait >= 360) {
                 clearInterval(epochCheck); window._epochCheckTimer = null;
-                log("❌ Epoch did not start in 6 minutes. Try resetting.", "lerr");
+                log(window.bt?bt("log_epoch_timeout"):"❌ Epoch did not start. Try resetting.", "lerr");
                 setStatus("err", "Epoch timeout", "Try resetting the setup");
                 if (miningSwitch) miningSwitch.checked = false;
                 miner = null;
@@ -1044,7 +1044,7 @@
         log("⚠️ Sync error: " + e.message, "lwrn");
       }
     }, AUTO_TAP_INTERVAL);
-    log("◈ Mining protocol active", "linf");
+    log(window.bt?bt("log_mining_protocol"):"◈ Mining protocol active", "linf");
   }
 
   // ─── STOP ────────────────────────────────────────────────────────────────
