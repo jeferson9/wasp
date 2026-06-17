@@ -427,7 +427,6 @@
       // ✅ Confirmada — só a partir daqui o get_reward() será chamado com segurança
       saved.propagated = true; saveSaved();
       log(window.bt?bt("log_propagation_ok"):"✅ Propagation confirmed", "lok");
-      if(window.waiSpeak) waiSpeak("wai_prop_ok");
       var dp = byId("dPropagated"); if (dp) dp.textContent = window.bt?bt("sw_confirmed"):"✅ Confirmed";
     } catch(e) {
       var em = e && e.message ? e.message.substring(0, 80) : String(e);
@@ -576,7 +575,6 @@
       // O SDK faz o poll internamente com max_attempts=60 e interval_ms=3000 (~3 min total)
       if (!saved.propagated) {
         log(window.bt?bt("log_confirm_prop_reward"):"🔄 Confirming propagation before get_reward()...", "linf");
-      if(window.waiSpeak) waiSpeak("wai_prop_checking");
         window.BeeSDK.ensure_mining_keys_propagated({
           client_config: { network: { endpoints: ENDPOINTS } },
           miner_address: minerAddr,
@@ -771,8 +769,6 @@
               clearInterval(epochCheck); window._epochCheckTimer = null;
               miner = tmpMiner;
               log(window.bt?bt("log_new_epoch"):"✅ New epoch! Starting mining...", "lok");
-      if(window.waiSpeak) waiSpeak("wai_epoch_start");
-      if(window._waiActive && window._waiStartPickaxe) _waiStartPickaxe();
               doStartMiner();
             } else {
               try { tmpMiner.stop(); } catch(_) {}
@@ -801,7 +797,6 @@
       if (isFetch) {
         // Nó instável — reembolsa WP e tenta novamente em 60s sem desistir
         log(window.bt?bt("log_unstable_node"):"⚠️ Unstable node — retrying in 60s...", "lwrn");
-      if(window.waiSpeak) waiSpeak("wai_unstable");
         setStatus("warn", "Unstable node — reconnecting...", "Next attempt in 60s");
         miner = null;
         refundSessionWP("unstable node");
@@ -853,7 +848,6 @@
       if (epochDone) return;
       epochDone = true;
       log(window.bt?bt("log_reward_start"):"⏱️ Epoch completed — claiming reward...", "lwrn");
-      if(window.waiSpeak) waiSpeak("wai_reward_start");
       handleEpochEnd("timeout");
     }, MINING_DURATION_MS + 3000); // +3s de margem após a sessão terminar
 
@@ -891,10 +885,8 @@
               setTimeout(function() { doGetReward(attempt + 1); }, delay);
             } else {
               log(window.bt?bt("log_reward_fail"):"❌ Reward claim failed after 3 attempts.", "lerr");
-      if(window.waiSpeak) waiSpeak("wai_reward_fail");
               if (!saved.propagated) {
                 log(window.bt?bt("log_reauth_needed"):"⚠️ Keys not registered — tap Reauthorize.", "lerr");
-      if(window.waiSpeak) waiSpeak("wai_reauth_needed");
                 setStatus("err", "Reauthorize on AN Wallet", "Mining keys not propagated — tap Reauthorize");
                 showReauthPrompt();
                 toast("Reauthorize mining keys on AN Wallet");
@@ -954,7 +946,6 @@
       setTimeout(function() {
         if (!claimMiner) {
           log(window.bt?bt("log_miner_lost"):"⚠️ Miner instance lost.", "lerr");
-      if(window.waiSpeak) waiSpeak("wai_miner_lost");
           scheduleRestart();
           return;
         }
@@ -965,7 +956,6 @@
           return;
         }
         log(window.bt?bt("log_calling_reward"):"💰 Calling get_reward() on mining instance...", "linf");
-      if(window.waiSpeak) waiSpeak("wai_reward_sending");
         // Garante que a WebView está ativa (importante para PiP)
         if (window.AndroidBee && window.AndroidBee.resumeForClaim) {
           window.AndroidBee.resumeForClaim();
@@ -1020,19 +1010,15 @@
     setStatus("on", "Mining NACKL ⚡", (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
     updateMetrics();
     log(window.bt?bt("log_mining_started"):"✅ Mining started — epoch active", "lok");
-      if(window.waiSpeak) { waiSpeak("wai_epoch_start"); }
-      if(window._waiActive && window._waiStartPickaxe) _waiStartPickaxe();
     toast("NACKL Mining started! ⚡");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────
-    // 70 taps por epoch de 5 min = 1 tap a cada ~4.3s
-    // Nos últimos 30s verifica quantos foram aceitos e completa os faltantes
+    // 100 taps por epoch de 5 min = 1 tap a cada 3s
+    // Para imediatamente quando mining=false (stop ou fim de epoch)
     if (window._autoTapTimer) clearInterval(window._autoTapTimer);
-    if (window._autoTapTopup) clearTimeout(window._autoTapTopup);
     var autoTapCount = 0;
-    var tapAccepted  = 0; // taps confirmados pela rede
-    var AUTO_TAP_TOTAL = 70;
-    var AUTO_TAP_INTERVAL = Math.floor((MINING_DURATION_MS - 35000) / AUTO_TAP_TOTAL); // ~4000ms, deixa 35s para top-up
+    var AUTO_TAP_TOTAL = 100;
+    var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3000ms
     window._autoTapTimer = setInterval(async function() {
       if (!mining || !miner) {
         clearInterval(window._autoTapTimer);
@@ -1050,41 +1036,16 @@
           Math.floor(Math.random() * 300 + 50)
         );
         autoTapCount++;
-        tapAccepted++;
         window._tapCount = (window._tapCount || 0) + 1;
         if (autoTapCount % 10 === 0) {
           log("◈ Syncing with network... " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
-          if (window.waiSpeak) waiSpeak("wai_taps_progress", {n: autoTapCount});
         }
+        // Animar botão TAP visualmente
         if (window._tapBtnAnim) window._tapBtnAnim();
       } catch(e) {
         log("⚠️ Sync error: " + e.message, "lwrn");
       }
     }, AUTO_TAP_INTERVAL);
-
-    // Top-up: 30s antes do fim da epoch, completar taps faltantes rapidamente
-    window._autoTapTopup = setTimeout(async function() {
-      if (!mining || !miner) return;
-      var missing = AUTO_TAP_TOTAL - tapAccepted;
-      if (missing <= 0) return;
-      log("◈ Completing " + missing + " missing taps before epoch ends...", "linf");
-      if (window.waiSpeak) waiSpeak("wai_topup", {n: missing});
-      for (var i = 0; i < missing && mining && miner; i++) {
-        try {
-          await miner.add_tap(
-            Math.floor(Math.random() * 300 + 50),
-            Math.floor(Math.random() * 300 + 50)
-          );
-          tapAccepted++;
-          window._tapCount = (window._tapCount || 0) + 1;
-          if (window._tapBtnAnim) window._tapBtnAnim();
-          await new Promise(function(r){ setTimeout(r, 400); });
-        } catch(e) {
-          log("⚠️ Top-up tap failed: " + e.message, "lwrn");
-        }
-      }
-      log("◈ Top-up complete. Total accepted: " + tapAccepted + "/" + AUTO_TAP_TOTAL, "linf");
-    }, MINING_DURATION_MS - 33000);
     log(window.bt?bt("log_mining_protocol"):"◈ Mining protocol active", "linf");
   }
 
@@ -1105,7 +1066,6 @@
     }
     if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
     if (window._autoTapTimer)  { clearInterval(window._autoTapTimer);  window._autoTapTimer  = null; }
-    if (window._autoTapTopup)  { clearTimeout(window._autoTapTopup);   window._autoTapTopup  = null; }
     try { if (miner) miner.stop(); } catch(_) {}
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
@@ -1114,19 +1074,10 @@
     notifyMiningStatus();
     updateMetrics();
     log(window.bt?bt("log_mining_paused"):"Mining paused.", "lwrn");
-      if(window._waiStopPickaxe) _waiStopPickaxe();
-      if(window.waiSpeak) waiSpeak("wai_paused");
   }
 
   // ─── TAP ─────────────────────────────────────────────────────────────────
   async function sendTap() {
-    window._waiTapCount = (window._waiTapCount || 0) + 1;
-    if (window._waiActive && window._waiTapCount % 10 === 0) {
-        if (window.waiSpeak) waiSpeak("wai_taps_progress", {n: window._waiTapCount});
-    }
-    // Anima a picareta
-    var el = document.getElementById("tapPickaxe");
-    if (el && window._waiActive) { el.style.transform="rotate(-20deg)"; setTimeout(function(){if(el)el.style.transform="";},150); }
     if (!mining || !miner) return;
     try {
       await miner.add_tap(
