@@ -574,7 +574,7 @@
       // Propagação em background — não bloqueia o usuário
       // O SDK faz o poll internamente com max_attempts=60 e interval_ms=3000 (~3 min total)
       if (!saved.propagated) {
-        log("🔄 Confirming propagation in background (no need to wait)...", "linf");
+        log(window.bt?bt("log_confirm_prop_reward"):"🔄 Confirming propagation before get_reward()...", "linf");
         window.BeeSDK.ensure_mining_keys_propagated({
           client_config: { network: { endpoints: ENDPOINTS } },
           miner_address: minerAddr,
@@ -674,7 +674,7 @@
         log(window.bt?bt("log_keys_confirmed"):"✅ Keys confirmed! Reward will arrive.", "lok");
         var dp = byId("dPropagated"); if (dp) dp.textContent = window.bt?bt("sw_confirmed"):"✅ Confirmed";
       } catch (e) {
-        log("⚠️ Propagation not confirmed after ~2 min. Starting anyway; if reward does not arrive, tap Reauthorize keys.", "lwrn");
+        log(window.bt?bt("log_prop_not_confirmed_start"):"⚠️ Propagation not confirmed after ~2 min. Starting anyway.", "lwrn");
         showReauthPrompt();
       }
       _awaitingPropagation = false;
@@ -764,7 +764,7 @@
               ENDPOINTS, APP_ID, saved.minerAddress, saved.publicKey, saved.secretKey
             );
             var cs = tmpMiner.can_start();
-            log("Aguardando epoch... " + epochWait + "s | can_start()=" + cs, "linf");
+            log((window.bt?bt("log_waiting_epoch"):"⏳ Waiting for epoch... ") + epochWait + "s | can_start()=" + cs, "linf");
             if (cs) {
               clearInterval(epochCheck); window._epochCheckTimer = null;
               miner = tmpMiner;
@@ -860,7 +860,7 @@
 
         function doGetReward(attempt) {
           attempt = attempt || 1;
-          log("💰 Chamando get_reward()... (tentativa " + attempt + "/3)", "linf");
+          log((window.bt?bt("log_reward_attempt"):"💰 Calling get_reward()... (attempt ") + attempt + "/3)", "linf");
           claimMiner.get_reward().then(function() {
             log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
             log("💎 Verifique sua AN Wallet — saldo NACKL atualizado em breve.", "lok");
@@ -878,10 +878,10 @@
             resolve();
           }).catch(function(e) {
             var errMsg = e && e.message ? e.message.substring(0,120) : String(e);
-            log("❌ get_reward() falhou (tentativa " + attempt + "): " + errMsg, "lerr");
+            log((window.bt?bt("log_reward_attempt_fail"):"❌ get_reward() failed (attempt ") + attempt + "): " + errMsg, "lerr");
             if (attempt < 3) {
               var delay = attempt * 10000; // 10s, 20s
-              log("🔄 Tentando novamente em " + (delay/1000) + "s...", "lwrn");
+              log((window.bt?bt("log_retrying_in"):"🔄 Retrying in ") + (delay/1000) + "s...", "lwrn");
               setTimeout(function() { doGetReward(attempt + 1); }, delay);
             } else {
               log(window.bt?bt("log_reward_fail"):"❌ Reward claim failed after 3 attempts.", "lerr");
@@ -908,7 +908,7 @@
         // Não propagado: tenta propagar rapidamente antes do claim.
         // Após reconexão/limpeza de dados a propagação demora mais, então
         // usamos mais tentativas para dar tempo da rede registrar as chaves.
-        log("🔄 Confirming propagation before get_reward()...", "linf");
+        log(window.bt?bt("log_confirm_prop_reward"):"🔄 Confirming propagation before get_reward()...", "linf");
         window.BeeSDK.ensure_mining_keys_propagated({
           client_config: { network: { endpoints: ENDPOINTS } },
           miner_address: saved.minerAddress,
@@ -920,7 +920,7 @@
           saved.propagated = true; saveSaved();
           log("✅ Propagacao confirmada — chamando get_reward()...", "lok");
         }).catch(function(e) {
-          log("⚠️ Propagacao falhou — tentando get_reward() mesmo assim...", "lwrn");
+          log(window.bt?bt("log_prop_failed_anyway"):"⚠️ Propagation failed — attempting get_reward() anyway...", "lwrn");
         }).finally(function() {
           doGetReward();
         });
@@ -955,7 +955,7 @@
           scheduleRestart();
           return;
         }
-        log("💰 Calling get_reward() on the mining instance...", "linf");
+        log(window.bt?bt("log_calling_reward"):"💰 Calling get_reward() on mining instance...", "linf");
         // Garante que a WebView está ativa (importante para PiP)
         if (window.AndroidBee && window.AndroidBee.resumeForClaim) {
           window.AndroidBee.resumeForClaim();
