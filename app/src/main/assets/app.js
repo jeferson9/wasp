@@ -1045,10 +1045,12 @@ function renderHive(){
         localStorage.setItem("waspHiveSeeded", "1");
     }
 
+    const _settingsName = (window.ht ? ht("settings") : null) || document.querySelector(".settings-title")?.textContent || "Settings";
+    const _beeName     = (window.ht ? ht("bee_engine_label") : null) || "Bee Engine";
     // ── 2. Atalhos fixos do sistema (Painel e Config) ─────────────────────────
     const PINNED = [
-        { id:"__panel__",  name: window.ht ? ht("bee_engine_label") : "Bee Engine", pinned:true, icon:"file:///android_asset/img/ic_panel_hive.svg" },
-        { id:"__config__", name: window.ht ? ht("settings_title") : "Settings", pinned:true, icon:"file:///android_asset/img/ic_settings_hive.svg" },
+        { id:"__panel__",  name: _beeName,     pinned:true, icon:"file:///android_asset/img/ic_panel_hive.svg" },
+        { id:"__config__", name: _settingsName, pinned:true, icon:"file:///android_asset/img/ic_settings_hive.svg" },
     ];
 
     // ── 3. "Mais usados": top 4 por uso/recência (atalhos fixos não contam) ────
