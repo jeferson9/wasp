@@ -1047,8 +1047,8 @@ function renderHive(){
 
     // ── 2. Atalhos fixos do sistema (Painel e Config) ─────────────────────────
     const PINNED = [
-        { id:"__panel__",  name:"Bee Engine", pinned:true, icon:"file:///android_asset/img/ic_panel_hive.svg" },
-        { id:"__config__", name:"Config", pinned:true, icon:"file:///android_asset/img/ic_settings_hive.svg" },
+        { id:"__panel__",  name: window.ht ? ht("bee_engine_label") : "Bee Engine", pinned:true, icon:"file:///android_asset/img/ic_panel_hive.svg" },
+        { id:"__config__", name: window.ht ? ht("settings_title") : "Settings", pinned:true, icon:"file:///android_asset/img/ic_settings_hive.svg" },
     ];
 
     // ── 3. "Mais usados": top 4 por uso/recência (atalhos fixos não contam) ────
@@ -1099,9 +1099,11 @@ function renderHive(){
         grid.appendChild(divider);
     }
 
-    // Lista completa (todos os sites em ordem alfabética) + atalhos fixos no fim
-    alpha.forEach(item => grid.appendChild(cell(item)));
-    PINNED.forEach(item => grid.appendChild(cell(item)));
+    // Lista completa em ordem alfabética — PINNED misturado com os sites
+    const allItems = [...alpha, ...PINNED].sort((a,b) =>
+        a.name.localeCompare(b.name, navigator.language || "en", { sensitivity:"base" })
+    );
+    allItems.forEach(item => grid.appendChild(cell(item)));
 
 
     // Trata fallback de favicon que não carrega
