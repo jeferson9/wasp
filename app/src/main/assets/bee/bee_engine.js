@@ -40,11 +40,11 @@
     if (btn) {
       var wp = getWP();
       if (wp >= WP_MINING_COST) {
-        btn.textContent = "Minerar (1 WP/min)";
+        btn.textContent = window.bt?bt("sw_mine"):"Mine (1 WP/min)";
         btn.disabled = false;
         btn.classList.remove("btn-disabled");
       } else {
-        btn.textContent = "Precisa de " + WP_MINING_COST + " WP para iniciar";
+        btn.textContent = (window.bt?bt("sw_need_wp"):"Need {n} WP to start").replace("{n}",WP_MINING_COST);
         btn.disabled = true;
         btn.classList.add("btn-disabled");
       }
@@ -144,7 +144,7 @@
   }
 
   function updateMetrics() {
-    if (mEngine) mEngine.textContent = mining ? "Running ⚡" : (wasmReady ? "Ready" : "Starting...");
+    if (mEngine) mEngine.textContent = mining ? (window.bt?bt("sw_mining"):"Mining NACKL ⚡") : (wasmReady ? "Ready" : (window.bt?bt("loading_sdk"):"Starting..."));
     // "Ciclos" agora reflete épocas com reward efetivamente pago (métrica real),
     // não eventos de rede. Resolve a confusão entre o painel e o que cai na wallet.
     if (mCycles) mCycles.textContent = String(getEpochsPaid());
@@ -376,8 +376,8 @@
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow = getWP();
       if (switchSub) switchSub.textContent = _wpNow >= WP_MINING_COST
-        ? "Turn on to mine — 1 WP/min (" + WP_MINING_COST + " WP per session)"
-        : "Need " + WP_MINING_COST + " WP to start (you have " + _wpNow + ")";
+        ? (window.bt?bt("sw_turn_on"):"Turn on to mine") + " — 1 WP/min (" + WP_MINING_COST + " WP per session)"
+        : (window.bt?bt("sw_need_wp"):"Need {n} WP to start").replace("{n}", WP_MINING_COST) + " (" + _wpNow + " WP)";
       updateWpDisplay();
       setStep(5);
       log("Session restored: " + saved.walletName, "lok");
@@ -425,7 +425,7 @@
       // ✅ Confirmada — só a partir daqui o get_reward() será chamado com segurança
       saved.propagated = true; saveSaved();
       log(window.bt?bt("log_propagation_ok"):"✅ Propagation confirmed", "lok");
-      var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
+      var dp = byId("dPropagated"); if (dp) dp.textContent = window.bt?bt("sw_confirmed"):"✅ Confirmed";
     } catch(e) {
       var em = e && e.message ? e.message.substring(0, 80) : String(e);
       log("⏳ Propagation pending: " + em, "linf");
@@ -456,7 +456,7 @@
     setupRunning = true;
     if (btnSetup) {
       btnSetup.disabled = true;
-      btnSetup.innerHTML = '<span class="spinner"></span>Generating keys...';
+      btnSetup.innerHTML = '<span class="spinner"></span>' + (window.bt?bt('log_gen_keys'):'Generating keys...');
     }
 
     try {
@@ -499,7 +499,7 @@
 
       if (btnSetup) {
         btnSetup.disabled = false;
-        btnSetup.textContent = "✅ Already authorized — continue";
+        btnSetup.textContent = window.bt?bt("sw_authorized"):"✅ Already authorized — continue";
         btnSetup.onclick = confirmAuthorization;
       }
       if (btnOpenAgain) btnOpenAgain.classList.remove("hidden");
@@ -513,7 +513,7 @@
       setStatus("err", "Erro no setup", em.substring(0,100));
       if (btnSetup) {
         btnSetup.disabled = false;
-        btnSetup.textContent = "Try again";
+        btnSetup.textContent = window.bt?bt("sw_try_again"):"Try again";
         btnSetup.onclick = runSetup;
       }
     }
@@ -527,7 +527,7 @@
 
     if (btnSetup) {
       btnSetup.disabled = true;
-      btnSetup.innerHTML = '<span class="spinner"></span>Confirmando...';
+      btnSetup.innerHTML = '<span class="spinner"></span>' + (window.bt?bt('please_wait'):'Please wait...');
     }
     setStep(4);
     setStatus("warn", "Confirmando...", "Buscando miner address na blockchain");
@@ -561,8 +561,8 @@
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow2 = getWP();
       if (switchSub) switchSub.textContent = _wpNow2 >= WP_MINING_COST
-        ? "Turn on to mine — 1 WP/min (" + WP_MINING_COST + " WP per session)"
-        : "Need " + WP_MINING_COST + " WP to start (you have " + _wpNow2 + ")";
+        ? (window.bt?bt("sw_turn_on"):"Turn on to mine") + " — 1 WP/min (" + WP_MINING_COST + " WP per session)"
+        : (window.bt?bt("sw_need_wp"):"Need {n} WP to start").replace("{n}", WP_MINING_COST) + " (" + _wpNow2 + " WP)";
       updateWpDisplay();
       setStep(5); updateMetrics();
       log(window.bt?bt("log_bee_authorized"):"Bee authorized! Turn on mining.", "lok");
@@ -583,7 +583,7 @@
         }).then(function() {
           saved.propagated = true; saveSaved();
           log("✅ Propagation confirmed in background!", "lok");
-          var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
+          var dp = byId("dPropagated"); if (dp) dp.textContent = window.bt?bt("sw_confirmed"):"✅ Confirmed";
         }).catch(function(e) {
           log("Background propagation: " + (e&&e.message?e.message.substring(0,80):String(e)), "lwrn");
           log("Mining works anyway — propagation confirms automatically.", "linf");
@@ -602,7 +602,7 @@
       setStatus("err", "Confirmation failed", em2.substring(0,120));
       if (btnSetup) {
         btnSetup.disabled = false;
-        btnSetup.textContent = "Tentar verificar novamente";
+        btnSetup.textContent = window.bt?bt("sw_verify_again"):"Try to verify again";
         btnSetup.onclick = confirmAuthorization;
       }
     }
@@ -657,7 +657,7 @@
       _awaitingPropagation = true;
       log(window.bt?bt("log_first_mining"):"🔑 First mining: confirming key registration...", "lwrn");
       setStatus("warn", "Registering keys...", "Waiting for network confirmation (may take ~1 min)");
-      if (switchSub) switchSub.textContent = "Registering keys on network...";
+      if (switchSub) switchSub.textContent = window.bt?bt("sw_registering"):"Registering keys on network...";
       if (miningSwitch) miningSwitch.checked = true; // mantém intenção do usuário
       try {
         await window.BeeSDK.ensure_mining_keys_propagated({
@@ -670,7 +670,7 @@
         });
         saved.propagated = true; saveSaved();
         log(window.bt?bt("log_keys_confirmed"):"✅ Keys confirmed! Reward will arrive.", "lok");
-        var dp = byId("dPropagated"); if (dp) dp.textContent = "✅ Confirmed";
+        var dp = byId("dPropagated"); if (dp) dp.textContent = window.bt?bt("sw_confirmed"):"✅ Confirmed";
       } catch (e) {
         log("⚠️ Propagation not confirmed after ~2 min. Starting anyway; if reward does not arrive, tap Reauthorize keys.", "lwrn");
         showReauthPrompt();
@@ -679,7 +679,7 @@
       // Se o usuário desligou enquanto aguardava, não inicia.
       if (miningSwitch && !miningSwitch.checked) {
         setStatus("on", (window.bt?bt("bee_ready"):"Bee ready"), (window.bt?bt("mining_paused"):"Mining paused"));
-        if (switchSub) switchSub.textContent = "Turn on to mine";
+        if (switchSub) switchSub.textContent = window.bt?bt("sw_turn_on"):"Turn on to mine";
         return;
       }
       // Cai através para o fluxo normal de início abaixo.
@@ -690,7 +690,7 @@
     if (wp < WP_MINING_COST) {
       // Sem WP — bloqueia e avisa
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = false; }
-      if (switchSub) switchSub.textContent = "Need " + WP_MINING_COST + " WP to mine";
+      if (switchSub) switchSub.textContent = (window.bt?bt("sw_need_wp"):"Need {n} WP").replace("{n}",WP_MINING_COST);
       setStatus("err", "Insufficient WP", "Earn " + WP_MINING_COST + " WP at WP Central to start mining");
       log((window.bt?bt("log_insufficient_wp"):"❌ Insufficient WP.") + " Balance: " + wp + " / Required: " + WP_MINING_COST, "lerr");
       updateWpDisplay();
@@ -701,7 +701,7 @@
     var ok = spendWP(WP_MINING_COST, "NACKL mining session");
     if (!ok) {
       if (miningSwitch) miningSwitch.checked = false;
-      if (switchSub) switchSub.textContent = "Error debiting WP";
+      if (switchSub) switchSub.textContent = window.bt?bt("sw_error_debit"):"Error debiting WP";
       return;
     }
     _wpDebited = true;
@@ -868,7 +868,7 @@
               var paid = parseInt(localStorage.getItem("wasp_bee_epochs_paid") || "0", 10) || 0;
               localStorage.setItem("wasp_bee_epochs_paid", String(paid + 1));
             } catch(_) {}
-            var el = byId("mReward"); if (el) el.textContent = "Sent ✅";
+            var el = byId("mReward"); if (el) el.textContent = window.bt?bt("sw_sent"):"Sent ✅";
             updateMetrics();
             toast("Reward NACKL enviado! ✅");
             try { claimMiner.stop(); } catch(_) {}
@@ -936,7 +936,7 @@
       sessionStart = null; stopUptimeTimer();
       if (miningSwitch) miningSwitch.checked = true;
       setStatus("warn", "Coletando reward...", "Aguardando slashing period (~16s)");
-      if (switchSub) switchSub.textContent = "Collecting reward...";
+      if (switchSub) switchSub.textContent = window.bt?bt("sw_collecting"):"Collecting reward...";
       if (tapSection) tapSection.classList.add("hidden");
       notifyMiningStatus();
 
@@ -963,7 +963,7 @@
 
       function scheduleRestart() {
         setStatus("warn", "Waiting for next epoch...", "Reiniciando em ~30s");
-        if (switchSub) switchSub.textContent = "Waiting for next epoch...";
+        if (switchSub) switchSub.textContent = window.bt?bt("sw_next_epoch"):"Waiting for next epoch...";
         setTimeout(function() {
           if (miningSwitch && miningSwitch.checked) startMining();
         }, 30000);
@@ -1004,7 +1004,7 @@
     // Sessão realmente iniciou — confirma o débito de WP (não reembolsa mais).
     _wpDebited = false;
     if (tapSection) tapSection.classList.remove("hidden");
-    if (switchSub)  switchSub.textContent = "Mining NACKL ⚡";
+    if (switchSub)  switchSub.textContent = window.bt?bt("sw_mining"):"Mining NACKL ⚡";
     setStatus("on", "Mining NACKL ⚡", (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
     updateMetrics();
     log(window.bt?bt("log_mining_started"):"✅ Mining started — epoch active", "lok");
@@ -1057,7 +1057,7 @@
         try { if (miner) miner.stop(); } catch(_) {}
         miner = null;
         refundSessionWP("desligado antes de iniciar");
-        if (switchSub) switchSub.textContent = "Turn on to resume";
+        if (switchSub) switchSub.textContent = window.bt?bt("sw_resume"):window.bt?bt("sw_resume"):"Turn on to resume";
         setStatus("on", (window.bt?bt("bee_ready"):"Bee ready"), (window.bt?bt("mining_paused"):"Mining paused"));
       }
       return;
@@ -1144,7 +1144,7 @@
       btn = document.createElement("button");
       btn.id = "btnReauth";
       btn.className = "btn";
-      btn.textContent = "🔁 Reauthorize keys on AN Wallet";
+      btn.textContent = window.bt?bt("btn_reauth"):"🔁 Reauthorize keys on AN Wallet";
       btn.onclick = reauthorizeKeys;
       if (host) host.appendChild(btn);
     } catch(_) {}
@@ -1182,7 +1182,7 @@
     if (el("dAddr"))    el("dAddr").textContent    = saved.minerAddress || "—";
     if (el("dMining"))  el("dMining").textContent  = mining ? "✅ YES" : "❌ NO";
     if (el("dCycles"))  el("dCycles").textContent  = String(cycles) + " eventos";
-    if (el("dPropagated")) el("dPropagated").textContent = saved.propagated ? "✅ Yes" : "⚠️ Pending";
+    if (el("dPropagated")) el("dPropagated").textContent = saved.propagated ? (window.bt?bt("sw_confirmed"):"✅ Yes") : "⚠️ Pending";
     if (el("dLastEvent"))  el("dLastEvent").textContent  = window._lastMinerEvent || "nenhum";
 
     // Verificar assets via bridge
