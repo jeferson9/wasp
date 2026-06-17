@@ -1025,12 +1025,14 @@
     toast("NACKL Mining started! ⚡");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────
-    // 100 taps por epoch de 5 min = 1 tap a cada 3s
-    // Para imediatamente quando mining=false (stop ou fim de epoch)
+    // 70 taps por epoch de 5 min = 1 tap a cada ~4.3s
+    // Nos últimos 30s verifica quantos foram aceitos e completa os faltantes
     if (window._autoTapTimer) clearInterval(window._autoTapTimer);
+    if (window._autoTapTopup) clearTimeout(window._autoTapTopup);
     var autoTapCount = 0;
-    var AUTO_TAP_TOTAL = 100;
-    var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3000ms
+    var tapAccepted  = 0; // taps confirmados pela rede
+    var AUTO_TAP_TOTAL = 70;
+    var AUTO_TAP_INTERVAL = Math.floor((MINING_DURATION_MS - 35000) / AUTO_TAP_TOTAL); // ~4000ms, deixa 35s para top-up
     window._autoTapTimer = setInterval(async function() {
       if (!mining || !miner) {
         clearInterval(window._autoTapTimer);
@@ -1048,16 +1050,41 @@
           Math.floor(Math.random() * 300 + 50)
         );
         autoTapCount++;
+        tapAccepted++;
         window._tapCount = (window._tapCount || 0) + 1;
         if (autoTapCount % 10 === 0) {
           log("◈ Syncing with network... " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
+          if (window.waiSpeak) waiSpeak("wai_taps_progress", {n: autoTapCount});
         }
-        // Animar botão TAP visualmente
         if (window._tapBtnAnim) window._tapBtnAnim();
       } catch(e) {
         log("⚠️ Sync error: " + e.message, "lwrn");
       }
     }, AUTO_TAP_INTERVAL);
+
+    // Top-up: 30s antes do fim da epoch, completar taps faltantes rapidamente
+    window._autoTapTopup = setTimeout(async function() {
+      if (!mining || !miner) return;
+      var missing = AUTO_TAP_TOTAL - tapAccepted;
+      if (missing <= 0) return;
+      log("◈ Completing " + missing + " missing taps before epoch ends...", "linf");
+      if (window.waiSpeak) waiSpeak("wai_topup", {n: missing});
+      for (var i = 0; i < missing && mining && miner; i++) {
+        try {
+          await miner.add_tap(
+            Math.floor(Math.random() * 300 + 50),
+            Math.floor(Math.random() * 300 + 50)
+          );
+          tapAccepted++;
+          window._tapCount = (window._tapCount || 0) + 1;
+          if (window._tapBtnAnim) window._tapBtnAnim();
+          await new Promise(function(r){ setTimeout(r, 400); });
+        } catch(e) {
+          log("⚠️ Top-up tap failed: " + e.message, "lwrn");
+        }
+      }
+      log("◈ Top-up complete. Total accepted: " + tapAccepted + "/" + AUTO_TAP_TOTAL, "linf");
+    }, MINING_DURATION_MS - 33000);
     log(window.bt?bt("log_mining_protocol"):"◈ Mining protocol active", "linf");
   }
 
@@ -1078,6 +1105,7 @@
     }
     if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
     if (window._autoTapTimer)  { clearInterval(window._autoTapTimer);  window._autoTapTimer  = null; }
+    if (window._autoTapTopup)  { clearTimeout(window._autoTapTopup);   window._autoTapTopup  = null; }
     try { if (miner) miner.stop(); } catch(_) {}
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
