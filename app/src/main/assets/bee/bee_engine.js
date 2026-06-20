@@ -5,7 +5,7 @@
   // APP_ID oficial da rede Acki Nacki para mineração mobile
   // Fonte: https://docs.ackinacki.com/bee-sdk
   var APP_ID = "0x0000000000000000000000000000000000000000000000000000000000000017";
-  var ENDPOINTS = ["mainnet.ackinacki.org"];
+  var ENDPOINTS = ["https://mainnet-cf.ackinacki.org"];
   var KEY_STATE = "wasp_bee_state_v6";        // v6 — limpa estado corrompido de versões anteriores
   var MINING_DURATION_MS = 5 * 60 * 1000;    // 5 min por sessão (padrão Acki Nacki)
 
@@ -476,8 +476,8 @@
       saved.minerAddress = "";
       saveSaved();
 
-      // SDK: gen_mining_keys(app_id) — sem walletName conforme exemplo oficial
-      var result = await window.BeeSDK.gen_mining_keys(APP_ID);
+      // SDK: gen_mining_keys(app_id, walletName) — formato que funciona em produção
+      var result = await window.BeeSDK.gen_mining_keys(APP_ID, saved.walletName);
       saved.publicKey  = result.public;
       saved.secretKey  = result.secret;
       saveSaved();
