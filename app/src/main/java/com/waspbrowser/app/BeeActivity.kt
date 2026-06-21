@@ -443,7 +443,10 @@ class BeeActivity : AppCompatActivity() {
     }
 
     private fun attachBridge() {
-        beeWebView.addJavascriptInterface(BeeBridge(), "AndroidBee")
+        beeWebView.addJavascriptInterface(
+            BeeBridge(this) { url -> mainHandler.post { openExternal(url) } },
+            "AndroidBee"
+        )
     }
 
     private fun attachClients() {
