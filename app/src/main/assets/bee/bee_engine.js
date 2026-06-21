@@ -568,7 +568,8 @@
       updateWpDisplay();
       setStep(5); updateMetrics();
       log(window.bt?bt("log_bee_authorized"):"Bee authorized! Turn on mining.", "lok");
-      log(window.bt?bt("log_mambaboard_warning"):"⚠️ Activate Mambaboard to receive rewards.", "lwrn");
+      // TEMP: aviso de Mambaboard desativado a pedido do usuário
+      // log(window.bt?bt("log_mambaboard_warning"):"⚠️ Activate Mambaboard to receive rewards.", "lwrn");
       toast("Bee Engine authorized! ✅");
 
       // Propagação em background — não bloqueia o usuário
