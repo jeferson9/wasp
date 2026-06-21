@@ -476,8 +476,8 @@
       saved.minerAddress = "";
       saveSaved();
 
-      // SDK: gen_mining_keys(app_id, walletName) — formato que funciona em produção
-      var result = await window.BeeSDK.gen_mining_keys(APP_ID, saved.walletName);
+      // SDK 3.0: gen_mining_keys(app_id) — confirmado no bee_sdk_core.js oficial
+      var result = await window.BeeSDK.gen_mining_keys(APP_ID);
       saved.publicKey  = result.public;
       saved.secretKey  = result.secret;
       saveSaved();
