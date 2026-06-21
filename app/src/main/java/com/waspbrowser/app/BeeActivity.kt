@@ -515,10 +515,51 @@ class BeeActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Tenta converter um link https://t.me/<bot>/<app>?startapp=<payload> para o
+     * esquema nativo tg://resolve?... e abrir o Telegram diretamente, sem passar
+     * pelo Resolver do Android. Retorna true se conseguiu disparar o intent.
+     */
+    private fun tryOpenTelegramApp(url: String): Boolean {
+        try {
+            val uri = Uri.parse(url)
+            if (uri.host != "t.me") return false
+
+            val segments = uri.pathSegments
+            if (segments.isEmpty()) return false
+
+            val botUsername = segments[0]
+            val appName = segments.getOrNull(1)
+            val startApp = uri.getQueryParameter("startapp")
+
+            val tgUri = Uri.parse("tg://resolve").buildUpon().apply {
+                appendQueryParameter("domain", botUsername)
+                if (!appName.isNullOrBlank()) appendQueryParameter("appname", appName)
+                if (!startApp.isNullOrBlank()) appendQueryParameter("startapp", startApp)
+            }.build()
+
+            val tgIntent = Intent(Intent.ACTION_VIEW, tgUri).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                setPackage("org.telegram.messenger")
+            }
+            if (tgIntent.resolveActivity(packageManager) != null) {
+                startActivity(tgIntent)
+                return true
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "tryOpenTelegramApp: falhou para $url — ${e.message}")
+        }
+        return false
+    }
+
     private fun openExternal(url: String) {
         if (url.isBlank()) return
         Log.d(TAG, "openExternal: $url")
         try {
+            // Atalho: links t.me com bot/app tentam abrir o Telegram nativo primeiro,
+            // evitando o Resolver do Android (que pode travar quando o app está
+            // marcado como "abrir automaticamente" para links https).
+            if (tryOpenTelegramApp(url)) return
             val intent = if (url.startsWith("intent://")) {
                 Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
             } else {
