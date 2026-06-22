@@ -1014,12 +1014,12 @@
     toast("NACKL Mining started! ⚡");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────
-    // 100 taps por epoch de 5 min = 1 tap a cada 3s
+    // 80 taps por epoch de 5 min = 1 tap a cada ~3.75s
     // Para imediatamente quando mining=false (stop ou fim de epoch)
     if (window._autoTapTimer) clearInterval(window._autoTapTimer);
     var autoTapCount = 0;
-    var AUTO_TAP_TOTAL = 100;
-    var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3000ms
+    var AUTO_TAP_TOTAL = 80;
+    var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3750ms
     window._autoTapTimer = setInterval(async function() {
       if (!mining || !miner) {
         clearInterval(window._autoTapTimer);
@@ -1234,8 +1234,11 @@
   window.onAppResume = function() {
     log("App returned to focus", "linf");
     if (!wasmReady || !saved.authorized || !saved.minerAddress) return;
-
-// Auto-start no resume removido — usuario relliga manualmente
+    // Se não está minerando, verifica se há reward pendente de sessão anterior
+    if (!mining && !claiming) {
+      log("Verificando reward pendente da sessão anterior...", "linf");
+      tryClaimPendingReward(null);
+    }
   };
 
   window.onAppPause = function() {
