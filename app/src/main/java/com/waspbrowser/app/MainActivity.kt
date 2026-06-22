@@ -677,7 +677,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         webAppView.addJavascriptInterface(
-            BeeBridge(this) { url -> runOnUiThread { openSite(url) } },
+            BeeBridge(context = this, openUrlCallback = { url -> runOnUiThread { openSite(url) } }),
             "Android"
         )
 

@@ -1,0 +1,128 @@
+From ccfca906e40448c53ef86fd976dc8c4995ce1f63 Mon Sep 17 00:00:00 2001
+From: Wasp Dev <wasp@dev.com>
+Date: Mon, 22 Jun 2026 11:46:03 +0000
+Subject: [PATCH] =?UTF-8?q?fix(android+ux):=20corrige=20botao=20fechar=20p?=
+ =?UTF-8?q?ainel=20=E2=80=94=20padr=C3=A3o=20id=C3=AAntico=20=C3=A0=20Cent?=
+ =?UTF-8?q?ral=20WP?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Kotlin:
+- BeeBridge.kt: corrige ordem dos parâmetros (activity após openUrlCallback)
+  para não quebrar a chamada BeeBridge(this) { url -> ... }
+- BeeActivity.attachBridge(): registra bridge também como 'Android' (igual CentralActivity)
+
+JS (index.html):
+- Adiciona função closeBeePanel() idêntica ao closeCentral() da Central:
+  tenta AndroidBee.closePanel(), fallback Android.closePanel(), fallback history.back()
+- Botão X no header usa onclick="closeBeePanel()" em vez de inline complexo
+- Remove botão antigo do meio do conteúdo
+---
+ app/src/main/assets/bee/index.html            | 25 ++++++++++++++-----
+ .../java/com/waspbrowser/app/BeeActivity.kt   |  7 +++---
+ .../java/com/waspbrowser/app/BeeBridge.kt     | 11 +++++---
+ 3 files changed, 30 insertions(+), 13 deletions(-)
+
+diff --git a/app/src/main/assets/bee/index.html b/app/src/main/assets/bee/index.html
+index 9128e16..61d499a 100644
+--- a/app/src/main/assets/bee/index.html
++++ b/app/src/main/assets/bee/index.html
+@@ -374,13 +374,10 @@
+ 
+     <!-- Epoch -->
+     <div id="hdr-epoch-label" style="font-size:10px;color:#ffc107;font-weight:700;letter-spacing:0.5px;flex-shrink:0;opacity:0.7;"></div>
+-</div>
+ 
+-<!-- ── BOTÃO FECHAR PAINEL ── -->
+-<button onclick="try{if(window.AndroidBee&&typeof AndroidBee.closePanel==='function'){AndroidBee.closePanel()}else{history.back()}}catch(_){history.back()}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 0;margin-bottom:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(200,208,224,0.15);border-radius:14px;color:#c8d0e0;font-size:14px;cursor:pointer;" ontouchstart="this.style.opacity='.6'" ontouchend="this.style.opacity='1'">
+-    <span style="font-size:16px;line-height:1;">✕</span>
+-    <span data-i18n="btn_close_panel">Close</span>
+-</button>
++    <!-- Botão fechar — mesmo padrão da Central WP -->
++    <button onclick="closeBeePanel()" style="width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(200,208,224,0.18);color:#c8d0e0;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:transform .15s ease;" ontouchstart="this.style.transform='scale(.9)'" ontouchend="this.style.transform=''">✕</button>
++</div>
+ 
+ <!-- ── BOTÃO CENTRAL WP ── -->
+ <button class="central-wp-btn" onclick="openCentralWP()">
+@@ -693,6 +690,22 @@
+         window.location.href = "central.html";
+     }
+ 
++    // ── Fecha o painel Bee Engine — mesmo padrão do closeCentral() ──
++    function closeBeePanel() {
++        try {
++            if (window.AndroidBee && typeof window.AndroidBee.closePanel === "function") {
++                window.AndroidBee.closePanel();
++                return;
++            }
++            if (window.Android && typeof window.Android.closePanel === "function") {
++                window.Android.closePanel();
++                return;
++            }
++            if (history.length > 1) history.back();
++            else window.close();
++        } catch(_) { history.back(); }
++    }
++
+     // ── Abre app de ativação Mambaboard ──
+     function openMambaApp(which) {
+         var urls = {
+diff --git a/app/src/main/java/com/waspbrowser/app/BeeActivity.kt b/app/src/main/java/com/waspbrowser/app/BeeActivity.kt
+index 9440211..449b373 100644
+--- a/app/src/main/java/com/waspbrowser/app/BeeActivity.kt
++++ b/app/src/main/java/com/waspbrowser/app/BeeActivity.kt
+@@ -443,10 +443,9 @@ class BeeActivity : AppCompatActivity() {
+     }
+ 
+     private fun attachBridge() {
+-        beeWebView.addJavascriptInterface(
+-            BeeBridge(this) { url -> mainHandler.post { openExternal(url) } },
+-            "AndroidBee"
+-        )
++        val bridge = BeeBridge(this) { url -> mainHandler.post { openExternal(url) } }
++        beeWebView.addJavascriptInterface(bridge, "AndroidBee")
++        beeWebView.addJavascriptInterface(bridge, "Android")
+     }
+ 
+     private fun attachClients() {
+diff --git a/app/src/main/java/com/waspbrowser/app/BeeBridge.kt b/app/src/main/java/com/waspbrowser/app/BeeBridge.kt
+index 69d06e2..9de2aca 100644
+--- a/app/src/main/java/com/waspbrowser/app/BeeBridge.kt
++++ b/app/src/main/java/com/waspbrowser/app/BeeBridge.kt
+@@ -1,15 +1,19 @@
+ package com.waspbrowser.app
+ 
++import android.app.Activity
+ import android.content.Context
+ import android.content.Intent
+ import android.os.Build
++import android.os.Handler
++import android.os.Looper
+ import android.util.Log
+ import android.webkit.JavascriptInterface
+ import android.widget.Toast
+ 
+ class BeeBridge(
+     private val context: Context,
+-    private val openUrlCallback: (String) -> Unit = {}
++    private val openUrlCallback: (String) -> Unit = {},
++    private val activity: Activity? = context as? Activity
+ ) {
+ 
+     @JavascriptInterface
+@@ -156,8 +160,9 @@ class BeeBridge(
+ 
+     @JavascriptInterface
+     fun closePanel() {
+-        android.os.Handler(android.os.Looper.getMainLooper()).post {
+-            (context as? android.app.Activity)?.finish()
++        Handler(Looper.getMainLooper()).post {
++            Log.d("BeeBridge", "closePanel: activity=$activity")
++            activity?.finish()
+         }
+     }
+ }
+-- 
+2.43.0
+

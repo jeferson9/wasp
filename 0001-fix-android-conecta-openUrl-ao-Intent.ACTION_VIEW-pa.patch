@@ -1,0 +1,48 @@
+From 38edaac031299fe034957f0b01d23bf7608cfac3 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Sun, 21 Jun 2026 02:37:22 +0000
+Subject: [PATCH] fix(android): conecta openUrl ao Intent.ACTION_VIEW para
+ abrir Telegram nativo
+
+- BeeBridge() no BeeActivity estava sendo instanciado sem callback (usava o default vazio {} -> openUrl() nao fazia nada na pratica)
+- Conecta openUrlCallback a openExternal() ja existente, que dispara Intent.ACTION_VIEW + CATEGORY_BROWSABLE, deixando o Android escolher o app Telegram instalado via App Link
+- Usa mainHandler.post {} para garantir execucao na UI thread, seguindo o mesmo padrao ja usado em outros callbacks do arquivo (linhas 559/565)
+- Atualiza link do bot Mambaboard de t.ackinacki.com (site institucional com tela de login que nao saia do navegador) para o formato direto t.me/ackinacki_bot/ackinacki_app, que e reconhecido como App Link do Telegram pelo Android
+- startapp payload mantido identico (base64 do referrer jeferson999)
+---
+ app/src/main/assets/bee/index.html                   | 2 +-
+ app/src/main/java/com/waspbrowser/app/BeeActivity.kt | 5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/app/src/main/assets/bee/index.html b/app/src/main/assets/bee/index.html
+index c6bf18f..16e4aaf 100644
+--- a/app/src/main/assets/bee/index.html
++++ b/app/src/main/assets/bee/index.html
+@@ -687,7 +687,7 @@
+     // ── Abre app de ativação Mambaboard ──
+     function openMambaApp(which) {
+         var urls = {
+-            telegram: "https://t.ackinacki.com/?startapp=eyJyZWZlcnJlciI6ImplZmVyc29uOTk5In0"
++            telegram: "https://t.me/ackinacki_bot/ackinacki_app?startapp=eyJyZWZlcnJlciI6ImplZmVyc29uOTk5In0"
+         };
+         var url = urls[which] || urls.telegram;
+         if (window.AndroidBee && typeof window.AndroidBee.openUrl === "function") {
+diff --git a/app/src/main/java/com/waspbrowser/app/BeeActivity.kt b/app/src/main/java/com/waspbrowser/app/BeeActivity.kt
+index 20932c5..3455fff 100644
+--- a/app/src/main/java/com/waspbrowser/app/BeeActivity.kt
++++ b/app/src/main/java/com/waspbrowser/app/BeeActivity.kt
+@@ -443,7 +443,10 @@ class BeeActivity : AppCompatActivity() {
+     }
+ 
+     private fun attachBridge() {
+-        beeWebView.addJavascriptInterface(BeeBridge(), "AndroidBee")
++        beeWebView.addJavascriptInterface(
++            BeeBridge(this) { url -> mainHandler.post { openExternal(url) } },
++            "AndroidBee"
++        )
+     }
+ 
+     private fun attachClients() {
+-- 
+2.43.0
+
