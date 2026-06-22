@@ -865,6 +865,7 @@
           claimMiner.get_reward().then(function() {
             log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
             log("💎 Verifique sua AN Wallet — saldo NACKL atualizado em breve.", "lok");
+            try { localStorage.removeItem("wasp_pending_reward"); } catch(_) {}
             // Contador real de épocas pagas (persistido) — distingue de "cycles"
             // (eventos de rede) e de "epochCount" (épocas iniciadas).
             try {
@@ -936,6 +937,8 @@
       // NÃO chamar .stop() antes do get_reward() pois invalida o objeto WASM
       var claimMiner = miner;
       miner = null; mining = false;
+      // Flag: epoch terminou sem claim — para tryClaimPendingReward no resume
+      try { localStorage.setItem("wasp_pending_reward", "1"); } catch(_) {}
       sessionStart = null; stopUptimeTimer();
       if (miningSwitch) miningSwitch.checked = true;
       setStatus("warn", "Coletando reward...", "Aguardando slashing period (~16s)");
@@ -1234,10 +1237,15 @@
   window.onAppResume = function() {
     log("App returned to focus", "linf");
     if (!wasmReady || !saved.authorized || !saved.minerAddress) return;
-    // Se não está minerando, verifica se há reward pendente de sessão anterior
+    // Só tenta resgatar reward se há flag de epoch incompleto salvo
     if (!mining && !claiming) {
-      log("Verificando reward pendente da sessão anterior...", "linf");
-      tryClaimPendingReward(null);
+      try {
+        var hasPending = localStorage.getItem("wasp_pending_reward") === "1";
+        if (hasPending) {
+          log("Reward pendente encontrado — tentando resgatar...", "linf");
+          tryClaimPendingReward(null);
+        }
+      } catch(_) {}
     }
   };
 
@@ -1266,6 +1274,7 @@
       await tmpMiner.get_reward();
       log("get_reward (resume): executed ✅ -- check your AN Wallet", "lok");
       toast("Pending reward sent to wallet ✅");
+      try { localStorage.removeItem("wasp_pending_reward"); } catch(_) {}
       var el = byId("mReward"); if (el) el.textContent = "Sent ✅";
     } catch(e) {
       // Sem reward pendente -- normal apos epoch incompleto
