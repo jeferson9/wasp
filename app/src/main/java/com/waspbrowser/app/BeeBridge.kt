@@ -153,4 +153,11 @@ class BeeBridge(
     fun clearCacheAndCookies() {
         (context as? MainActivity)?.clearCacheAndCookies()
     }
+
+    @JavascriptInterface
+    fun closePanel() {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            (context as? android.app.Activity)?.finish()
+        }
+    }
 }

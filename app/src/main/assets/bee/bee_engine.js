@@ -592,12 +592,12 @@
           log("Mining works anyway — propagation confirms automatically.", "linf");
         });
       }
-      // Mostrar aviso Mambaboard se não foi dismissado
-      try {
-        var dismissed = localStorage.getItem("wasp_mamba_dismissed");
-        var mambaCard = document.getElementById("mambaCard");
-        if (mambaCard && !dismissed) mambaCard.classList.remove("hidden");
-      } catch(_) {}
+      // TEMP: aviso Mambaboard desativado temporariamente
+      // try {
+      //   var dismissed = localStorage.getItem("wasp_mamba_dismissed");
+      //   var mambaCard = document.getElementById("mambaCard");
+      //   if (mambaCard && !dismissed) mambaCard.classList.remove("hidden");
+      // } catch(_) {}
 
     } catch (e) {
       var em2 = e && e.message ? e.message : String(e);
