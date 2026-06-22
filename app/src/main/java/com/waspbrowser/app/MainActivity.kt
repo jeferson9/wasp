@@ -1043,6 +1043,12 @@ class MainActivity : AppCompatActivity() {
                         newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
                             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
                                 android.util.Log.d("PopupOAuth", "URL: $url")
+                                val safeUrl = url ?: return
+                                currentUrl = safeUrl
+                                runOnUiThread {
+                                    urlDomain.text = getCleanDomain(safeUrl)
+                                    updateSecurityIcon(safeUrl)
+                                }
                                 finishPopupLoginIfNeeded(session, url)
                             }
                             override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
@@ -1058,7 +1064,44 @@ class MainActivity : AppCompatActivity() {
                                     }
                                     return GeckoResult.fromValue(AllowOrDeny.DENY)
                                 }
+                                // Trata links externos (Play Store, APK, Telegram, etc)
+                                val nativeScheme = !url.startsWith("http://") && !url.startsWith("https://") &&
+                                        !url.startsWith("about:") && !url.startsWith("data:") &&
+                                        !url.startsWith("blob:") && !url.startsWith("javascript:")
+                                if (nativeScheme) {
+                                    runOnUiThread { openExternalApp(url) }
+                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                                }
+                                val isAppLink = lower.contains("play.google.com/store") ||
+                                        lower.endsWith(".apk") ||
+                                        lower.startsWith("https://t.me/") ||
+                                        lower.startsWith("https://telegram.me/")
+                                if (isAppLink) {
+                                    runOnUiThread { openExternalApp(url) }
+                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                                }
                                 return null
+                            }
+                        }
+
+                        newSession.progressDelegate = object : GeckoSession.ProgressDelegate {
+                            override fun onPageStart(session: GeckoSession, url: String) {
+                                currentUrl = url
+                                runOnUiThread {
+                                    urlDomain.text = getCleanDomain(url)
+                                    updateSecurityIcon(url)
+                                    pageProgress.visibility = View.VISIBLE
+                                    pageProgress.progress = 0
+                                }
+                            }
+                            override fun onProgressChange(session: GeckoSession, progress: Int) {
+                                runOnUiThread {
+                                    pageProgress.progress = progress
+                                    if (progress >= 100) pageProgress.visibility = View.GONE
+                                }
+                            }
+                            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                                runOnUiThread { pageProgress.visibility = View.GONE }
                             }
                         }
 
