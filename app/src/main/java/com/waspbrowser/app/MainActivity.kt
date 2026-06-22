@@ -443,6 +443,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 enterPictureInPictureMode(paramsBuilder.build())
+                // Guarda se o browser estava ativo ao entrar no PiP
+                getSharedPreferences("bee_pip", android.content.Context.MODE_PRIVATE)
+                    .edit().putBoolean("pip_was_browsing", geckoView.visibility == android.view.View.VISIBLE).apply()
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "PiP error: ${e.message}")
             }
@@ -486,9 +489,13 @@ class MainActivity : AppCompatActivity() {
                 params.height = dp56
                 it.layoutParams = params
             }
-            // Só abre painel se não há uma página aberta no browser
-            if (geckoView.visibility == android.view.View.VISIBLE) {
-                // Estava no browser — não abre painel, colapsa apenas
+            // Verifica se estava navegando antes do PiP
+            val wasBrowsing = getSharedPreferences("bee_pip", android.content.Context.MODE_PRIVATE)
+                .getBoolean("pip_was_browsing", false)
+            if (wasBrowsing && currentUrl.isNotBlank()) {
+                // Restaura browser na página que estava
+                geckoView.visibility = android.view.View.VISIBLE
+                topBar.visibility = android.view.View.VISIBLE
                 collapseBeePanel()
             } else {
                 openBeePanel()
