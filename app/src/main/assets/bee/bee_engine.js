@@ -1354,7 +1354,7 @@
       mining: mining,
       wallet: (saved && saved.walletName) ? saved.walletName : "",
       tapCount: window._tapCount || 0,
-      tapTotal: 100,
+      tapTotal: 80,
       epochCount: window._epochCount || 0,
       epochsPaid: getEpochsPaid()
     };
