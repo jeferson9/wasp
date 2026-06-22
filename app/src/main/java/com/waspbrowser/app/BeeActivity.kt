@@ -767,6 +767,11 @@ class BeeActivity : AppCompatActivity() {
             val wallet = prefs.getString(BeeBackgroundService.KEY_WALLET, "") ?: ""
             return """{"active":$active,"remainingMs":$remaining,"cycles":$cycles,"wallet":"$wallet"}"""
         }
+
+        @JavascriptInterface
+        fun closePanel() {
+            mainHandler.post { finish() }
+        }
     }
 
 
