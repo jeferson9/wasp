@@ -1,15 +1,19 @@
 package com.waspbrowser.app
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 
 class BeeBridge(
     private val context: Context,
-    private val openUrlCallback: (String) -> Unit = {}
+    private val openUrlCallback: (String) -> Unit = {},
+    private val activity: Activity? = context as? Activity
 ) {
 
     @JavascriptInterface
@@ -156,8 +160,9 @@ class BeeBridge(
 
     @JavascriptInterface
     fun closePanel() {
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            (context as? android.app.Activity)?.finish()
+        Handler(Looper.getMainLooper()).post {
+            Log.d("BeeBridge", "closePanel: activity=$activity")
+            activity?.finish()
         }
     }
 }
