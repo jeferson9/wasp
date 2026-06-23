@@ -649,7 +649,7 @@ class MainActivity : AppCompatActivity() {
         val shouldClose = safeUrl.isBlank() || safeUrl == "about:blank" ||
                 safeUrl.contains("login/success") || safeUrl.contains("login/callback") ||
                 safeUrl.contains("auth/success") || safeUrl.contains("auth/callback") ||
-                safeUrl.contains("signin/callback") || safeUrl.contains("close") ||
+                safeUrl.contains("signin/callback") ||
                 (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage"))
         if (!shouldClose) return
         runOnUiThread {
@@ -1026,50 +1026,49 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
-                val runtime = geckoRuntime ?: run {
-                    if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
-                    return null
-                }
                 val result = GeckoResult<GeckoSession>()
                 runOnUiThread {
                     try {
                         try { popupSession?.close() } catch (_: Exception) {}
                         val newSession = GeckoSession()
-                        newSession.open(runtime)
+
+                        // Fecha popup quando JS chama window.close()
                         newSession.contentDelegate = object : GeckoSession.ContentDelegate {
                             override fun onCloseRequest(session: GeckoSession) {
                                 runOnUiThread { resetToMainSession() }
                             }
                         }
+
+                        // Fecha popup quando navega para URL de callback
                         newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
                             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
-                                val safeUrl = url ?: return
-                                currentUrl = safeUrl
-                                runOnUiThread { urlDomain.text = getCleanDomain(safeUrl); updateSecurityIcon(safeUrl) }
-                                finishPopupLoginIfNeeded(session, safeUrl)
+                                android.util.Log.d("PopupOAuth", "URL: $url")
+                                finishPopupLoginIfNeeded(session, url)
                             }
                             override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
                                 val url = request.uri ?: return null
                                 val lower = url.lowercase()
-                                val native = !url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("about:") && !url.startsWith("data:") && !url.startsWith("blob:") && !url.startsWith("javascript:")
-                                if (native) { runOnUiThread { openExternalApp(url); resetToMainSession() }; return GeckoResult.fromValue(AllowOrDeny.DENY) }
-                                if (lower.contains("play.google.com/store") || lower.endsWith(".apk")) { runOnUiThread { openExternalApp(url); resetToMainSession() }; return GeckoResult.fromValue(AllowOrDeny.DENY) }
+                                val isDeeplink = !url.startsWith("http://") && !url.startsWith("https://") ||
+                                        lower.contains("links.gosh.sh/deeplinks") ||
+                                        lower.contains("deeplinks/wallet")
+                                if (isDeeplink) {
+                                    runOnUiThread {
+                                        openExternalApp(url)
+                                        resetToMainSession()
+                                    }
+                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                                }
                                 return null
                             }
                         }
-                        newSession.progressDelegate = object : GeckoSession.ProgressDelegate {
-                            override fun onPageStart(session: GeckoSession, url: String) { currentUrl = url; runOnUiThread { urlDomain.text = getCleanDomain(url); updateSecurityIcon(url); pageProgress.visibility = View.VISIBLE; pageProgress.progress = 0 } }
-                            override fun onProgressChange(session: GeckoSession, progress: Int) { runOnUiThread { pageProgress.progress = progress; if (progress >= 100) pageProgress.visibility = View.GONE } }
-                            override fun onPageStop(session: GeckoSession, success: Boolean) { runOnUiThread { pageProgress.visibility = View.GONE } }
-                        }
+
                         popupSession = newSession
                         geckoView.setSession(newSession)
                         btnBack.alpha = 1f
                         result.complete(newSession)
                     } catch (e: Exception) {
-                        android.util.Log.e("WaspBrowser", "onNewSession error: ${e.message}")
-                        result.complete(null)
                         if (uri.isNotBlank()) openSite(uri)
+                        result.complete(null)
                     }
                 }
                 return result
@@ -1206,13 +1205,14 @@ class MainActivity : AppCompatActivity() {
 
     /** Troca suave: WebView (home) → GeckoView (browser) */
     private fun crossfadeToGecko() {
-        webAppView.visibility = View.GONE
-        topBar.visibility = View.VISIBLE
         if (geckoView.visibility == View.VISIBLE) return
         geckoView.alpha = 0f
         geckoView.visibility = View.VISIBLE
         topBar.alpha = 0f
-        geckoView.animate().alpha(1f).setDuration(180).start()
+        topBar.visibility = View.VISIBLE
+        geckoView.animate().alpha(1f).setDuration(180).withEndAction {
+            webAppView.visibility = View.GONE
+        }.start()
         topBar.animate().alpha(1f).setDuration(180).start()
     }
 
