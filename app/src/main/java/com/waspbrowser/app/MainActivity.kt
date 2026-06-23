@@ -1032,6 +1032,7 @@ class MainActivity : AppCompatActivity() {
                     try {
                         try { popupSession?.close() } catch (_: Exception) {}
                         val newSession = GeckoSession()
+                        newSession.open(geckoRuntime!!)
 
                         // Fecha popup quando JS chama window.close()
                         newSession.contentDelegate = object : GeckoSession.ContentDelegate {
