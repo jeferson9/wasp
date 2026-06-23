@@ -646,11 +646,12 @@ class MainActivity : AppCompatActivity() {
     private fun finishPopupLoginIfNeeded(session: GeckoSession, url: String?) {
         if (session != popupSession) return
         val safeUrl = url?.trim()?.lowercase().orEmpty()
+        // Só fecha o popup em callbacks OAuth reais — não durante o fluxo de autenticação
         val shouldClose = safeUrl.isBlank() || safeUrl == "about:blank" ||
                 safeUrl.contains("login/success") || safeUrl.contains("login/callback") ||
                 safeUrl.contains("auth/success") || safeUrl.contains("auth/callback") ||
-                safeUrl.contains("signin/callback") ||
-                (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage"))
+                safeUrl.contains("signin/callback") || safeUrl.contains("oauth/callback") ||
+                safeUrl.contains("oauth2/callback")
         if (!shouldClose) return
         runOnUiThread {
             val currentPopup = popupSession
@@ -662,7 +663,7 @@ class MainActivity : AppCompatActivity() {
             pageProgress.visibility = View.GONE
             updateTopBarForHome(false)
             crossfadeToGecko()
-            try { geckoSession.reload() } catch (e: Exception) { e.printStackTrace() }
+            // NÃO faz reload — mantém o estado da sessão principal após login
         }
     }
 
@@ -1054,32 +1055,25 @@ class MainActivity : AppCompatActivity() {
                             override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
                                 val url = request.uri ?: return null
                                 val lower = url.lowercase()
-                                val isDeeplink = !url.startsWith("http://") && !url.startsWith("https://") ||
-                                        lower.contains("links.gosh.sh/deeplinks") ||
-                                        lower.contains("deeplinks/wallet")
-                                if (isDeeplink) {
-                                    runOnUiThread {
-                                        openExternalApp(url)
-                                        resetToMainSession()
-                                    }
-                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
-                                }
-                                // Trata links externos (Play Store, APK, Telegram, etc)
+                                // Esquemas nativos (intent://, market://, etc) → app externo
                                 val nativeScheme = !url.startsWith("http://") && !url.startsWith("https://") &&
                                         !url.startsWith("about:") && !url.startsWith("data:") &&
                                         !url.startsWith("blob:") && !url.startsWith("javascript:")
                                 if (nativeScheme) {
-                                    runOnUiThread { openExternalApp(url) }
+                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
                                     return GeckoResult.fromValue(AllowOrDeny.DENY)
                                 }
-                                val isAppLink = lower.contains("play.google.com/store") ||
-                                        lower.endsWith(".apk") ||
-                                        lower.startsWith("https://t.me/") ||
-                                        lower.startsWith("https://telegram.me/")
-                                if (isAppLink) {
-                                    runOnUiThread { openExternalApp(url) }
+                                // Deep links da Acki Nacki → app externo
+                                if (lower.contains("links.gosh.sh/deeplinks") || lower.contains("deeplinks/wallet")) {
+                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
                                     return GeckoResult.fromValue(AllowOrDeny.DENY)
                                 }
+                                // Play Store e APK → app externo
+                                if (lower.contains("play.google.com/store") || lower.endsWith(".apk")) {
+                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
+                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                                }
+                                // Tudo o mais (https normal, OAuth, etc) → navega normalmente no popup
                                 return null
                             }
                         }
@@ -1248,14 +1242,13 @@ class MainActivity : AppCompatActivity() {
 
     /** Troca suave: WebView (home) → GeckoView (browser) */
     private fun crossfadeToGecko() {
+        webAppView.visibility = View.GONE
+        topBar.visibility = View.VISIBLE
         if (geckoView.visibility == View.VISIBLE) return
         geckoView.alpha = 0f
         geckoView.visibility = View.VISIBLE
         topBar.alpha = 0f
-        topBar.visibility = View.VISIBLE
-        geckoView.animate().alpha(1f).setDuration(180).withEndAction {
-            webAppView.visibility = View.GONE
-        }.start()
+        geckoView.animate().alpha(1f).setDuration(180).start()
         topBar.animate().alpha(1f).setDuration(180).start()
     }
 
