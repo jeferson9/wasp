@@ -646,12 +646,11 @@ class MainActivity : AppCompatActivity() {
     private fun finishPopupLoginIfNeeded(session: GeckoSession, url: String?) {
         if (session != popupSession) return
         val safeUrl = url?.trim()?.lowercase().orEmpty()
-        // Só fecha o popup em callbacks OAuth reais — não durante o fluxo de autenticação
         val shouldClose = safeUrl.isBlank() || safeUrl == "about:blank" ||
                 safeUrl.contains("login/success") || safeUrl.contains("login/callback") ||
                 safeUrl.contains("auth/success") || safeUrl.contains("auth/callback") ||
-                safeUrl.contains("signin/callback") || safeUrl.contains("oauth/callback") ||
-                safeUrl.contains("oauth2/callback")
+                safeUrl.contains("signin/callback") || safeUrl.contains("close") ||
+                (safeUrl.contains("accounts.google.com") && safeUrl.contains("postmessage"))
         if (!shouldClose) return
         runOnUiThread {
             val currentPopup = popupSession
@@ -663,7 +662,7 @@ class MainActivity : AppCompatActivity() {
             pageProgress.visibility = View.GONE
             updateTopBarForHome(false)
             crossfadeToGecko()
-            // NÃO faz reload — mantém o estado da sessão principal após login
+            try { geckoSession.reload() } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
@@ -1027,90 +1026,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
-                val result = GeckoResult<GeckoSession>()
-                runOnUiThread {
-                    try {
-                        try { popupSession?.close() } catch (_: Exception) {}
-                        val runtime = geckoRuntime ?: return@runOnUiThread
-                        val newSession = GeckoSession()
-                        newSession.open(runtime)
-
-                        // Fecha popup quando JS chama window.close()
-                        newSession.contentDelegate = object : GeckoSession.ContentDelegate {
-                            override fun onCloseRequest(session: GeckoSession) {
-                                runOnUiThread { resetToMainSession() }
-                            }
-                        }
-
-                        // Fecha popup quando navega para URL de callback
-                        newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
-                            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
-                                android.util.Log.d("PopupOAuth", "URL: $url")
-                                val safeUrl = url ?: return
-                                currentUrl = safeUrl
-                                runOnUiThread {
-                                    urlDomain.text = getCleanDomain(safeUrl)
-                                    updateSecurityIcon(safeUrl)
-                                }
-                                finishPopupLoginIfNeeded(session, url)
-                            }
-                            override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
-                                val url = request.uri ?: return null
-                                val lower = url.lowercase()
-                                // Esquemas nativos (intent://, market://, etc) → app externo
-                                val nativeScheme = !url.startsWith("http://") && !url.startsWith("https://") &&
-                                        !url.startsWith("about:") && !url.startsWith("data:") &&
-                                        !url.startsWith("blob:") && !url.startsWith("javascript:")
-                                if (nativeScheme) {
-                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
-                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
-                                }
-                                // Deep links da Acki Nacki → app externo
-                                if (lower.contains("links.gosh.sh/deeplinks") || lower.contains("deeplinks/wallet")) {
-                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
-                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
-                                }
-                                // Play Store e APK → app externo
-                                if (lower.contains("play.google.com/store") || lower.endsWith(".apk")) {
-                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
-                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
-                                }
-                                // Tudo o mais (https normal, OAuth, etc) → navega normalmente no popup
-                                return null
-                            }
-                        }
-
-                        newSession.progressDelegate = object : GeckoSession.ProgressDelegate {
-                            override fun onPageStart(session: GeckoSession, url: String) {
-                                currentUrl = url
-                                runOnUiThread {
-                                    urlDomain.text = getCleanDomain(url)
-                                    updateSecurityIcon(url)
-                                    pageProgress.visibility = View.VISIBLE
-                                    pageProgress.progress = 0
-                                }
-                            }
-                            override fun onProgressChange(session: GeckoSession, progress: Int) {
-                                runOnUiThread {
-                                    pageProgress.progress = progress
-                                    if (progress >= 100) pageProgress.visibility = View.GONE
-                                }
-                            }
-                            override fun onPageStop(session: GeckoSession, success: Boolean) {
-                                runOnUiThread { pageProgress.visibility = View.GONE }
-                            }
-                        }
-
-                        popupSession = newSession
-                        geckoView.setSession(newSession)
-                        btnBack.alpha = 1f
-                        result.complete(newSession)
-                    } catch (e: Exception) {
-                        if (uri.isNotBlank()) openSite(uri)
-                        result.complete(null)
-                    }
-                }
-                return result
+                if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
+                return null
             }
 
             override fun onLoadRequest(
