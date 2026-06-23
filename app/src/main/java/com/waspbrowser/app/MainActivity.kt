@@ -1026,8 +1026,84 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
-                if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
-                return null
+                val runtime = geckoRuntime ?: run {
+                    if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
+                    return null
+                }
+                val result = GeckoResult<GeckoSession>()
+                runOnUiThread {
+                    try {
+                        try { popupSession?.close() } catch (_: Exception) {}
+
+                        val newSession = GeckoSession()
+                        newSession.open(runtime)
+
+                        newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
+                            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
+                                val safeUrl = url ?: return
+                                currentUrl = safeUrl
+                                runOnUiThread {
+                                    urlDomain.text = getCleanDomain(safeUrl)
+                                    updateSecurityIcon(safeUrl)
+                                }
+                                finishPopupLoginIfNeeded(session, safeUrl)
+                            }
+                            override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
+                                val url = request.uri ?: return null
+                                val lower = url.lowercase()
+                                val nativeScheme = !url.startsWith("http://") && !url.startsWith("https://") &&
+                                        !url.startsWith("about:") && !url.startsWith("data:") &&
+                                        !url.startsWith("blob:") && !url.startsWith("javascript:")
+                                if (nativeScheme) {
+                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
+                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                                }
+                                if (lower.contains("play.google.com/store") || lower.endsWith(".apk")) {
+                                    runOnUiThread { openExternalApp(url); resetToMainSession() }
+                                    return GeckoResult.fromValue(AllowOrDeny.DENY)
+                                }
+                                return null
+                            }
+                        }
+
+                        newSession.progressDelegate = object : GeckoSession.ProgressDelegate {
+                            override fun onPageStart(session: GeckoSession, url: String) {
+                                currentUrl = url
+                                runOnUiThread {
+                                    urlDomain.text = getCleanDomain(url)
+                                    updateSecurityIcon(url)
+                                    pageProgress.visibility = View.VISIBLE
+                                    pageProgress.progress = 0
+                                }
+                            }
+                            override fun onProgressChange(session: GeckoSession, progress: Int) {
+                                runOnUiThread {
+                                    pageProgress.progress = progress
+                                    if (progress >= 100) pageProgress.visibility = View.GONE
+                                }
+                            }
+                            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                                runOnUiThread { pageProgress.visibility = View.GONE }
+                            }
+                        }
+
+                        newSession.contentDelegate = object : GeckoSession.ContentDelegate {
+                            override fun onCloseRequest(session: GeckoSession) {
+                                runOnUiThread { resetToMainSession() }
+                            }
+                        }
+
+                        popupSession = newSession
+                        geckoView.setSession(newSession)
+                        btnBack.alpha = 1f
+                        result.complete(newSession)
+                    } catch (e: Exception) {
+                        android.util.Log.e("MainActivity", "onNewSession error: ${e.message}")
+                        if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
+                        result.complete(null)
+                    }
+                }
+                return result
             }
 
             override fun onLoadRequest(
