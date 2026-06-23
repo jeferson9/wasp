@@ -1026,14 +1026,53 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
-                if (uri.isNotBlank()) {
-                    runOnUiThread {
-                        getActiveSession().loadUri(uri)
-                        currentUrl = uri
-                        urlDomain.text = getCleanDomain(uri)
+                val runtime = geckoRuntime ?: run {
+                    if (uri.isNotBlank()) runOnUiThread { openSite(uri) }
+                    return null
+                }
+                val result = GeckoResult<GeckoSession>()
+                runOnUiThread {
+                    try {
+                        try { popupSession?.close() } catch (_: Exception) {}
+                        val newSession = GeckoSession()
+                        newSession.open(runtime)
+                        newSession.contentDelegate = object : GeckoSession.ContentDelegate {
+                            override fun onCloseRequest(session: GeckoSession) {
+                                runOnUiThread { resetToMainSession() }
+                            }
+                        }
+                        newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
+                            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
+                                val safeUrl = url ?: return
+                                currentUrl = safeUrl
+                                runOnUiThread { urlDomain.text = getCleanDomain(safeUrl); updateSecurityIcon(safeUrl) }
+                                finishPopupLoginIfNeeded(session, safeUrl)
+                            }
+                            override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
+                                val url = request.uri ?: return null
+                                val lower = url.lowercase()
+                                val native = !url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("about:") && !url.startsWith("data:") && !url.startsWith("blob:") && !url.startsWith("javascript:")
+                                if (native) { runOnUiThread { openExternalApp(url); resetToMainSession() }; return GeckoResult.fromValue(AllowOrDeny.DENY) }
+                                if (lower.contains("play.google.com/store") || lower.endsWith(".apk")) { runOnUiThread { openExternalApp(url); resetToMainSession() }; return GeckoResult.fromValue(AllowOrDeny.DENY) }
+                                return null
+                            }
+                        }
+                        newSession.progressDelegate = object : GeckoSession.ProgressDelegate {
+                            override fun onPageStart(session: GeckoSession, url: String) { currentUrl = url; runOnUiThread { urlDomain.text = getCleanDomain(url); updateSecurityIcon(url); pageProgress.visibility = View.VISIBLE; pageProgress.progress = 0 } }
+                            override fun onProgressChange(session: GeckoSession, progress: Int) { runOnUiThread { pageProgress.progress = progress; if (progress >= 100) pageProgress.visibility = View.GONE } }
+                            override fun onPageStop(session: GeckoSession, success: Boolean) { runOnUiThread { pageProgress.visibility = View.GONE } }
+                        }
+                        popupSession = newSession
+                        geckoView.setSession(newSession)
+                        btnBack.alpha = 1f
+                        result.complete(newSession)
+                    } catch (e: Exception) {
+                        android.util.Log.e("WaspBrowser", "onNewSession error: ${e.message}")
+                        result.complete(null)
+                        if (uri.isNotBlank()) openSite(uri)
                     }
                 }
-                return null
+                return result
             }
 
             override fun onLoadRequest(
