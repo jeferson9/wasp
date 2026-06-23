@@ -12,17 +12,20 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import android.webkit.JavascriptInterface
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.core.app.NotificationCompat
 
 /**
- * BeeBackgroundService — mantém o processo vivo enquanto o Bee Engine minera.
+ * BeeBackgroundService — ForegroundService com WebView headless que minera em background.
  *
- * Responsabilidades:
- *  - Rodar como ForegroundService com START_STICKY
- *  - Chamar onAppResume() na WebView persistente a cada TICK_MS
- *    para que o bee_engine.js reative a mineração se necessário
- *  - NÃO tentar controlar epochs diretamente — o bee_engine.js
- *    já tem toda a lógica de claim + restart internamente
+ * Quando o app vai para background, este serviço:
+ * 1. Cria uma WebView headless (sem UI) que carrega o bee_engine.js
+ * 2. Injeta o estado salvo (wallet, chaves) para retomar a participação
+ * 3. Mantém o processo vivo via ForegroundService — o Android não mata serviços foreground
+ * 4. Ao retornar ao app, a BeeActivity assume e o serviço para a WebView headless
  */
 class BeeBackgroundService : Service() {
 
@@ -30,7 +33,6 @@ class BeeBackgroundService : Service() {
         private const val TAG = "BeeBackgroundService"
         private const val CHANNEL_ID = "bee_mining_channel"
         private const val NOTIF_ID = 42
-        private const val TICK_MS = 30_000L
 
         const val PREFS_BG   = "bee_bg_mining"
         const val KEY_ACTIVE = "bg_active"
@@ -57,8 +59,6 @@ class BeeBackgroundService : Service() {
             val prefActive = context.getSharedPreferences(PREFS_BG, Context.MODE_PRIVATE)
                 .getBoolean(KEY_ACTIVE, false)
             if (!prefActive) return false
-            // Verifica se o serviço realmente está rodando
-            // Nota: getRunningServices é deprecated mas ainda funciona para serviços próprios
             return try {
                 val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
                 @Suppress("DEPRECATION")
@@ -70,7 +70,6 @@ class BeeBackgroundService : Service() {
                 }
                 running
             } catch (e: Exception) {
-                // Fallback para Xiaomi MIUI que pode restringir getRunningServices
                 prefActive
             }
         }
@@ -83,9 +82,8 @@ class BeeBackgroundService : Service() {
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private var tickRunnable: Runnable? = null
     private var walletName = ""
-    private var tickCount = 0
+    private var bgWebView: WebView? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -97,15 +95,14 @@ class BeeBackgroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
+            stopBgWebView()
             stopMining()
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // Ignora epoch actions — o JS controla internamente
         if (intent?.action == ACTION_EPOCH_ENDED ||
             intent?.action == "com.waspbrowser.app.BEE_EPOCH_STARTED") {
-            Log.d(TAG, "Epoch event received — ignored (JS controls restart)")
             return START_STICKY
         }
 
@@ -119,29 +116,85 @@ class BeeBackgroundService : Service() {
         startForeground(NOTIF_ID, buildNotification(walletName))
         Log.d(TAG, "Service iniciado | wallet=$walletName")
 
-        scheduleTick()
+        // Inicia WebView headless para mineração em background
+        handler.post { startBgWebView() }
+
         return START_STICKY
     }
 
     override fun onDestroy() {
-        tickRunnable?.let { handler.removeCallbacks(it) }
+        stopBgWebView()
         stopMining()
         Log.d(TAG, "Service destroyed")
         super.onDestroy()
     }
 
-    private fun scheduleTick() {
-        tickRunnable?.let { handler.removeCallbacks(it) }
-        tickRunnable = Runnable {
-            tickCount++
-            Log.d(TAG, "Tick #$tickCount | wallet=$walletName")
+    private fun startBgWebView() {
+        if (bgWebView != null) return // já está rodando
 
-            // Apenas acorda o WebView e deixa o bee_engine.js decidir o que fazer
-            BeeActivity.runJs("if(window.onAppResume) window.onAppResume()")
+        Log.d(TAG, "Iniciando WebView headless para background mining")
 
-            scheduleTick()
+        try {
+            val wv = WebView(applicationContext)
+            wv.settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                databaseEnabled = true
+                allowFileAccessFromFileURLs = true
+                allowUniversalAccessFromFileURLs = true
+                cacheMode = WebSettings.LOAD_DEFAULT
+                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                mediaPlaybackRequiresUserGesture = false
+            }
+
+            // Bridge para comunicação JS → Service
+            wv.addJavascriptInterface(BgBridge(), "AndroidBee")
+
+            wv.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    Log.d(TAG, "BgWebView carregada: $url")
+                    // Injeta flag para saber que está em background
+                    view?.evaluateJavascript("window._isBackgroundMode = true;", null)
+                }
+            }
+
+            // Carrega o mesmo HTML do painel Bee Engine
+            wv.loadUrl("file:///android_asset/bee/index.html")
+
+            bgWebView = wv
+            Log.d(TAG, "WebView headless iniciada")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao criar WebView headless: ${e.message}")
+            // Fallback: usa o método antigo de ping via BeeActivity
+            scheduleLegacyTick()
         }
-        handler.postDelayed(tickRunnable!!, TICK_MS)
+    }
+
+    private fun stopBgWebView() {
+        try {
+            bgWebView?.let { wv ->
+                wv.evaluateJavascript("if(window.stopMining) stopMining();", null)
+                handler.postDelayed({
+                    wv.destroy()
+                    bgWebView = null
+                    Log.d(TAG, "WebView headless destruída")
+                }, 1000)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao parar WebView headless: ${e.message}")
+            bgWebView = null
+        }
+    }
+
+    // Fallback se WebView headless falhar: ping na BeeActivity
+    private fun scheduleLegacyTick() {
+        handler.postDelayed({
+            if (isActive(this)) {
+                BeeActivity.runJs("if(window.onAppResume) window.onAppResume()")
+                scheduleLegacyTick()
+            }
+        }, 30_000L)
     }
 
     private fun stopMining() {
@@ -151,7 +204,7 @@ class BeeBackgroundService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(CHANNEL_ID, "Bee Mining", NotificationManager.IMPORTANCE_LOW)
+            val ch = NotificationChannel(CHANNEL_ID, "Bee Participation", NotificationManager.IMPORTANCE_LOW)
             ch.setShowBadge(false)
             (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
         }
@@ -171,7 +224,58 @@ class BeeBackgroundService : Service() {
             .setOngoing(true).setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(open)
-            .addAction(R.drawable.ic_bee_tech, "Parar", stop)
+            .addAction(R.drawable.ic_bee_tech, getString(R.string.notif_stop), stop)
             .build()
+    }
+
+    /**
+     * Bridge JS para a WebView headless do serviço de background.
+     * Expõe os mesmos métodos necessários pelo bee_engine.js.
+     */
+    inner class BgBridge {
+        @JavascriptInterface
+        fun goBack() {
+            // Em background não faz nada — não há UI
+        }
+
+        @JavascriptInterface
+        fun openCentral() {}
+
+        @JavascriptInterface
+        fun openUrl(url: String) {}
+
+        @JavascriptInterface
+        fun toast(msg: String) {
+            Log.d(TAG, "BgBridge toast: $msg")
+        }
+
+        @JavascriptInterface
+        fun log(msg: String) {
+            Log.d(TAG, "BgBridge JS: $msg")
+        }
+
+        @JavascriptInterface
+        fun setMiningStatus(active: Boolean, wallet: String) {
+            Log.d(TAG, "BgBridge setMiningStatus: active=$active wallet=$wallet")
+            // Atualiza notificação com status atual
+            handler.post {
+                val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                nm.notify(NOTIF_ID, buildNotification(wallet))
+            }
+        }
+
+        @JavascriptInterface
+        fun closePanel() {
+            // Em background não fecha nada
+        }
+
+        @JavascriptInterface
+        fun getBgMiningStatus(): String {
+            val active = isActive(this@BeeBackgroundService)
+            val prefs = getSharedPreferences(PREFS_BG, MODE_PRIVATE)
+            val cycles = prefs.getInt(KEY_CYCLES, 0)
+            val wallet = prefs.getString(KEY_WALLET, "") ?: ""
+            return """{"active":$active,"remainingMs":${Long.MAX_VALUE},"cycles":$cycles,"wallet":"$wallet"}"""
+        }
     }
 }

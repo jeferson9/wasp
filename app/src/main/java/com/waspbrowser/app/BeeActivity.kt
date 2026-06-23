@@ -81,7 +81,7 @@ class BeeActivity : AppCompatActivity() {
                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
                         .edit()
                         .putBoolean("mining_active", active)
-                        .putBoolean("pip_allowed", active)
+                        .putBoolean("bg_participation_allowed", active)
                         .apply()
                     try {
                         if (active) {
@@ -279,25 +279,25 @@ class BeeActivity : AppCompatActivity() {
                                 val clean = result?.trim()?.trim('"') ?: "ok"
                                 if (clean == "low") {
                                     webView.evaluateJavascript(
-                                        "var sw=document.getElementById('pipSwitch');if(sw)sw.checked=false;",
+                                        "var sw=document.getElementById('bgSwitch');if(sw)sw.checked=false;",
                                         null
                                     )
-                                    BeeActivity.runJs("if(window.toast)toast('Saldo WP insuficiente para PiP');")
+                                    BeeActivity.runJs("if(window.toast)toast('Saldo WP insuficiente para participação em segundo plano.');")
                                 } else {
                                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
-                                        .edit().putBoolean("pip_user_enabled", true).apply()
+                                        .edit().putBoolean("bg_participation_enabled", true).apply()
                                 }
                             }
                         }
                     } else {
                         context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
-                            .edit().putBoolean("pip_user_enabled", false).apply()
+                            .edit().putBoolean("bg_participation_enabled", false).apply()
                     }
                 }
                 @android.webkit.JavascriptInterface
                 fun isPipEnabled(): Boolean {
                     return context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
-                        .getBoolean("pip_user_enabled", false)  // default: desligado (não invasivo)
+                        .getBoolean("bg_participation_enabled", false)  // default: desligado (não invasivo)
                 }
                 @android.webkit.JavascriptInterface
                 fun openWpAd() {

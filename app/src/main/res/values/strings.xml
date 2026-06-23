@@ -127,8 +127,9 @@
     <string name="toast_no_page_translate">Немає сторінки для перекладу</string>
     <string name="link_cant_open">Не вдалося відкрити це посилання</string>
     <string name="hive_empty">No sites in Hive yet. Add sites with the + button</string>
-    <string name="notif_mining_title">NACKL Mining</string>
-    <string name="notif_mining_active">Mining active</string>
+    <string name="notif_mining_title">Bee Engine — Participation</string>
+    <string name="notif_mining_active">Participation active in background</string>
+    <string name="notif_stop">Stop</string>
     <string name="about_title">About Wasp</string>
     <string name="about_subtitle">Wasp Browser initial version</string>
     <string name="nav_back">Back</string>

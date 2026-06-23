@@ -23,9 +23,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import android.app.PictureInPictureParams
 import android.os.Build
-import android.util.Rational
 import org.json.JSONArray
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
@@ -374,8 +372,7 @@ class MainActivity : AppCompatActivity() {
         }
         persistentBeeView?.post {
             persistentBeeView?.resumeTimers()
-            // Não notifica "voltou ao foco" se está saindo do PiP — mineração não parou
-            if (!isInPictureInPictureMode) {
+            run {
                 persistentBeeView?.evaluateJavascript(
                     "if(window.onAppResume) window.onAppResume(); else if(window.onWalletReturn) window.onWalletReturn();", null)
             }
@@ -384,24 +381,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Não pausa timers em modo PiP — mineração deve continuar
         // Não pausa no onPause pois afeta SDK de anúncios — pausamos no onStop
-        if (!isInPictureInPictureMode) {
-            webAppView.onPause()
-        }
+        webAppView.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        // Pausa timers só quando app vai para background completamente
-        if (!isInPictureInPictureMode) {
-            webAppView.pauseTimers()
-        }
+        // Pausa timers quando app vai para background
+        webAppView.pauseTimers()
     }
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        enterPipIfPossible()
     }
 
     @Deprecated("Deprecated in Java")
@@ -411,107 +402,14 @@ class MainActivity : AppCompatActivity() {
             geckoView.visibility == View.VISIBLE -> when {
                 popupSession != null -> resetToMainSession()
                 canGoBackGecko -> getActiveSession().goBack()
-                else -> enterPipIfPossible()
+                else -> goHome()
             }
-            else -> enterPipIfPossible()
+            else -> goHome()
         }
     }
 
-    private fun enterPipIfPossible() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val prefs = getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
-            // Só entra em PiP se a mineração estiver ativa E o usuário tiver
-            // escolhido ligar a janela flutuante (não é mais automático).
-            val miningActive = prefs.getBoolean("pip_allowed", false)
-            val userEnabled  = prefs.getBoolean("pip_user_enabled", false)
-            if (!miningActive || !userEnabled) return
 
-            try {
-                val metrics = resources.displayMetrics
-                val pipWidth = (metrics.widthPixels * 0.45f).toInt()
-                val pipHeight = (pipWidth * 7f / 16f).toInt()
-                val pipLeft = metrics.widthPixels - pipWidth - 16
-                val pipTop = 64
 
-                val paramsBuilder = PictureInPictureParams.Builder()
-                    .setAspectRatio(Rational(16, 7))
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    paramsBuilder.setSourceRectHint(android.graphics.Rect(
-                        pipLeft, pipTop, pipLeft + pipWidth, pipTop + pipHeight
-                    ))
-                }
-
-                enterPictureInPictureMode(paramsBuilder.build())
-                // Guarda se o browser estava ativo ao entrar no PiP
-                getSharedPreferences("bee_pip", android.content.Context.MODE_PRIVATE)
-                    .edit().putBoolean("pip_was_browsing", geckoView.visibility == android.view.View.VISIBLE).apply()
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "PiP error: ${e.message}")
-            }
-        }
-    }
-
-    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-        if (isInPictureInPictureMode) {
-            // No PiP mostra só o topo colapsado do painel — já é compacto e tech
-            webAppView.visibility = android.view.View.GONE
-            geckoView.visibility = android.view.View.GONE
-            topBar.visibility = android.view.View.GONE
-            collapseBeePanel()
-            // Expande o container para preencher o PiP inteiro
-            val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container)
-            container?.let {
-                val params = it.layoutParams
-                params.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                it.layoutParams = params
-                it.visibility = android.view.View.VISIBLE
-            }
-            persistentBeeView?.post {
-                persistentBeeView?.evaluateJavascript("""
-                    (function(){
-                        var el = document.querySelector('.central-wp-btn');
-                        if(el) el.style.visibility='hidden';
-                        document.body.style.overflow='hidden';
-                    })()
-                """.trimIndent(), null)
-            }
-        } else {
-            // Voltou do PiP — restaura UI
-            webAppView.visibility = android.view.View.VISIBLE
-            topBar.visibility = android.view.View.GONE
-            // Restaura altura do container
-            val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container)
-            container?.let {
-                val params = it.layoutParams
-                val dp56 = (56 * resources.displayMetrics.density).toInt()
-                params.height = dp56
-                it.layoutParams = params
-            }
-            // Verifica se estava navegando antes do PiP
-            val wasBrowsing = getSharedPreferences("bee_pip", android.content.Context.MODE_PRIVATE)
-                .getBoolean("pip_was_browsing", false)
-            if (wasBrowsing && currentUrl.isNotBlank()) {
-                // Restaura browser na página que estava
-                geckoView.visibility = android.view.View.VISIBLE
-                topBar.visibility = android.view.View.VISIBLE
-                collapseBeePanel()
-            } else {
-                openBeePanel()
-            }
-            persistentBeeView?.post {
-                persistentBeeView?.evaluateJavascript("""
-                    (function(){
-                        var el = document.querySelector('.central-wp-btn');
-                        if(el) el.style.visibility='';
-                        document.body.style.overflow='';
-                        if(window.exitPipMode) window.exitPipMode();
-                    })()
-                """.trimIndent(), null)
-            }
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
