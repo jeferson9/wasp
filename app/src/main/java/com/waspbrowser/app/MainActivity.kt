@@ -941,7 +941,16 @@ class MainActivity : AppCompatActivity() {
                         newSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
                             override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
                                 android.util.Log.d("PopupOAuth", "URL: $url")
-                                finishPopupLoginIfNeeded(session, url)
+                                val safeUrl = url ?: return
+                                if (session == getActiveSession()) {
+                                    currentUrl = safeUrl
+                                    runOnUiThread {
+                                        urlDomain.text = getCleanDomain(safeUrl)
+                                        updateSecurityIcon(safeUrl)
+                                        WaspTranslator.onNavigate(safeUrl) { badgeView -> updateTranslateBadge(badgeView) }
+                                    }
+                                }
+                                finishPopupLoginIfNeeded(session, safeUrl)
                             }
                             override fun onLoadRequest(session: GeckoSession, request: GeckoSession.NavigationDelegate.LoadRequest): GeckoResult<AllowOrDeny>? {
                                 val url = request.uri ?: return null
