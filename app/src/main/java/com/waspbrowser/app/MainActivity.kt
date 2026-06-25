@@ -932,6 +932,16 @@ class MainActivity : AppCompatActivity() {
 
                         // Fecha popup quando JS chama window.close()
                         newSession.contentDelegate = object : GeckoSession.ContentDelegate {
+                            override fun onTitleChange(session: GeckoSession, title: String?) {
+                                if (session != getActiveSession()) return
+                                runOnUiThread {
+                                    if (!title.isNullOrBlank()) {
+                                        currentTitle = title
+                                        urlTitle.text = title
+                                        if (currentUrl.isNotBlank()) urlDomain.text = getCleanDomain(currentUrl)
+                                    }
+                                }
+                            }
                             override fun onCloseRequest(session: GeckoSession) {
                                 runOnUiThread { resetToMainSession() }
                             }
