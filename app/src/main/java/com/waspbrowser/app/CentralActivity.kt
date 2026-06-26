@@ -48,10 +48,7 @@ class CentralActivity : AppCompatActivity() {
         // Credita 15 WP do interstitial bônus (chamado pela StartioAdActivity).
         // Cooldown separado de 30 min — independente do rewarded video.
         const val INTERSTITIAL_BONUS_WP        = 15
-        const val INTERSTITIAL_COOLDOWN_MS     = 30 * 60 * 1000L
         fun grantInterstitialBonus(ctx: android.content.Context) {
-            ctx.getSharedPreferences("wasp_ads", android.content.Context.MODE_PRIVATE)
-                .edit().putLong("wp_interstitial_last", System.currentTimeMillis()).apply()
             runJs("if(window.waspAddWP) window.waspAddWP($INTERSTITIAL_BONUS_WP, 'Bonus ad');")
             BeeActivity.runJs(
                 "(function(){try{" +

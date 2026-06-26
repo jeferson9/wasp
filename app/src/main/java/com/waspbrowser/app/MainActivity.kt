@@ -293,7 +293,6 @@ class MainActivity : AppCompatActivity() {
     private var bonusBannerView: android.widget.FrameLayout? = null
     // ─── REMOVER ANTES DE PUBLICAR (valores de teste) ───────────────────
     private val BONUS_INTERVAL_MS   = 15 * 60 * 1000L  // 15 min entre banners
-    private val BONUS_COOLDOWN_MS   = 30 * 60 * 1000L  // 30 min após resgate
 
     // =========================================================
     // LIFECYCLE
@@ -1619,18 +1618,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleBonusBannerTimer() {
         bonusHandler.removeCallbacksAndMessages(null)
-        // Timer conta qualquer tela do Wasp aberta (home, central, browser).
-        // O banner só é exibido quando o GeckoView estiver visível no disparo;
-        // se o usuário estiver na home/central, repolling a cada 5s até voltar.
-        val prefs = getSharedPreferences("wasp_ads", MODE_PRIVATE)
-        val lastBonus = prefs.getLong("wp_interstitial_last", 0L)
-        val sinceBonus = System.currentTimeMillis() - lastBonus
-        val delay = if (sinceBonus < BONUS_COOLDOWN_MS) {
-            BONUS_COOLDOWN_MS - sinceBonus
-        } else {
-            BONUS_INTERVAL_MS
-        }
-        bonusHandler.postDelayed({ tryShowBonusBanner() }, delay)
+        // Banner a cada 15 min — sem cooldown extra após resgatar.
+        bonusHandler.postDelayed({ tryShowBonusBanner() }, BONUS_INTERVAL_MS)
     }
 
     private fun tryShowBonusBanner() {
@@ -1769,15 +1758,14 @@ class MainActivity : AppCompatActivity() {
             CentralActivity.grantInterstitialBonus(applicationContext)
             android.widget.Toast.makeText(this,
                 getString(R.string.bonus_rewarded), android.widget.Toast.LENGTH_SHORT).show()
-            bonusHandler.postDelayed({ scheduleBonusBannerTimer() }, BONUS_COOLDOWN_MS)
+            scheduleBonusBannerTimer()
             return
         }
         // ─────────────────────────────────────────────────────────────────
         val i = Intent(this, StartioAdActivity::class.java)
         i.putExtra(StartioAdActivity.EXTRA_MODE, StartioAdActivity.MODE_INTERSTITIAL_BONUS)
         startActivity(i)
-        // Agenda próximo banner para daqui 30 min (cooldown pós-resgate)
-        bonusHandler.postDelayed({ scheduleBonusBannerTimer() }, BONUS_COOLDOWN_MS)
+        scheduleBonusBannerTimer()
     }
 
 }
