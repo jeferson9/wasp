@@ -294,7 +294,6 @@ class MainActivity : AppCompatActivity() {
     // ─── REMOVER ANTES DE PUBLICAR (valores de teste) ───────────────────
     private val BONUS_INTERVAL_MS   = 15 * 60 * 1000L  // 15 min entre banners
     private val BONUS_COOLDOWN_MS   = 30 * 60 * 1000L  // 30 min após resgate
-    private val BONUS_AUTO_HIDE_MS  = 30 * 1000L       // fecha sozinho em 30s
 
     // =========================================================
     // LIFECYCLE
@@ -1751,11 +1750,6 @@ class MainActivity : AppCompatActivity() {
         banner.animate().translationY(0f).setDuration(280)
             .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
 
-        // Auto-hide após 30s se não interagido
-        bonusHandler.postDelayed({
-            hideBonusBanner()
-            scheduleBonusBannerTimer()
-        }, BONUS_AUTO_HIDE_MS)
     }
 
     private fun hideBonusBanner() {
