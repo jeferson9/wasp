@@ -291,8 +291,9 @@ class MainActivity : AppCompatActivity() {
     // ── Bonus interstitial banner ─────────────────────────────────────
     private val bonusHandler   = android.os.Handler(android.os.Looper.getMainLooper())
     private var bonusBannerView: android.widget.FrameLayout? = null
-    private val BONUS_INTERVAL_MS   = 15 * 60 * 1000L  // 15 min entre banners
-    private val BONUS_COOLDOWN_MS   = 30 * 60 * 1000L  // 30 min após resgate
+    // ─── REMOVER ANTES DE PUBLICAR (valores de teste) ───────────────────
+    private val BONUS_INTERVAL_MS   = 1 * 60 * 1000L   // TEST: 1 min (prod: 15 min)
+    private val BONUS_COOLDOWN_MS   = 2 * 60 * 1000L   // TEST: 2 min (prod: 30 min)
     private val BONUS_AUTO_HIDE_MS  = 30 * 1000L       // fecha sozinho em 30s
 
     // =========================================================
