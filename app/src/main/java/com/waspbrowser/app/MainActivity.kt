@@ -1125,7 +1125,6 @@ class MainActivity : AppCompatActivity() {
         pageProgress.visibility = View.VISIBLE
         pageProgress.progress = 0
         updateTopBarForHome(false)
-        webAppView.pauseTimers()
         getActiveSession().loadUri(url)
         crossfadeToGecko()
     }
