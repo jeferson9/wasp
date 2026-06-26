@@ -1620,24 +1620,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleBonusBannerTimer() {
         bonusHandler.removeCallbacksAndMessages(null)
-        // Só agenda quando o browser (GeckoView) está visível
+        // Timer conta qualquer tela do Wasp aberta (home, central, browser).
+        // O banner só é exibido quando o GeckoView estiver visível no disparo;
+        // se o usuário estiver na home/central, repolling a cada 5s até voltar.
         val prefs = getSharedPreferences("wasp_ads", MODE_PRIVATE)
         val lastBonus = prefs.getLong("wp_interstitial_last", 0L)
         val sinceBonus = System.currentTimeMillis() - lastBonus
         val delay = if (sinceBonus < BONUS_COOLDOWN_MS) {
-            // Ainda no cooldown pós-resgate: agenda para quando terminar
             BONUS_COOLDOWN_MS - sinceBonus
         } else {
             BONUS_INTERVAL_MS
         }
-        bonusHandler.postDelayed({
-            if (::geckoView.isInitialized && geckoView.visibility == android.view.View.VISIBLE) {
-                showBonusBanner()
-            } else {
-                // Browser não está visível: reagenda normalmente
-                scheduleBonusBannerTimer()
-            }
-        }, delay)
+        bonusHandler.postDelayed({ tryShowBonusBanner() }, delay)
+    }
+
+    private fun tryShowBonusBanner() {
+        if (::geckoView.isInitialized && geckoView.visibility == android.view.View.VISIBLE) {
+            showBonusBanner()
+        } else {
+            // Usuário está na home ou central: repolling a cada 5s sem resetar o timer
+            bonusHandler.postDelayed({ tryShowBonusBanner() }, 5_000L)
+        }
     }
 
     private fun showBonusBanner() {
