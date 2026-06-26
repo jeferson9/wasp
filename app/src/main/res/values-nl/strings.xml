@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">Geen opgeslagen sites</string>
     <string name="hive_tap_remove" formatted="false">%d site(s) · tik om te verwijderen</string>
     <string name="hive_remove_btn" formatted="false">Verwijderen</string>
+
+    <string name="bonus_banner_title">+15 WP beschikbaar!</string>
+    <string name="bonus_banner_body">Bekijk een korte advertentie en verdien bonus WP</string>
+    <string name="bonus_banner_cta">CLAIMEN</string>
+    <string name="bonus_loading_ad">Bonus advertentie laden...</string>
+    <string name="bonus_rewarded">+15 WP bijgeschreven!</string>
 </resources>

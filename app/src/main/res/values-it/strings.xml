@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">Nessun sito salvato</string>
     <string name="hive_tap_remove" formatted="false">%d sito(i) · tocca per rimuovere</string>
     <string name="hive_remove_btn" formatted="false">Rimuovi</string>
+
+    <string name="bonus_banner_title">+15 WP disponibili!</string>
+    <string name="bonus_banner_body">Guarda un breve annuncio e guadagna WP bonus</string>
+    <string name="bonus_banner_cta">RISCATTA</string>
+    <string name="bonus_loading_ad">Caricamento annuncio bonus...</string>
+    <string name="bonus_rewarded">+15 WP accreditati!</string>
 </resources>

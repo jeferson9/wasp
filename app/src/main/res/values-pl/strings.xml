@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">Brak zapisanych stron</string>
     <string name="hive_tap_remove" formatted="false">%d strona(y) · dotknij aby usunąć</string>
     <string name="hive_remove_btn" formatted="false">Usuń</string>
+
+    <string name="bonus_banner_title">+15 WP dostępnych!</string>
+    <string name="bonus_banner_body">Obejrzyj krótką reklamę i zdobądź bonus WP</string>
+    <string name="bonus_banner_cta">ODBIERZ</string>
+    <string name="bonus_loading_ad">Ładowanie reklamy bonus...</string>
+    <string name="bonus_rewarded">+15 WP dodane!</string>
 </resources>

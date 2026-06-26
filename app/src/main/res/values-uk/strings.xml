@@ -164,4 +164,10 @@
     <string name="hive_no_sites" formatted="false">Немає збережених сайтів</string>
     <string name="hive_tap_remove" formatted="false">%d сайт(ів) · торкніться для видалення</string>
     <string name="hive_remove_btn" formatted="false">Видалити</string>
+
+    <string name="bonus_banner_title">+15 WP доступно!</string>
+    <string name="bonus_banner_body">Перегляньте коротку рекламу та отримайте бонусні WP</string>
+    <string name="bonus_banner_cta">ОТРИМАТИ</string>
+    <string name="bonus_loading_ad">Завантаження бонусної реклами...</string>
+    <string name="bonus_rewarded">+15 WP нараховано!</string>
 </resources>

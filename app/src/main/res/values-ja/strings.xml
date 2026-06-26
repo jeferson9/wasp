@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">保存済みサイトなし</string>
     <string name="hive_tap_remove" formatted="false">%d サイト · タップして削除</string>
     <string name="hive_remove_btn" formatted="false">削除</string>
+
+    <string name="bonus_banner_title">+15 WP獲得可能！</string>
+    <string name="bonus_banner_body">短い広告を見てボーナスWPをもらおう</string>
+    <string name="bonus_banner_cta">受け取る</string>
+    <string name="bonus_loading_ad">ボーナス広告読み込み中...</string>
+    <string name="bonus_rewarded">+15 WPが付与されました！</string>
 </resources>

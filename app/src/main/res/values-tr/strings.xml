@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">Kayıtlı site yok</string>
     <string name="hive_tap_remove" formatted="false">%d site · kaldırmak için dokun</string>
     <string name="hive_remove_btn" formatted="false">Kaldır</string>
+
+    <string name="bonus_banner_title">+15 WP mevcut!</string>
+    <string name="bonus_banner_body">Kısa bir reklam izle ve bonus WP kazan</string>
+    <string name="bonus_banner_cta">AL</string>
+    <string name="bonus_loading_ad">Bonus reklam yükleniyor...</string>
+    <string name="bonus_rewarded">+15 WP eklendi!</string>
 </resources>

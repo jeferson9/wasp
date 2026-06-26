@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">Keine Sites gespeichert</string>
     <string name="hive_tap_remove" formatted="false">%d Site(s) · zum Entfernen tippen</string>
     <string name="hive_remove_btn" formatted="false">Entfernen</string>
+
+    <string name="bonus_banner_title">+15 WP verfügbar!</string>
+    <string name="bonus_banner_body">Schau eine kurze Anzeige und erhalte Bonus-WP</string>
+    <string name="bonus_banner_cta">EINLÖSEN</string>
+    <string name="bonus_loading_ad">Bonus-Anzeige laden...</string>
+    <string name="bonus_rewarded">+15 WP gutgeschrieben!</string>
 </resources>

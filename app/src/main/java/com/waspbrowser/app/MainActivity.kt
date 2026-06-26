@@ -288,6 +288,13 @@ class MainActivity : AppCompatActivity() {
     private var currentTitle: String = ""
     private var sslErrorActive = false
 
+    // ── Bonus interstitial banner ─────────────────────────────────────
+    private val bonusHandler   = android.os.Handler(android.os.Looper.getMainLooper())
+    private var bonusBannerView: android.widget.FrameLayout? = null
+    private val BONUS_INTERVAL_MS   = 15 * 60 * 1000L  // 15 min entre banners
+    private val BONUS_COOLDOWN_MS   = 30 * 60 * 1000L  // 30 min após resgate
+    private val BONUS_AUTO_HIDE_MS  = 30 * 1000L       // fecha sozinho em 30s
+
     // =========================================================
     // LIFECYCLE
     // =========================================================
@@ -356,6 +363,7 @@ class MainActivity : AppCompatActivity() {
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         webAppView.onResume()
         webAppView.resumeTimers()
+        scheduleBonusBannerTimer()
         if (::webAppView.isInitialized && webAppView.visibility == View.VISIBLE &&
             ::geckoView.isInitialized && geckoView.visibility != View.VISIBLE) {
             // Restaura o tab visual sem resetar para 'main'
@@ -387,6 +395,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        bonusHandler.removeCallbacksAndMessages(null)
+        hideBonusBanner()
         // Pausa timers quando app vai para background
         webAppView.pauseTimers()
     }
@@ -1601,4 +1611,164 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BONUS INTERSTITIAL BANNER
+    // Aparece no topo do browser a cada 15 min de navegação.
+    // Cooldown de 30 min após resgate para nao saturar o usuário.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private fun scheduleBonusBannerTimer() {
+        bonusHandler.removeCallbacksAndMessages(null)
+        // Só agenda quando o browser (GeckoView) está visível
+        val prefs = getSharedPreferences("wasp_ads", MODE_PRIVATE)
+        val lastBonus = prefs.getLong("wp_interstitial_last", 0L)
+        val sinceBonus = System.currentTimeMillis() - lastBonus
+        val delay = if (sinceBonus < BONUS_COOLDOWN_MS) {
+            // Ainda no cooldown pós-resgate: agenda para quando terminar
+            BONUS_COOLDOWN_MS - sinceBonus
+        } else {
+            BONUS_INTERVAL_MS
+        }
+        bonusHandler.postDelayed({
+            if (::geckoView.isInitialized && geckoView.visibility == android.view.View.VISIBLE) {
+                showBonusBanner()
+            } else {
+                // Browser não está visível: reagenda normalmente
+                scheduleBonusBannerTimer()
+            }
+        }, delay)
+    }
+
+    private fun showBonusBanner() {
+        if (bonusBannerView != null) return  // já está visível
+        val ctx = this
+        val dm = resources.displayMetrics
+        fun dp(v: Int) = (v * dm.density).toInt()
+
+        val banner = android.widget.FrameLayout(ctx).apply {
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.parseColor("#1A1E2E"))
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), android.graphics.Color.parseColor("#40FFD400"))
+            }
+            elevation = dp(8).toFloat()
+        }
+
+        val row = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(10), dp(10), dp(10))
+        }
+
+        // Ícone ✦
+        val icon = android.widget.TextView(ctx).apply {
+            text = "✦"
+            setTextColor(android.graphics.Color.parseColor("#FFD400"))
+            textSize = 18f
+            setPadding(0, 0, dp(10), 0)
+        }
+        row.addView(icon)
+
+        // Textos (coluna)
+        val textCol = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            layoutParams = android.widget.LinearLayout.LayoutParams(0,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val tvTitle = android.widget.TextView(ctx).apply {
+            text = getString(R.string.bonus_banner_title)
+            setTextColor(android.graphics.Color.parseColor("#FFD400"))
+            textSize = 13f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        val tvBody = android.widget.TextView(ctx).apply {
+            text = getString(R.string.bonus_banner_body)
+            setTextColor(android.graphics.Color.parseColor("#AAC0D0E0"))
+            textSize = 11f
+        }
+        textCol.addView(tvTitle)
+        textCol.addView(tvBody)
+        row.addView(textCol)
+
+        // Botão CTA
+        val btnCta = android.widget.TextView(ctx).apply {
+            text = getString(R.string.bonus_banner_cta)
+            setTextColor(android.graphics.Color.parseColor("#111420"))
+            textSize = 11f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(android.graphics.Color.parseColor("#FFD400"))
+                cornerRadius = dp(6).toFloat()
+            }
+            setPadding(dp(12), dp(6), dp(12), dp(6))
+            setOnClickListener {
+                hideBonusBanner()
+                openBonusInterstitial()
+            }
+        }
+        row.addView(btnCta, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp(8) })
+
+        // Fechar (X)
+        val btnClose = android.widget.TextView(ctx).apply {
+            text = "✕"
+            setTextColor(android.graphics.Color.parseColor("#66C8D0E0"))
+            textSize = 14f
+            setPadding(dp(8), dp(6), dp(4), dp(6))
+            setOnClickListener {
+                hideBonusBanner()
+                // Descartou: reagenda para daqui 15 min
+                scheduleBonusBannerTimer()
+            }
+        }
+        row.addView(btnClose)
+
+        banner.addView(row)
+        bonusBannerView = banner
+
+        // Insere no topo de main_content_frame
+        val container = findViewById<android.widget.FrameLayout>(R.id.main_content_frame)
+        val lp = android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = android.view.Gravity.TOP
+            topMargin = dp(8)
+            marginStart = dp(12)
+            marginEnd = dp(12)
+        }
+        container.addView(banner, lp)
+
+        // Anima entrada (slide down)
+        banner.translationY = -dp(80).toFloat()
+        banner.animate().translationY(0f).setDuration(280)
+            .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+
+        // Auto-hide após 30s se não interagido
+        bonusHandler.postDelayed({
+            hideBonusBanner()
+            scheduleBonusBannerTimer()
+        }, BONUS_AUTO_HIDE_MS)
+    }
+
+    private fun hideBonusBanner() {
+        val b = bonusBannerView ?: return
+        bonusBannerView = null
+        b.animate().translationY(-b.height.toFloat()).alpha(0f).setDuration(220)
+            .withEndAction {
+                (b.parent as? android.view.ViewGroup)?.removeView(b)
+            }.start()
+    }
+
+    private fun openBonusInterstitial() {
+        val i = Intent(this, StartioAdActivity::class.java)
+        i.putExtra(StartioAdActivity.EXTRA_MODE, StartioAdActivity.MODE_INTERSTITIAL_BONUS)
+        startActivity(i)
+        // Agenda próximo banner para daqui 30 min (cooldown pós-resgate)
+        bonusHandler.postDelayed({ scheduleBonusBannerTimer() }, BONUS_COOLDOWN_MS)
+    }
+
 }

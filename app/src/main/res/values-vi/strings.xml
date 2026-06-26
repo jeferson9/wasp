@@ -114,4 +114,10 @@
     <string name="dl_empty">Chưa có tải xuống</string>
     <string name="dl_open">Mở</string>
     <string name="dl_size_unknown">Kích thước không xác định</string>
+
+    <string name="bonus_banner_title">+15 WP có sẵn!</string>
+    <string name="bonus_banner_body">Xem quảng cáo ngắn và nhận WP thưởng</string>
+    <string name="bonus_banner_cta">NHẬN</string>
+    <string name="bonus_loading_ad">Đang tải quảng cáo thưởng...</string>
+    <string name="bonus_rewarded">+15 WP đã cộng!</string>
 </resources>

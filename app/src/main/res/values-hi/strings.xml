@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">कोई सहेजी साइट नहीं</string>
     <string name="hive_tap_remove" formatted="false">%d साइट · हटाने के लिए टैप करें</string>
     <string name="hive_remove_btn" formatted="false">हटाएं</string>
+
+    <string name="bonus_banner_title">+15 WP उपलब्ध!</string>
+    <string name="bonus_banner_body">एक छोटा विज्ञापन देखें और बोनस WP पाएं</string>
+    <string name="bonus_banner_cta">प्राप्त करें</string>
+    <string name="bonus_loading_ad">बोनस विज्ञापन लोड हो रहा है...</string>
+    <string name="bonus_rewarded">+15 WP जमा!</string>
 </resources>

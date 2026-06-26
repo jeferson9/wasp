@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">没有保存的网站</string>
     <string name="hive_tap_remove" formatted="false">%d 个网站 · 点击删除</string>
     <string name="hive_remove_btn" formatted="false">删除</string>
+
+    <string name="bonus_banner_title">+15 WP 可领取！</string>
+    <string name="bonus_banner_body">观看一个简短广告，赚取奖励WP</string>
+    <string name="bonus_banner_cta">领取</string>
+    <string name="bonus_loading_ad">加载奖励广告...</string>
+    <string name="bonus_rewarded">+15 WP 已到账！</string>
 </resources>

@@ -123,4 +123,10 @@
     <string name="hive_no_sites" formatted="false">저장된 사이트 없음</string>
     <string name="hive_tap_remove" formatted="false">%d 사이트 · 탭하여 제거</string>
     <string name="hive_remove_btn" formatted="false">제거</string>
+
+    <string name="bonus_banner_title">+15 WP 획득 가능!</string>
+    <string name="bonus_banner_body">짧은 광고를 보고 보너스 WP를 받으세요</string>
+    <string name="bonus_banner_cta">받기</string>
+    <string name="bonus_loading_ad">보너스 광고 로딩 중...</string>
+    <string name="bonus_rewarded">+15 WP 지급!</string>
 </resources>

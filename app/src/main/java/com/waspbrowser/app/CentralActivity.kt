@@ -34,17 +34,31 @@ class CentralActivity : AppCompatActivity() {
         fun grantAdReward(ctx: android.content.Context) {
             ctx.getSharedPreferences("wasp_ads", android.content.Context.MODE_PRIVATE)
                 .edit().putLong("wp_ad_last", System.currentTimeMillis()).apply()
-            // Caso 1: Central como Activity dedicada (waspAddWP no documento).
             runJs("if(window.waspAddWP) window.waspAddWP($AD_REWARD_WP, 'Ad watched');")
-            // Caso 2: Central como iframe na WebView principal — alcança o
-            // iframe e credita lá. O localStorage é compartilhado (origem file://),
-            // então o saldo aparece em qualquer contexto da Central.
             BeeActivity.runJs(
                 "(function(){try{" +
                 "var f=document.getElementById('wasp-central-frame');" +
                 "if(f){var ifr=f.querySelector('iframe');" +
                 "if(ifr&&ifr.contentWindow&&ifr.contentWindow.waspAddWP){" +
                 "ifr.contentWindow.waspAddWP($AD_REWARD_WP,'Ad watched');}}" +
+                "}catch(e){}})();"
+            )
+        }
+
+        // Credita 15 WP do interstitial bônus (chamado pela StartioAdActivity).
+        // Cooldown separado de 30 min — independente do rewarded video.
+        const val INTERSTITIAL_BONUS_WP        = 15
+        const val INTERSTITIAL_COOLDOWN_MS     = 30 * 60 * 1000L
+        fun grantInterstitialBonus(ctx: android.content.Context) {
+            ctx.getSharedPreferences("wasp_ads", android.content.Context.MODE_PRIVATE)
+                .edit().putLong("wp_interstitial_last", System.currentTimeMillis()).apply()
+            runJs("if(window.waspAddWP) window.waspAddWP($INTERSTITIAL_BONUS_WP, 'Bonus ad');")
+            BeeActivity.runJs(
+                "(function(){try{" +
+                "var f=document.getElementById('wasp-central-frame');" +
+                "if(f){var ifr=f.querySelector('iframe');" +
+                "if(ifr&&ifr.contentWindow&&ifr.contentWindow.waspAddWP){" +
+                "ifr.contentWindow.waspAddWP($INTERSTITIAL_BONUS_WP,'Bonus ad');}}" +
                 "}catch(e){}})();"
             )
         }

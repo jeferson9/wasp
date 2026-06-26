@@ -51,9 +51,11 @@ import com.startapp.sdk.adsbase.adlisteners.VideoListener
 class StartioAdActivity : AppCompatActivity() {
 
     companion object {
-        const val TAG       = "StartioAdActivity"
-        const val EXTRA_MODE = "ad_mode"
-        const val APP_ID    = "204731691"
+        const val TAG                     = "StartioAdActivity"
+        const val EXTRA_MODE              = "ad_mode"
+        const val APP_ID                  = "204731691"
+        const val MODE_INTERSTITIAL_BONUS = "interstitial_bonus"
+        const val INTERSTITIAL_BONUS_WP   = 15
     }
 
     private val handler  = Handler(Looper.getMainLooper())
@@ -73,11 +75,40 @@ class StartioAdActivity : AppCompatActivity() {
             statusText.text = m
         }
 
-        // SDK ja inicializado no SplashActivity (no boot). Nao reinicializamos
-        // aqui: chamar init() de novo no momento de abrir o anuncio so atrasa
-        // a abertura da tela. Mantemos o modo de teste alinhado com o Splash.
         StartAppSDK.setTestAdsEnabled(true) // REMOVER ANTES DE PUBLICAR
 
+        val mode = intent.getStringExtra(EXTRA_MODE) ?: ""
+
+        if (mode == MODE_INTERSTITIAL_BONUS) {
+            // ── MODO INTERSTITIAL BÔNUS (15 WP) ──────────────────────────
+            // Interstitial nao tem callback de "completou" — credita ao fechar.
+            diag(getString(R.string.bonus_loading_ad))
+            val adBonus = StartAppAd(this)
+            adBonus.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
+                override fun onReceiveAd(p: Ad) {
+                    diag(getString(R.string.ad_starting_video))
+                    adBonus.showAd(object : AdDisplayListener {
+                        override fun adHidden(p0: Ad) {
+                            CentralActivity.grantInterstitialBonus(applicationContext)
+                            safeFinish()
+                        }
+                        override fun adDisplayed(p0: Ad) {}
+                        override fun adClicked(p0: Ad) {}
+                        override fun adNotDisplayed(p0: Ad) {
+                            diag(getString(R.string.ad_cant_show))
+                            safeFinish()
+                        }
+                    })
+                }
+                override fun onFailedToReceiveAd(p: Ad?) {
+                    diag(getString(R.string.ad_none_available))
+                    handler.postDelayed({ safeFinish() }, 900)
+                }
+            })
+            return
+        }
+
+        // ── MODO REWARDED VIDEO (30 WP) — comportamento original ─────────
         val ad = StartAppAd(this)
 
         // Marca rewarded so quando o video e assistido ate o fim.
@@ -90,11 +121,8 @@ class StartioAdActivity : AppCompatActivity() {
         ad.loadAd(StartAppAd.AdMode.REWARDED_VIDEO, object : AdEventListener {
             override fun onReceiveAd(p: Ad) {
                 diag(getString(R.string.ad_starting_video))
-                // Sem delay artificial: exibimos assim que o video esta pronto.
                 ad.showAd(object : AdDisplayListener {
                     override fun adHidden(p0: Ad) {
-                        // MODO SEGURO: credita 30 WP somente se o video foi
-                        // realmente completado. Sem video assistido = sem WP.
                         if (rewarded) {
                             CentralActivity.grantAdReward(applicationContext)
                         }

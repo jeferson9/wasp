@@ -123,6 +123,11 @@
     <string name="ad_none_available">No ad available</string>
     <string name="ad_wait_reward" formatted="false">Wait - you will receive %d WP for watching</string>
     <string name="ad_next_in">Next ad in ~%d min</string>
+    <string name="bonus_banner_title">+15 WP available!</string>
+    <string name="bonus_banner_body">Watch a quick ad and earn bonus WP</string>
+    <string name="bonus_banner_cta">CLAIM</string>
+    <string name="bonus_loading_ad">Loading bonus ad...</string>
+    <string name="bonus_rewarded">+15 WP credited!</string>
     <string name="toast_translate_error">Не вдалося почати переклад</string>
     <string name="toast_no_page_translate">Немає сторінки для перекладу</string>
     <string name="link_cant_open">Не вдалося відкрити це посилання</string>
