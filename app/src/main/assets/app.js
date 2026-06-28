@@ -1013,7 +1013,7 @@ function renderHive(){
         { name:"Google",        url:"https://google.com" },
     ];
 
-    const SEED_VERSION = "v4";
+    const SEED_VERSION = "v5";
     if(localStorage.getItem("waspHiveSeedVer") !== SEED_VERSION){
         const userAdded = list.filter(i => i && i.url && i._userAdded);
         list = SEED_SITES.map(s => ({ ...s, uses:0, lastUsed:0 })).concat(userAdded);
