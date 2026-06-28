@@ -703,9 +703,7 @@
             telegram: "https://t.ackinacki.com/?startapp=eyJyZWZlcnJlciI6ImplZmVyc29uOTk5In0"
         };
         var url = urls[which] || urls.telegram;
-        if (window.AndroidBee && typeof window.AndroidBee.openExternalUrl === "function") {
-            window.AndroidBee.openExternalUrl(url);
-        } else if (window.AndroidBee && typeof window.AndroidBee.openUrl === "function") {
+        if (window.AndroidBee && typeof window.AndroidBee.openUrl === "function") {
             window.AndroidBee.openUrl(url);
         } else {
             window.open(url, "_blank");
