@@ -57,6 +57,20 @@ class BeeBridge(
         catch (e: Exception) { }
     }
 
+    @JavascriptInterface
+    fun openExternalUrl(url: String) {
+        // Abre no app externo (Telegram, browser do sistema) via Intent
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                addCategory(android.content.Intent.CATEGORY_BROWSABLE)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("BeeBridge", "openExternalUrl error: ${e.message}")
+        }
+    }
+
     // ─── Bg Mining via WP ────────────────────────────────────────────────────
 
     /**
