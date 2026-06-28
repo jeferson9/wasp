@@ -1005,6 +1005,7 @@ function renderHive(){
     const SEED_SITES = [
         { name:"Acki Nacki",    url:"https://ackinacki.com" },
         { name:"Acki Live",     url:"https://acki.live" },
+        { name:"DEX.do",        url:"https://app.dex.do/?ref=a18c9c4f7004e3b81499db7080b0ac48657b85b4e15be7c6dec93957c1ed8378" },
         { name:"CoinMarketCap", url:"https://coinmarketcap.com" },
         { name:"CoinGecko",     url:"https://coingecko.com" },
         { name:"YouTube",       url:"https://youtube.com" },
@@ -1012,10 +1013,7 @@ function renderHive(){
         { name:"Google",        url:"https://google.com" },
     ];
 
-    // Versão do seed: ao subir o número, força recarregar a lista padrão
-    // (descarta os sites antigos pré-carregados). Sites que o USUÁRIO
-    // adicionou manualmente são preservados.
-    const SEED_VERSION = "v3";
+    const SEED_VERSION = "v4";
     if(localStorage.getItem("waspHiveSeedVer") !== SEED_VERSION){
         const userAdded = list.filter(i => i && i.url && i._userAdded);
         list = SEED_SITES.map(s => ({ ...s, uses:0, lastUsed:0 })).concat(userAdded);
