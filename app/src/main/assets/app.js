@@ -1005,7 +1005,7 @@ function renderHive(){
     const SEED_SITES = [
         { name:"Acki Nacki",    url:"https://ackinacki.com" },
         { name:"Acki Live",     url:"https://acki.live" },
-        { name:"DEX.do",        url:"https://app.dex.do/?ref=a18c9c4f7004e3b81499db7080b0ac48657b85b4e15be7c6dec93957c1ed8378" },
+        { name:"DEX.do",        url:"https://app.dex.do/?ref=a18c9c4f7004e3b81499db7080b0ac48657b85b4e15be7c6dec93957c1ed8378", icon:"file:///android_asset/img/dexdo.webp" },
         { name:"CoinMarketCap", url:"https://coinmarketcap.com" },
         { name:"CoinGecko",     url:"https://coingecko.com" },
         { name:"YouTube",       url:"https://youtube.com" },
@@ -1069,7 +1069,7 @@ function renderHive(){
     grid.innerHTML = "";
 
     function iconHTML(item){
-        if(item.pinned){
+        if(item.pinned || item.icon){
             return '<img class="hive-icon" src="' + item.icon + '">';
         }
         let domain = "";
