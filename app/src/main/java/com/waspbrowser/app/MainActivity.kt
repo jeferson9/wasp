@@ -1020,6 +1020,7 @@ class MainActivity : AppCompatActivity() {
                         lowerUrl.endsWith(".apk") ||
                         lowerUrl.startsWith("https://t.me/") ||
                         lowerUrl.startsWith("https://telegram.me/") ||
+                        lowerUrl.startsWith("https://t.ackinacki.com/") ||
                         lowerUrl.contains("links.gosh.sh/deeplinks") ||
                         lowerUrl.contains("deeplinks/wallet")
 
