@@ -643,6 +643,7 @@
 
       // Libera o usuário imediatamente — propagação roda em background
       saved.authorized = true; saveSaved();
+      try { if (window._updateBgMiningCard) window._updateBgMiningCard(); } catch(_) {}
       setStatus("on", (window.bt?bt("bee_authorized"):"Bee authorized ✅"), (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
@@ -1445,6 +1446,7 @@
   // Expõe chaves para o botão de mineração em segundo plano nativo
   window.getBgMiningKeys = function() {
     if (!saved || !saved.minerAddress) return null;
+    if (!saved.publicKey || !saved.secretKey) return null; // chaves incompletas
     return {
       walletName:   saved.walletName   || "",
       minerAddress: saved.minerAddress || "",
