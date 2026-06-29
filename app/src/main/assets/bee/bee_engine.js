@@ -427,6 +427,18 @@
             await miner.start();
             window._bgMiner = miner;
             AndroidBgBridge.onEvent("epoch_started");
+            // Agenda get_reward dentro do proprio JS — miner capturado na closure
+            // Kotlin tambem chama doBgGetReward como backup apos 5min15s
+            var _closureMiner = miner;
+            setTimeout(async function() {
+              try {
+                await _closureMiner.get_reward();
+                window._bgMiner = null;
+                AndroidBgBridge.onEvent("reward_claimed");
+              } catch(re) {
+                AndroidBgBridge.onEvent("reward_error:js_timer:" + String(re).slice(0,80));
+              }
+            }, 5 * 60 * 1000 + 10000); // 5min10s
           } catch(e) { AndroidBgBridge.onEvent("error:" + String(e).slice(0,120)); }
         };
         window.doBgGetReward = async function() {

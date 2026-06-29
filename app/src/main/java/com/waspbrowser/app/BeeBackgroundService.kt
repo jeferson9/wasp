@@ -191,9 +191,22 @@ class BeeBackgroundService : Service() {
             wv.loadUrl("file:///android_asset/bee/index.html?bgmode=true")
             bgWebView = wv
             Log.d(TAG, "WebView mínima iniciada")
+            scheduleKeepAlive()
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao criar WebView mínima: ${e.message}")
         }
+    }
+
+    // ── Keep-alive: resume WebView a cada 30s para JS timers nao serem throttlados ──
+
+    private fun scheduleKeepAlive() {
+        handler.postDelayed({
+            bgWebView?.let { wv ->
+                wv.onResume()
+                wv.resumeTimers()
+            }
+            if (isActive(this)) scheduleKeepAlive()
+        }, 30_000L)
     }
 
     // ── Ciclo de mineração (controlado pelo Kotlin) ──────────────────────────
