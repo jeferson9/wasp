@@ -246,10 +246,11 @@ class BeeBackgroundService : Service() {
                 when {
                     event == "sdk_ready" -> {
                         sdkReady = true
-                        updateNotification("🔑 SDK pronto")
-                        // Injeta as chaves e inicia o primeiro ciclo
-                        val keys = "window.initBgKeys('${esc(minerAddr)}','${esc(publicKey)}','${esc(secretKey)}');"
+                        updateNotification("🔑 SDK pronto — iniciando ciclo...")
+                        // Injeta chaves explicitamente (garante que bgmode as tem)
+                        val keys = "if(window.initBgKeys) window.initBgKeys('${esc(minerAddr)}','${esc(publicKey)}','${esc(secretKey)}');"
                         bgWebView?.evaluateJavascript(keys, null)
+                        // Aguarda 2s e dispara primeiro ciclo
                         handler.postDelayed({ triggerBgCycle() }, 2_000L)
                     }
                     event == "epoch_started" -> onEpochStarted()

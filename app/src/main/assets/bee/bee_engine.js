@@ -379,14 +379,29 @@
     // Modo background: notifica Kotlin e expoe funcoes de ciclo
     if (new URLSearchParams(window.location.search).get("bgmode") === "true") {
       try {
+        // Usa chaves injetadas pelo Kotlin ou do estado salvo
+        function _bgKeys() {
+          return {
+            minerAddress: (window._bgMinerAddr || saved.minerAddress || ""),
+            publicKey:    (window._bgPublicKey || saved.publicKey    || ""),
+            secretKey:    (window._bgSecretKey || saved.secretKey    || "")
+          };
+        }
+        window.initBgKeys = function(addr, pub, sec) {
+          window._bgMinerAddr = addr;
+          window._bgPublicKey = pub;
+          window._bgSecretKey = sec;
+        };
         window.doBgCycle = async function() {
           try {
+            var k = _bgKeys();
+            if (!k.minerAddress) { AndroidBgBridge.onEvent("no_keys"); return; }
             var miner = await window.BeeSDK.Miner.new({
               client_config: { network: { endpoints: ENDPOINTS } },
-              miner_address: saved.minerAddress,
+              miner_address: k.minerAddress,
               app_id: APP_ID,
-              public_key: saved.publicKey,
-              secret_key: saved.secretKey
+              public_key: k.publicKey,
+              secret_key: k.secretKey
             });
             var canStart = miner.can_start();
             if (!canStart) { AndroidBgBridge.onEvent("wait"); return; }
@@ -397,12 +412,13 @@
         };
         window.doBgGetReward = async function() {
           try {
+            var k = _bgKeys();
             var miner = window._bgMiner || await window.BeeSDK.Miner.new({
               client_config: { network: { endpoints: ENDPOINTS } },
-              miner_address: saved.minerAddress,
+              miner_address: k.minerAddress,
               app_id: APP_ID,
-              public_key: saved.publicKey,
-              secret_key: saved.secretKey
+              public_key: k.publicKey,
+              secret_key: k.secretKey
             });
             await miner.get_reward();
             window._bgMiner = null;
