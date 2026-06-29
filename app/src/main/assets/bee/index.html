@@ -703,8 +703,8 @@
             telegram: "https://t.me/ackinacki_bot"
         };
         var url = urls[which] || urls.telegram;
-        if (window.AndroidBee && typeof window.AndroidBee.openUrl === "function") {
-            window.AndroidBee.openUrl(url);
+        if (window.AndroidBee && typeof window.AndroidBee.openExternalUrl === "function") {
+            window.AndroidBee.openExternalUrl(url);
         } else {
             window.open(url, "_blank");
         }
