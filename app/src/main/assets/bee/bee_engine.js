@@ -395,7 +395,9 @@
         window.doBgCycle = async function() {
           try {
             var k = _bgKeys();
-            if (!k.minerAddress) { AndroidBgBridge.onEvent("no_keys"); return; }
+            if (!k.minerAddress) { AndroidBgBridge.onEvent("no_keys:addr_empty"); return; }
+            if (!window.BeeSDK)  { AndroidBgBridge.onEvent("no_sdk"); return; }
+            if (!window.BeeSDK.Miner) { AndroidBgBridge.onEvent("no_miner_class"); return; }
             var miner = await window.BeeSDK.Miner.new({
               client_config: { network: { endpoints: ENDPOINTS } },
               miner_address: k.minerAddress,
@@ -403,12 +405,13 @@
               public_key: k.publicKey,
               secret_key: k.secretKey
             });
+            if (!miner) { AndroidBgBridge.onEvent("miner_null"); return; }
             var canStart = miner.can_start();
             if (!canStart) { AndroidBgBridge.onEvent("wait"); return; }
             await miner.start();
             window._bgMiner = miner;
             AndroidBgBridge.onEvent("epoch_started");
-          } catch(e) { AndroidBgBridge.onEvent("error:" + String(e).slice(0,100)); }
+          } catch(e) { AndroidBgBridge.onEvent("error:" + String(e).slice(0,120)); }
         };
         window.doBgGetReward = async function() {
           try {
