@@ -883,7 +883,7 @@ initSDK();
     window._tapBtnAnim = function() {        if (_tapTimer) clearTimeout(_tapTimer);
         _tapTimer = setTimeout(function() {
             var btn = document.getElementById('btnTap');
-            if (btn) btn.textContent = 'PARTICIPANDO...';
+            if (btn) btn.textContent = window.bt ? bt('status_participating') : 'PARTICIPATING...';
         }, 1200);
     };
 })();
