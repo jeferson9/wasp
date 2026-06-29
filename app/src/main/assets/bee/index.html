@@ -736,7 +736,7 @@
             if (btn) btn.textContent = "Iniciando...";
             if (status) { status.style.display = "block"; status.textContent = "Carregando SDK em segundo plano..."; }
 
-            if (window.AndroidBee && typeof window.AndroidBee.startBgMiningFull === "function") {
+            try {
                 window.AndroidBee.startBgMiningFull(
                     keys.walletName   || "",
                     keys.minerAddress || "",
@@ -745,9 +745,16 @@
                 );
                 if (btn) btn.textContent = "⚡ Minerando em segundo plano";
                 if (status) status.textContent = "Kotlin controla o timing — tela pode apagar normalmente.";
-            } else {
-                if (btn) { btn.disabled = false; btn.textContent = "Minerar em Segundo Plano"; }
-                if (status) status.textContent = "Bridge não disponível.";
+            } catch(err) {
+                // Fallback: tenta startBgMining simples
+                try {
+                    window.AndroidBee.startBgMining(0, keys.walletName || "");
+                    if (btn) btn.textContent = "⚡ Segundo plano ativo";
+                    if (status) status.textContent = "Modo legado ativo.";
+                } catch(err2) {
+                    if (btn) { btn.disabled = false; btn.textContent = "Minerar em Segundo Plano"; }
+                    if (status) status.textContent = "Erro: " + err.message;
+                }
             }
         } catch(e) {
             var btn2 = document.getElementById("btnBgMining");
