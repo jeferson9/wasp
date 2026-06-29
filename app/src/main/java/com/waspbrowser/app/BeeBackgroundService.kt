@@ -247,6 +247,7 @@ class BeeBackgroundService : Service() {
             Log.d(TAG, "BgBridge event: $event")
             handler.post {
                 when {
+                    event == "propagating" -> updateNotification("🔗 Verificando chaves na rede...")
                     event == "sdk_ready" -> {
                         sdkReady = true
                         updateNotification("🔑 SDK pronto — iniciando ciclo...")

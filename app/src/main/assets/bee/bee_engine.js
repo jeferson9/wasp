@@ -392,12 +392,32 @@
           window._bgPublicKey = pub;
           window._bgSecretKey = sec;
         };
+        var _bgPropagated = false;
         window.doBgCycle = async function() {
           try {
             var k = _bgKeys();
             if (!k.minerAddress) { AndroidBgBridge.onEvent("no_keys:addr_empty"); return; }
             if (!window.BeeSDK)  { AndroidBgBridge.onEvent("no_sdk"); return; }
             if (!window.BeeSDK.Miner) { AndroidBgBridge.onEvent("no_miner_class"); return; }
+
+            // Garante propagacao das chaves antes do primeiro ciclo
+            if (!_bgPropagated) {
+              AndroidBgBridge.onEvent("propagating");
+              try {
+                await window.BeeSDK.ensure_mining_keys_propagated({
+                  client_config: { network: { endpoints: ENDPOINTS } },
+                  miner_address: k.minerAddress,
+                  app_id: APP_ID,
+                  expected_owner_public: k.publicKey,
+                  max_attempts: 30,
+                  interval_ms: 3000
+                });
+                _bgPropagated = true;
+              } catch(pe) {
+                _bgPropagated = true; // tenta mesmo assim
+              }
+            }
+
             var miner = await window.BeeSDK.Miner.new(
               ENDPOINTS, APP_ID, k.minerAddress, k.publicKey, k.secretKey
             );
