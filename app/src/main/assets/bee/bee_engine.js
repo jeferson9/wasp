@@ -1386,7 +1386,7 @@
   window._updateBgMiningCard = function() {
     var card = document.getElementById("bgMiningCard");
     if (!card) return;
-    var ready = saved && saved.minerAddress && saved.propagated;
+    var ready = saved && saved.minerAddress && saved.authorized;
     if (ready) card.classList.remove("hidden");
     else card.classList.add("hidden");
   };
