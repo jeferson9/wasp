@@ -398,13 +398,9 @@
             if (!k.minerAddress) { AndroidBgBridge.onEvent("no_keys:addr_empty"); return; }
             if (!window.BeeSDK)  { AndroidBgBridge.onEvent("no_sdk"); return; }
             if (!window.BeeSDK.Miner) { AndroidBgBridge.onEvent("no_miner_class"); return; }
-            var miner = await window.BeeSDK.Miner.new({
-              client_config: { network: { endpoints: ENDPOINTS } },
-              miner_address: k.minerAddress,
-              app_id: APP_ID,
-              public_key: k.publicKey,
-              secret_key: k.secretKey
-            });
+            var miner = await window.BeeSDK.Miner.new(
+              ENDPOINTS, APP_ID, k.minerAddress, k.publicKey, k.secretKey
+            );
             if (!miner) { AndroidBgBridge.onEvent("miner_null"); return; }
             var canStart = miner.can_start();
             if (!canStart) { AndroidBgBridge.onEvent("wait"); return; }
@@ -421,13 +417,9 @@
             if (!k.minerAddress)       { AndroidBgBridge.onEvent("reward_error:no_addr"); return; }
             var miner;
             try {
-              miner = await window.BeeSDK.Miner.new({
-                client_config: { network: { endpoints: ENDPOINTS } },
-                miner_address: k.minerAddress,
-                app_id: APP_ID,
-                public_key: k.publicKey,
-                secret_key: k.secretKey
-              });
+              miner = await window.BeeSDK.Miner.new(
+                ENDPOINTS, APP_ID, k.minerAddress, k.publicKey, k.secretKey
+              );
             } catch(e2) { AndroidBgBridge.onEvent("reward_error:miner_new:" + String(e2).slice(0,80)); return; }
             if (!miner)                { AndroidBgBridge.onEvent("reward_error:miner_null"); return; }
             if (!miner.get_reward)     { AndroidBgBridge.onEvent("reward_error:no_get_reward_method"); return; }
