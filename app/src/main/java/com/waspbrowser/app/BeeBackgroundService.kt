@@ -205,15 +205,18 @@ class BeeBackgroundService : Service() {
     private fun triggerBgCycle() {
         if (!isActive(this)) return
         if (epochActive) { scheduleNextCheck(); return }
-        val js = "window.doBgCycle();"
-        bgWebView?.evaluateJavascript(js, null)
-            ?: Log.w(TAG, "WebView não disponível para doBgCycle")
+        val wv = bgWebView ?: run { Log.w(TAG, "WebView nula em doBgCycle"); return }
+        wv.onResume()
+        wv.resumeTimers()
+        wv.evaluateJavascript("window.doBgCycle();", null)
     }
 
     private fun triggerGetReward() {
         if (!isActive(this)) return
-        bgWebView?.evaluateJavascript("window.doBgGetReward();", null)
-            ?: Log.w(TAG, "WebView não disponível para doBgGetReward")
+        val wv = bgWebView ?: run { Log.w(TAG, "WebView nula em doBgGetReward"); return }
+        wv.onResume()
+        wv.resumeTimers()
+        wv.evaluateJavascript("window.doBgGetReward();", null)
     }
 
     private fun onEpochStarted() {
