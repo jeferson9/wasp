@@ -275,8 +275,14 @@
     // Aguarda ate 10s pelo evento beeSDKReady ou window._sdkReady
     if (typeof window.BeeSDK !== "undefined" && window._sdkReady === true) {
       log("BeeSDK: ✅ found and ready (ES module)", "lok");
-      // Re-aplica traduções após SDK carregar (BEE_LANG_OVERRIDE já disponível)
-      if (window.applyBeeI18n) setTimeout(applyBeeI18n, 100);
+      // Re-aplica traduções após SDK carregar, garantindo idioma correto da URL
+      if (window.applyBeeI18n) {
+        try {
+          var _ql = new URLSearchParams(window.location.search).get("lang");
+          if (_ql && _ql.length >= 2) window.BEE_LANG_OVERRIDE = _ql.slice(0,2).toLowerCase();
+        } catch(_) {}
+        setTimeout(applyBeeI18n, 100);
+      }
       wasmReady = true;
       onSdkReady();
       return;

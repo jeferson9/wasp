@@ -793,6 +793,9 @@ class BeeActivity : AppCompatActivity() {
         beeWebView.onResume()
         beeWebView.resumeTimers()
         evaluateJs("if(window.onAppResume) window.onAppResume()")
+        // Re-injeta idioma ao voltar ao foco (cobre mudança de idioma no sistema)
+        val resumeLang = java.util.Locale.getDefault().language.lowercase()
+        evaluateJs("(function(){ try { window.BEE_LANG_OVERRIDE='$resumeLang'; if(window.applyBeeI18n) applyBeeI18n(); } catch(e){} })();")
         // WakeLock: mantém CPU ativo para o JS do epoch continuar em background
         if (wakeLock == null || wakeLock?.isHeld == false) {
             val pm = getSystemService(POWER_SERVICE) as PowerManager
