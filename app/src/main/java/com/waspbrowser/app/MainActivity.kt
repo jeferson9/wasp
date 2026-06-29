@@ -629,6 +629,7 @@ class MainActivity : AppCompatActivity() {
             isLongClickable = true
             requestFocus(View.FOCUS_DOWN)
             setOnTouchListener { v, _ -> if (!v.hasFocus()) v.requestFocus(View.FOCUS_DOWN); false }
+            setOnLongClickListener { true } // consome long-press: impede menu de contexto nativo
         }
         webAppView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
