@@ -179,4 +179,27 @@ class BeeBridge(
             activity?.finish()
         }
     }
+
+    @JavascriptInterface
+    fun startBgMiningFull(walletName: String, minerAddress: String, publicKey: String, secretKey: String) {
+        Log.d("BeeBridge", "startBgMiningFull: wallet=$walletName")
+        try {
+            context.getSharedPreferences(BeeBackgroundService.PREFS_BG, android.content.Context.MODE_PRIVATE)
+                .edit()
+                .putString(BeeBackgroundService.KEY_MINER_ADDR, minerAddress)
+                .putString(BeeBackgroundService.KEY_PUBLIC_KEY, publicKey)
+                .putString(BeeBackgroundService.KEY_SECRET_KEY, secretKey)
+                .apply()
+            val intent = BeeBackgroundService.buildStartIntentFull(
+                context, walletName, minerAddress, publicKey, secretKey
+            )
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        } catch (e: Exception) {
+            Log.e("BeeBridge", "startBgMiningFull error: ${e.message}")
+        }
+    }
 }
