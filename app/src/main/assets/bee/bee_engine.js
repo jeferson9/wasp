@@ -415,22 +415,28 @@
         };
         window.doBgGetReward = async function() {
           try {
+            if (!window.BeeSDK)        { AndroidBgBridge.onEvent("reward_error:no_BeeSDK"); return; }
+            if (!window.BeeSDK.Miner)  { AndroidBgBridge.onEvent("reward_error:no_Miner_class"); return; }
             var k = _bgKeys();
-            // Sempre cria miner novo — objeto WASM anterior pode ter sido GC'd
-            var miner = await window.BeeSDK.Miner.new({
-              client_config: { network: { endpoints: ENDPOINTS } },
-              miner_address: k.minerAddress,
-              app_id: APP_ID,
-              public_key: k.publicKey,
-              secret_key: k.secretKey
-            });
-            if (!miner) { AndroidBgBridge.onEvent("reward_error:miner_null"); return; }
+            if (!k.minerAddress)       { AndroidBgBridge.onEvent("reward_error:no_addr"); return; }
+            var miner;
+            try {
+              miner = await window.BeeSDK.Miner.new({
+                client_config: { network: { endpoints: ENDPOINTS } },
+                miner_address: k.minerAddress,
+                app_id: APP_ID,
+                public_key: k.publicKey,
+                secret_key: k.secretKey
+              });
+            } catch(e2) { AndroidBgBridge.onEvent("reward_error:miner_new:" + String(e2).slice(0,80)); return; }
+            if (!miner)                { AndroidBgBridge.onEvent("reward_error:miner_null"); return; }
+            if (!miner.get_reward)     { AndroidBgBridge.onEvent("reward_error:no_get_reward_method"); return; }
             await miner.get_reward();
             window._bgMiner = null;
             AndroidBgBridge.onEvent("reward_claimed");
           } catch(e) {
             window._bgMiner = null;
-            AndroidBgBridge.onEvent("reward_error:" + String(e).slice(0,120));
+            AndroidBgBridge.onEvent("reward_error:outer:" + String(e).slice(0,100));
           }
         };
         AndroidBgBridge.onEvent("sdk_ready");
