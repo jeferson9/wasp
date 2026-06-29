@@ -416,17 +416,22 @@
         window.doBgGetReward = async function() {
           try {
             var k = _bgKeys();
-            var miner = window._bgMiner || await window.BeeSDK.Miner.new({
+            // Sempre cria miner novo — objeto WASM anterior pode ter sido GC'd
+            var miner = await window.BeeSDK.Miner.new({
               client_config: { network: { endpoints: ENDPOINTS } },
               miner_address: k.minerAddress,
               app_id: APP_ID,
               public_key: k.publicKey,
               secret_key: k.secretKey
             });
+            if (!miner) { AndroidBgBridge.onEvent("reward_error:miner_null"); return; }
             await miner.get_reward();
             window._bgMiner = null;
             AndroidBgBridge.onEvent("reward_claimed");
-          } catch(e) { window._bgMiner = null; AndroidBgBridge.onEvent("reward_error:" + String(e).slice(0,100)); }
+          } catch(e) {
+            window._bgMiner = null;
+            AndroidBgBridge.onEvent("reward_error:" + String(e).slice(0,120));
+          }
         };
         AndroidBgBridge.onEvent("sdk_ready");
       } catch(e) {}
