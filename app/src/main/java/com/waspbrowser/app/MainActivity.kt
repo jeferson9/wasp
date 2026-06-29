@@ -668,7 +668,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupGecko() {
         if (geckoRuntime == null) {
-            geckoRuntime = GeckoRuntime.create(this)
+            val locale = java.util.Locale.getDefault()
+            val settings = org.mozilla.geckoview.GeckoRuntimeSettings.Builder()
+                .locales(arrayOf(locale.toLanguageTag(), "en"))
+                .build()
+            geckoRuntime = GeckoRuntime.create(this, settings)
         }
         geckoSession = GeckoSession()
         attachGeckoDelegates(geckoSession)
