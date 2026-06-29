@@ -376,6 +376,44 @@
   }
 
   function onSdkReady() {
+    // Modo background: notifica Kotlin e expoe funcoes de ciclo
+    if (new URLSearchParams(window.location.search).get("bgmode") === "true") {
+      try {
+        window.doBgCycle = async function() {
+          try {
+            var miner = await window.BeeSDK.Miner.new({
+              client_config: { network: { endpoints: ENDPOINTS } },
+              miner_address: saved.minerAddress,
+              app_id: APP_ID,
+              public_key: saved.publicKey,
+              secret_key: saved.secretKey
+            });
+            var canStart = miner.can_start();
+            if (!canStart) { AndroidBgBridge.onEvent("wait"); return; }
+            await miner.start();
+            window._bgMiner = miner;
+            AndroidBgBridge.onEvent("epoch_started");
+          } catch(e) { AndroidBgBridge.onEvent("error:" + String(e).slice(0,100)); }
+        };
+        window.doBgGetReward = async function() {
+          try {
+            var miner = window._bgMiner || await window.BeeSDK.Miner.new({
+              client_config: { network: { endpoints: ENDPOINTS } },
+              miner_address: saved.minerAddress,
+              app_id: APP_ID,
+              public_key: saved.publicKey,
+              secret_key: saved.secretKey
+            });
+            await miner.get_reward();
+            window._bgMiner = null;
+            AndroidBgBridge.onEvent("reward_claimed");
+          } catch(e) { window._bgMiner = null; AndroidBgBridge.onEvent("reward_error:" + String(e).slice(0,100)); }
+        };
+        AndroidBgBridge.onEvent("sdk_ready");
+      } catch(e) {}
+      return; // nao inicializa UI em bgmode
+    }
+
     updateMetrics();
     if (saved.authorized && saved.walletName && saved.minerAddress) {
       setStatus("on", (window.bt?bt("bee_ready"):"Bee ready ✅"), (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);

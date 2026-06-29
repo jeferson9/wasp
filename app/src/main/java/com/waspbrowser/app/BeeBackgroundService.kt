@@ -187,7 +187,8 @@ class BeeBackgroundService : Service() {
                 }
             }
 
-            wv.loadUrl("file:///android_asset/bee/bee_bg_minimal.html")
+            // Usa o index.html original — o carregamento de WASM ja funciona la
+            wv.loadUrl("file:///android_asset/bee/index.html?bgmode=true")
             bgWebView = wv
             Log.d(TAG, "WebView mínima iniciada")
         } catch (e: Exception) {
