@@ -3,31 +3,29 @@
 <head><meta charset="UTF-8"/></head>
 <body>
 <script>
-// Modo background mínimo — sem logs, sem timers JS, sem UI.
-// Kotlin controla o timing via evaluateJavascript.
-
 var ENDPOINTS = ["https://mainnet-cf.ackinacki.org"];
 var APP_ID    = "0x0000000000000000000000000000000000000000000000000000000000000017";
 
-window._bgMiner     = null;
-window._sdkReady    = false;
-window._minerAddr   = "";
-window._publicKey   = "";
-window._secretKey   = "";
+window._bgMiner   = null;
+window._sdkReady  = false;
+window._minerAddr = "";
+window._publicKey = "";
+window._secretKey = "";
 
-// Chamado pelo Kotlin após passar as chaves
+function notify(event) {
+    try { if (window.AndroidBgBridge) AndroidBgBridge.onEvent(event); } catch(_) {}
+}
+
 window.initBgKeys = function(minerAddress, publicKey, secretKey) {
-    window._minerAddr  = minerAddress;
-    window._publicKey  = publicKey;
-    window._secretKey  = secretKey;
+    window._minerAddr = minerAddress;
+    window._publicKey = publicKey;
+    window._secretKey = secretKey;
 };
 
-// Chamado pelo Kotlin para tentar iniciar epoch
 window.doBgCycle = async function() {
     try {
         if (!window.BeeSDK || !window._sdkReady) return notify("not_ready");
-        if (!window._minerAddr)                   return notify("no_keys");
-
+        if (!window._minerAddr) return notify("no_keys");
         var miner = await BeeSDK.Miner.new({
             client_config: { network: { endpoints: ENDPOINTS } },
             miner_address: window._minerAddr,
@@ -35,23 +33,19 @@ window.doBgCycle = async function() {
             public_key:    window._publicKey,
             secret_key:    window._secretKey
         });
-
         var canStart = miner.can_start();
         if (!canStart) return notify("wait");
-
         await miner.start();
         window._bgMiner = miner;
         notify("epoch_started");
     } catch(e) {
-        notify("error:" + e.toString().slice(0, 100));
+        notify("error:" + String(e).slice(0, 100));
     }
 };
 
-// Chamado pelo Kotlin após 5 min de epoch
 window.doBgGetReward = async function() {
     try {
         if (!window.BeeSDK || !window._sdkReady) return notify("not_ready");
-
         var miner = window._bgMiner || await BeeSDK.Miner.new({
             client_config: { network: { endpoints: ENDPOINTS } },
             miner_address: window._minerAddr,
@@ -59,46 +53,58 @@ window.doBgGetReward = async function() {
             public_key:    window._publicKey,
             secret_key:    window._secretKey
         });
-
         await miner.get_reward();
         window._bgMiner = null;
         notify("reward_claimed");
     } catch(e) {
         window._bgMiner = null;
-        notify("reward_error:" + e.toString().slice(0, 100));
+        notify("reward_error:" + String(e).slice(0, 100));
     }
 };
 
-function notify(event) {
-    try {
-        if (window.AndroidBgBridge) AndroidBgBridge.onEvent(event);
-    } catch(_) {}
-}
-</script>
+// Carrega SDK via script tag normal (sem ES module)
+document.addEventListener("DOMContentLoaded", function() {
+    var s = document.createElement("script");
+    s.src = "file:///android_asset/bee/bee_sdk_core.js";
+    s.onload = function() {
+        // bee_sdk_core.js expõe BeeSDK globalmente
+        if (window.BeeSDK) {
+            window._sdkReady = true;
+            notify("sdk_ready");
+        } else {
+            // Tenta via módulo como fallback
+            loadSdkModule();
+        }
+    };
+    s.onerror = function() { loadSdkModule(); };
+    document.head.appendChild(s);
+});
 
-<!-- Carrega WASM SDK -->
-<script type="module">
-import init, * as BeeSDKModule from './bee_sdk.js';
-(async function() {
-    try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'file:///android_asset/bee/bee_sdk_bg.wasm', true);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = async function() {
-            try {
-                await init(xhr.response);
-                window.BeeSDK    = BeeSDKModule;
-                window._sdkReady = true;
-                if (window.AndroidBgBridge) AndroidBgBridge.onEvent("sdk_ready");
-            } catch(e) {
-                if (window.AndroidBgBridge) AndroidBgBridge.onEvent("sdk_error:" + e.toString().slice(0,100));
+function loadSdkModule() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "file:///android_asset/bee/bee_sdk_bg.wasm", true);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function() {
+        try {
+            // Usa o init global se bee_sdk_core.js carregou parcialmente
+            if (typeof wasm_bindgen !== "undefined") {
+                wasm_bindgen(xhr.response).then(function() {
+                    window.BeeSDK = wasm_bindgen;
+                    window._sdkReady = true;
+                    notify("sdk_ready");
+                }).catch(function(e) {
+                    notify("sdk_error:" + String(e).slice(0, 80));
+                });
+            } else {
+                notify("sdk_error:wasm_bindgen_not_found");
             }
-        };
-        xhr.send();
-    } catch(e) {
-        if (window.AndroidBgBridge) AndroidBgBridge.onEvent("sdk_error:" + e.toString().slice(0,100));
-    }
-})();
+        } catch(e) {
+            notify("sdk_error:" + String(e).slice(0, 80));
+        }
+    };
+    xhr.onerror = function() { notify("sdk_error:xhr_failed"); };
+    xhr.send();
+}
 </script>
 </body>
 </html>
