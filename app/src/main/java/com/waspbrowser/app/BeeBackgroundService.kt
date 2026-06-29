@@ -255,14 +255,26 @@ class BeeBackgroundService : Service() {
                     }
                     event == "epoch_started" -> onEpochStarted()
                     event == "reward_claimed" -> onRewardClaimed()
-                    event == "wait" -> scheduleNextCheck()
-                    event == "not_ready" -> handler.postDelayed({ triggerBgCycle() }, 10_000L)
-                    event.startsWith("error") || event.startsWith("reward_error") -> {
+                    event == "wait" -> {
+                        updateNotification("⏳ Aguardando epoch... próxima tentativa em 1min")
+                        scheduleNextCheck()
+                    }
+                    event == "not_ready" -> {
+                        updateNotification("⏳ SDK não pronto, aguardando...")
+                        handler.postDelayed({ triggerBgCycle() }, 10_000L)
+                    }
+                    event.startsWith("error") -> {
                         epochActive = false
+                        updateNotification("⚠️ ${event.take(60)}")
                         Log.e(TAG, "Erro mining bg: $event")
                         scheduleNextCheck()
                     }
-                    event == "no_keys" -> updateNotification("⚠️ Chaves não encontradas")
+                    event.startsWith("reward_error") -> {
+                        epochActive = false
+                        updateNotification("⚠️ Reward falhou, tentando novamente...")
+                        scheduleNextCheck()
+                    }
+                    event == "no_keys" -> updateNotification("⚠️ Chaves não encontradas — reabra o painel")
                 }
             }
         }
