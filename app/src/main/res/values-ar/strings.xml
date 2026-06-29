@@ -13,4 +13,23 @@
     <string name="bonus_banner_cta">استرداد</string>
     <string name="bonus_loading_ad">جارٍ تحميل الإعلان...</string>
     <string name="bonus_rewarded">تمت إضافة +15 WP!</string>
+    <string name="tr_reg_americas">الأمريكتان</string>
+    <string name="tr_reg_west_europe">أوروبا الغربية</string>
+    <string name="tr_reg_central_east_europe">أوروبا الوسطى والشرقية</string>
+    <string name="tr_reg_caucasus_central_asia">القوقاز وآسيا الوسطى</string>
+    <string name="tr_reg_east_asia">شرق آسيا</string>
+    <string name="tr_reg_se_asia">جنوب شرق آسيا</string>
+    <string name="tr_reg_south_asia">جنوب آسيا</string>
+    <string name="tr_reg_middle_east">الشرق الأوسط</string>
+    <string name="tr_reg_africa">أفريقيا</string>
+    <string name="tr_reg_pacific_regional">المحيط الهادئ والإقليمية</string>
+    <string name="tr_title">ترجمة الصفحة إلى</string>
+    <string name="tr_translated_badge">تمت ترجمة الصفحة</string>
+    <string name="tr_other_lang">ترجمة إلى لغة أخرى</string>
+    <string name="tr_other_lang_sub">اختر من %d لغة</string>
+    <string name="tr_view_original">عرض الأصل</string>
+    <string name="tr_view_original_sub">إعادة تحميل الصفحة بدون ترجمة</string>
+    <string name="toast_translate_error">تعذر بدء الترجمة</string>
+    <string name="toast_no_page_translate">لا توجد صفحة للترجمة</string>
+    <string name="link_cant_open">تعذر فتح هذا الرابط</string>
 </resources>

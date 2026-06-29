@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">EINLÖSEN</string>
     <string name="bonus_loading_ad">Bonus-Anzeige laden...</string>
     <string name="bonus_rewarded">+15 WP gutgeschrieben!</string>
+    <string name="tr_reg_americas">Amerikas</string>
+    <string name="tr_reg_west_europe">Westeuropa</string>
+    <string name="tr_reg_central_east_europe">Mittel- &amp; Osteuropa</string>
+    <string name="tr_reg_caucasus_central_asia">Kaukasus &amp; Zentralasien</string>
+    <string name="tr_reg_east_asia">Ostasien</string>
+    <string name="tr_reg_se_asia">Südostasien</string>
+    <string name="tr_reg_south_asia">Südasien</string>
+    <string name="tr_reg_middle_east">Naher Osten</string>
+    <string name="tr_reg_africa">Afrika</string>
+    <string name="tr_reg_pacific_regional">Pazifik &amp; Regional</string>
+    <string name="tr_title">Seite übersetzen in</string>
+    <string name="tr_translated_badge">Seite übersetzt</string>
+    <string name="tr_other_lang">In andere Sprache übersetzen</string>
+    <string name="tr_other_lang_sub">Aus %d Sprachen wählen</string>
+    <string name="tr_view_original">Original anzeigen</string>
+    <string name="tr_view_original_sub">Seite ohne Übersetzung neu laden</string>
+    <string name="toast_translate_error">Übersetzung konnte nicht gestartet werden</string>
+    <string name="toast_no_page_translate">Keine Seite zum Übersetzen</string>
+    <string name="link_cant_open">Link konnte nicht geöffnet werden</string>
 </resources>

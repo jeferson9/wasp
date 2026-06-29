@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">领取</string>
     <string name="bonus_loading_ad">加载奖励广告...</string>
     <string name="bonus_rewarded">+15 WP 已到账！</string>
+    <string name="tr_reg_americas">美洲</string>
+    <string name="tr_reg_west_europe">西欧</string>
+    <string name="tr_reg_central_east_europe">中东欧</string>
+    <string name="tr_reg_caucasus_central_asia">高加索和中亚</string>
+    <string name="tr_reg_east_asia">东亚</string>
+    <string name="tr_reg_se_asia">东南亚</string>
+    <string name="tr_reg_south_asia">南亚</string>
+    <string name="tr_reg_middle_east">中东</string>
+    <string name="tr_reg_africa">非洲</string>
+    <string name="tr_reg_pacific_regional">太平洋和地区</string>
+    <string name="tr_title">将页面翻译为</string>
+    <string name="tr_translated_badge">页面已翻译</string>
+    <string name="tr_other_lang">翻译成另一种语言</string>
+    <string name="tr_other_lang_sub">从%d种语言中选择</string>
+    <string name="tr_view_original">查看原文</string>
+    <string name="tr_view_original_sub">重新加载无翻译页面</string>
+    <string name="toast_translate_error">无法开始翻译</string>
+    <string name="toast_no_page_translate">没有可翻译的页面</string>
+    <string name="link_cant_open">无法打开此链接</string>
 </resources>

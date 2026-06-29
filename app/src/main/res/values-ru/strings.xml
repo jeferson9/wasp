@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">ПОЛУЧИТЬ</string>
     <string name="bonus_loading_ad">Загрузка бонусной рекламы...</string>
     <string name="bonus_rewarded">+15 WP начислено!</string>
+    <string name="tr_reg_americas">Америки</string>
+    <string name="tr_reg_west_europe">Западная Европа</string>
+    <string name="tr_reg_central_east_europe">Центральная и Восточная Европа</string>
+    <string name="tr_reg_caucasus_central_asia">Кавказ и Центральная Азия</string>
+    <string name="tr_reg_east_asia">Восточная Азия</string>
+    <string name="tr_reg_se_asia">Юго-Восточная Азия</string>
+    <string name="tr_reg_south_asia">Южная Азия</string>
+    <string name="tr_reg_middle_east">Ближний Восток</string>
+    <string name="tr_reg_africa">Африка</string>
+    <string name="tr_reg_pacific_regional">Тихоокеанский и Региональные</string>
+    <string name="tr_title">Перевести страницу на</string>
+    <string name="tr_translated_badge">Страница переведена</string>
+    <string name="tr_other_lang">Перевести на другой язык</string>
+    <string name="tr_other_lang_sub">Выбрать из %d языков</string>
+    <string name="tr_view_original">Посмотреть оригинал</string>
+    <string name="tr_view_original_sub">Перезагрузить страницу без перевода</string>
+    <string name="toast_translate_error">Не удалось начать перевод</string>
+    <string name="toast_no_page_translate">Нет страницы для перевода</string>
+    <string name="link_cant_open">Не удалось открыть ссылку</string>
 </resources>

@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">받기</string>
     <string name="bonus_loading_ad">보너스 광고 로딩 중...</string>
     <string name="bonus_rewarded">+15 WP 지급!</string>
+    <string name="tr_reg_americas">아메리카</string>
+    <string name="tr_reg_west_europe">서유럽</string>
+    <string name="tr_reg_central_east_europe">중앙 및 동유럽</string>
+    <string name="tr_reg_caucasus_central_asia">캅카스 및 중앙아시아</string>
+    <string name="tr_reg_east_asia">동아시아</string>
+    <string name="tr_reg_se_asia">동남아시아</string>
+    <string name="tr_reg_south_asia">남아시아</string>
+    <string name="tr_reg_middle_east">중동</string>
+    <string name="tr_reg_africa">아프리카</string>
+    <string name="tr_reg_pacific_regional">태평양 및 지역</string>
+    <string name="tr_title">페이지 번역</string>
+    <string name="tr_translated_badge">페이지가 번역되었습니다</string>
+    <string name="tr_other_lang">다른 언어로 번역</string>
+    <string name="tr_other_lang_sub">%d개 언어 중 선택</string>
+    <string name="tr_view_original">원본 보기</string>
+    <string name="tr_view_original_sub">번역 없이 페이지 새로고침</string>
+    <string name="toast_translate_error">번역을 시작할 수 없습니다</string>
+    <string name="toast_no_page_translate">번역할 페이지가 없습니다</string>
+    <string name="link_cant_open">이 링크를 열 수 없습니다</string>
 </resources>

@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">受け取る</string>
     <string name="bonus_loading_ad">ボーナス広告読み込み中...</string>
     <string name="bonus_rewarded">+15 WPが付与されました！</string>
+    <string name="tr_reg_americas">アメリカ大陸</string>
+    <string name="tr_reg_west_europe">西ヨーロッパ</string>
+    <string name="tr_reg_central_east_europe">中央・東ヨーロッパ</string>
+    <string name="tr_reg_caucasus_central_asia">コーカサス・中央アジア</string>
+    <string name="tr_reg_east_asia">東アジア</string>
+    <string name="tr_reg_se_asia">東南アジア</string>
+    <string name="tr_reg_south_asia">南アジア</string>
+    <string name="tr_reg_middle_east">中東</string>
+    <string name="tr_reg_africa">アフリカ</string>
+    <string name="tr_reg_pacific_regional">太平洋・地域</string>
+    <string name="tr_title">ページを翻訳</string>
+    <string name="tr_translated_badge">ページが翻訳されました</string>
+    <string name="tr_other_lang">他の言語に翻訳</string>
+    <string name="tr_other_lang_sub">%d言語から選択</string>
+    <string name="tr_view_original">元のページを表示</string>
+    <string name="tr_view_original_sub">翻訳なしでページを再読み込み</string>
+    <string name="toast_translate_error">翻訳を開始できませんでした</string>
+    <string name="toast_no_page_translate">翻訳するページがありません</string>
+    <string name="link_cant_open">このリンクを開けませんでした</string>
 </resources>

@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">KLAIM</string>
     <string name="bonus_loading_ad">Memuat iklan bonus...</string>
     <string name="bonus_rewarded">+15 WP dikreditkan!</string>
+    <string name="tr_reg_americas">Amerika</string>
+    <string name="tr_reg_west_europe">Eropa Barat</string>
+    <string name="tr_reg_central_east_europe">Eropa Tengah dan Timur</string>
+    <string name="tr_reg_caucasus_central_asia">Kaukasus dan Asia Tengah</string>
+    <string name="tr_reg_east_asia">Asia Timur</string>
+    <string name="tr_reg_se_asia">Asia Tenggara</string>
+    <string name="tr_reg_south_asia">Asia Selatan</string>
+    <string name="tr_reg_middle_east">Timur Tengah</string>
+    <string name="tr_reg_africa">Afrika</string>
+    <string name="tr_reg_pacific_regional">Pasifik dan Regional</string>
+    <string name="tr_title">Terjemahkan halaman ke</string>
+    <string name="tr_translated_badge">Halaman diterjemahkan</string>
+    <string name="tr_other_lang">Terjemahkan ke bahasa lain</string>
+    <string name="tr_other_lang_sub">Pilih dari %d bahasa</string>
+    <string name="tr_view_original">Lihat asli</string>
+    <string name="tr_view_original_sub">Muat ulang halaman tanpa terjemahan</string>
+    <string name="toast_translate_error">Tidak dapat memulai penerjemahan</string>
+    <string name="toast_no_page_translate">Tidak ada halaman untuk diterjemahkan</string>
+    <string name="link_cant_open">Tidak dapat membuka tautan ini</string>
 </resources>

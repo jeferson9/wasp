@@ -120,4 +120,23 @@
     <string name="bonus_banner_cta">NHẬN</string>
     <string name="bonus_loading_ad">Đang tải quảng cáo thưởng...</string>
     <string name="bonus_rewarded">+15 WP đã cộng!</string>
+    <string name="tr_reg_americas">Châu Mỹ</string>
+    <string name="tr_reg_west_europe">Tây Âu</string>
+    <string name="tr_reg_central_east_europe">Trung và Đông Âu</string>
+    <string name="tr_reg_caucasus_central_asia">Caucasus và Trung Á</string>
+    <string name="tr_reg_east_asia">Đông Á</string>
+    <string name="tr_reg_se_asia">Đông Nam Á</string>
+    <string name="tr_reg_south_asia">Nam Á</string>
+    <string name="tr_reg_middle_east">Trung Đông</string>
+    <string name="tr_reg_africa">Châu Phi</string>
+    <string name="tr_reg_pacific_regional">Thái Bình Dương và Khu vực</string>
+    <string name="tr_title">Dịch trang sang</string>
+    <string name="tr_translated_badge">Trang đã được dịch</string>
+    <string name="tr_other_lang">Dịch sang ngôn ngữ khác</string>
+    <string name="tr_other_lang_sub">Chọn từ %d ngôn ngữ</string>
+    <string name="tr_view_original">Xem bản gốc</string>
+    <string name="tr_view_original_sub">Tải lại trang không có bản dịch</string>
+    <string name="toast_translate_error">Không thể bắt đầu dịch</string>
+    <string name="toast_no_page_translate">Không có trang để dịch</string>
+    <string name="link_cant_open">Không thể mở liên kết này</string>
 </resources>

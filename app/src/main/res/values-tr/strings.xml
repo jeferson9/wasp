@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">AL</string>
     <string name="bonus_loading_ad">Bonus reklam yükleniyor...</string>
     <string name="bonus_rewarded">+15 WP eklendi!</string>
+    <string name="tr_reg_americas">Amerika\'lar</string>
+    <string name="tr_reg_west_europe">Batı Avrupa</string>
+    <string name="tr_reg_central_east_europe">Orta ve Doğu Avrupa</string>
+    <string name="tr_reg_caucasus_central_asia">Kafkasya ve Orta Asya</string>
+    <string name="tr_reg_east_asia">Doğu Asya</string>
+    <string name="tr_reg_se_asia">Güneydoğu Asya</string>
+    <string name="tr_reg_south_asia">Güney Asya</string>
+    <string name="tr_reg_middle_east">Orta Doğu</string>
+    <string name="tr_reg_africa">Afrika</string>
+    <string name="tr_reg_pacific_regional">Pasifik ve Bölgesel</string>
+    <string name="tr_title">Sayfayı şuna çevir</string>
+    <string name="tr_translated_badge">Sayfa çevrildi</string>
+    <string name="tr_other_lang">Başka dile çevir</string>
+    <string name="tr_other_lang_sub">%d dil arasından seçin</string>
+    <string name="tr_view_original">Orijinali görüntüle</string>
+    <string name="tr_view_original_sub">Sayfayı çevirisiz yeniden yükle</string>
+    <string name="toast_translate_error">Çeviri başlatılamadı</string>
+    <string name="toast_no_page_translate">Çevrilecek sayfa yok</string>
+    <string name="link_cant_open">Bu bağlantı açılamadı</string>
 </resources>

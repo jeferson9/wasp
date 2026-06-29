@@ -129,4 +129,23 @@
     <string name="bonus_banner_cta">CANJEAR</string>
     <string name="bonus_loading_ad">Cargando anuncio bono...</string>
     <string name="bonus_rewarded">¡+15 WP acreditados!</string>
+    <string name="tr_reg_americas">Américas</string>
+    <string name="tr_reg_west_europe">Europa Occidental</string>
+    <string name="tr_reg_central_east_europe">Europa Central y Oriental</string>
+    <string name="tr_reg_caucasus_central_asia">Cáucaso y Asia Central</string>
+    <string name="tr_reg_east_asia">Asia Oriental</string>
+    <string name="tr_reg_se_asia">Sudeste Asiático</string>
+    <string name="tr_reg_south_asia">Asia del Sur</string>
+    <string name="tr_reg_middle_east">Oriente Medio</string>
+    <string name="tr_reg_africa">África</string>
+    <string name="tr_reg_pacific_regional">Pacífico y Regional</string>
+    <string name="tr_title">Traducir página a</string>
+    <string name="tr_translated_badge">Página traducida</string>
+    <string name="tr_other_lang">Traducir a otro idioma</string>
+    <string name="tr_other_lang_sub">Elige entre %d idiomas</string>
+    <string name="tr_view_original">Ver original</string>
+    <string name="tr_view_original_sub">Recargar página sin traducción</string>
+    <string name="toast_translate_error">No se pudo iniciar la traducción</string>
+    <string name="toast_no_page_translate">No hay página para traducir</string>
+    <string name="link_cant_open">No se pudo abrir este enlace</string>
 </resources>
