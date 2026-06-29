@@ -400,6 +400,12 @@
       if (walletInput && saved.walletName) walletInput.value = saved.walletName;
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = true; }
       setStep(1);
+      // Mostra aviso Mambaboard na primeira vez (antes de configurar wallet)
+      try {
+        var mambaDismissed = localStorage.getItem("wasp_mamba_dismissed");
+        var mambaEl = document.getElementById("mambaCard");
+        if (mambaEl && !mambaDismissed) mambaEl.classList.remove("hidden");
+      } catch(_) {}
     }
   }
 
