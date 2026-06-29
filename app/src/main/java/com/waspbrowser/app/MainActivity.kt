@@ -1751,18 +1751,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openBonusInterstitial() {
-        // ─── REMOVER ANTES DE PUBLICAR ────────────────────────────────────
-        // Em modo de teste o Start.io não garante adHidden no interstitial.
-        // Bypass: credita os 15 WP diretamente sem abrir anúncio.
-        val DEBUG_BYPASS_AD = true
-        if (DEBUG_BYPASS_AD) {
-            CentralActivity.grantInterstitialBonus(applicationContext)
-            android.widget.Toast.makeText(this,
-                getString(R.string.bonus_rewarded), android.widget.Toast.LENGTH_SHORT).show()
-            scheduleBonusBannerTimer()
-            return
-        }
-        // ─────────────────────────────────────────────────────────────────
+        // Credita os 15 WP imediatamente — o anúncio é exibido depois,
+        // na tela de confirmação, para o usuário já saber que ganhou.
+        CentralActivity.grantInterstitialBonus(applicationContext)
         val i = Intent(this, StartioAdActivity::class.java)
         i.putExtra(StartioAdActivity.EXTRA_MODE, StartioAdActivity.MODE_INTERSTITIAL_BONUS)
         startActivity(i)

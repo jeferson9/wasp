@@ -80,30 +80,26 @@ class StartioAdActivity : AppCompatActivity() {
         val mode = intent.getStringExtra(EXTRA_MODE) ?: ""
 
         if (mode == MODE_INTERSTITIAL_BONUS) {
-            // ── MODO INTERSTITIAL BÔNUS (15 WP) ──────────────────────────
-            // Interstitial nao tem callback de "completou" — credita ao fechar.
-            diag(getString(R.string.bonus_loading_ad))
-            val adBonus = StartAppAd(this)
-            adBonus.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
-                override fun onReceiveAd(p: Ad) {
-                    diag(getString(R.string.ad_starting_video))
-                    adBonus.showAd(object : AdDisplayListener {
-                        override fun adHidden(p0: Ad) {
-                            CentralActivity.grantInterstitialBonus(applicationContext)
-                            safeFinish()
-                        }
-                        override fun adDisplayed(p0: Ad) {}
-                        override fun adClicked(p0: Ad) {}
-                        override fun adNotDisplayed(p0: Ad) {
-                            diag(getString(R.string.ad_cant_show))
-                            safeFinish()
-                        }
-                    })
-                }
-                override fun onFailedToReceiveAd(p: Ad?) {
-                    diag(getString(R.string.ad_none_available))
-                    handler.postDelayed({ safeFinish() }, 900)
-                }
+            // ── MODO INTERSTITIAL BÔNUS ───────────────────────────────────
+            // WP já foi creditado antes de abrir esta Activity.
+            // Mostramos a tela de confirmação e o anúncio é disparado
+            // apenas quando o usuário toca "Voltar ao Wasp".
+            setContentView(buildRewardConfirmScreen {
+                // Callback do botão "Voltar ao Wasp"
+                setContentView(buildLoadingOverlay())
+                diag(getString(R.string.bonus_loading_ad))
+                val adBonus = StartAppAd(this)
+                adBonus.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
+                    override fun onReceiveAd(p: Ad) {
+                        adBonus.showAd(object : AdDisplayListener {
+                            override fun adHidden(p0: Ad)        { safeFinish() }
+                            override fun adDisplayed(p0: Ad)     {}
+                            override fun adClicked(p0: Ad)       {}
+                            override fun adNotDisplayed(p0: Ad)  { safeFinish() }
+                        })
+                    }
+                    override fun onFailedToReceiveAd(p: Ad?) { safeFinish() }
+                })
             })
             return
         }
@@ -155,6 +151,65 @@ class StartioAdActivity : AppCompatActivity() {
     private fun dp(v: Int) = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), resources.displayMetrics
     ).toInt()
+
+    private fun buildRewardConfirmScreen(onBack: () -> Unit): View {
+        val root = FrameLayout(this).apply {
+            setBackgroundColor(Color.parseColor("#111420"))
+        }
+        val col = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(32), dp(32), dp(32), dp(32))
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        }
+        // Ícone ✦
+        col.addView(TextView(this).apply {
+            text = "✦"
+            textSize = 56f
+            gravity = Gravity.CENTER
+            setTextColor(Color.parseColor("#FFD400"))
+        })
+        // Título
+        col.addView(TextView(this).apply {
+            text = "Você ganhou $INTERSTITIAL_BONUS_WP WP!"
+            textSize = 24f
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, dp(20), 0, dp(8))
+        })
+        // Subtítulo
+        col.addView(TextView(this).apply {
+            text = "Seu bônus foi adicionado à sua conta Wasp."
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTextColor(Color.parseColor("#99C8D0E0"))
+            setPadding(0, 0, 0, dp(40))
+        })
+        // Botão "Voltar ao Wasp"
+        col.addView(TextView(this).apply {
+            text = "Voltar ao Wasp"
+            textSize = 15f
+            gravity = Gravity.CENTER
+            setTextColor(Color.parseColor("#111420"))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(Color.parseColor("#FFD400"))
+                cornerRadius = dp(12).toFloat()
+            }
+            setPadding(dp(32), dp(14), dp(32), dp(14))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener { onBack() }
+        })
+        root.addView(col)
+        return root
+    }
 
     private fun buildLoadingOverlay(): View {
         val root = FrameLayout(this).apply {
