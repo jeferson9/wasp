@@ -576,6 +576,16 @@
     </div>
 </div>
 
+<!-- Botão mineração em segundo plano -->
+<div id="bgMiningCard" class="card hidden" style="margin-bottom:14px;text-align:center;border:1px solid rgba(255,193,7,0.25);">
+    <div style="font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:6px;">⚡ Segundo Plano</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Minera mesmo com a tela apagada. Kotlin controla o timing.</div>
+    <button class="btn" id="btnBgMining" onclick="startBgMiningNative()" style="font-size:14px;">
+        Minerar em Segundo Plano
+    </button>
+    <div id="bgMiningStatus" style="font-size:11px;color:var(--muted);margin-top:8px;display:none;"></div>
+</div>
+
 <div class="log-card">
     <div class="log-header">
         <span data-i18n="log_title">Log</span>
@@ -709,6 +719,39 @@
             window.AndroidBee.openExternalUrl(url);
         } else {
             window.open(url, "_blank");
+        }
+    }
+
+    // ── Mineração em segundo plano (arquitetura nativa) ───────────────────────
+    function startBgMiningNative() {
+        try {
+            var keys = window.getBgMiningKeys ? window.getBgMiningKeys() : null;
+            if (!keys || !keys.minerAddress) {
+                alert("Configure e autorize o Bee Engine primeiro.");
+                return;
+            }
+            var btn = document.getElementById("btnBgMining");
+            var status = document.getElementById("bgMiningStatus");
+            if (btn) btn.disabled = true;
+            if (btn) btn.textContent = "Iniciando...";
+            if (status) { status.style.display = "block"; status.textContent = "Carregando SDK em segundo plano..."; }
+
+            if (window.AndroidBee && typeof window.AndroidBee.startBgMiningFull === "function") {
+                window.AndroidBee.startBgMiningFull(
+                    keys.walletName   || "",
+                    keys.minerAddress || "",
+                    keys.publicKey    || "",
+                    keys.secretKey    || ""
+                );
+                if (btn) btn.textContent = "⚡ Minerando em segundo plano";
+                if (status) status.textContent = "Kotlin controla o timing — tela pode apagar normalmente.";
+            } else {
+                if (btn) { btn.disabled = false; btn.textContent = "Minerar em Segundo Plano"; }
+                if (status) status.textContent = "Bridge não disponível.";
+            }
+        } catch(e) {
+            var btn2 = document.getElementById("btnBgMining");
+            if (btn2) { btn2.disabled = false; btn2.textContent = "Minerar em Segundo Plano"; }
         }
     }
 

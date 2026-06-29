@@ -389,6 +389,8 @@
       updateWpDisplay();
       setStep(5);
       log("Session restored: " + saved.walletName, "lok");
+      // Mostra botão de mineração em segundo plano nativo
+      try { if (window._updateBgMiningCard) window._updateBgMiningCard(); } catch(_) {}
       // Mostrar aviso Mambaboard se não foi dismissado (rewards requerem ativação)
       try {
         var mambaDismissed = localStorage.getItem("wasp_mamba_dismissed");
@@ -1368,6 +1370,26 @@
     // Pequeno delay para garantir que o DOM e a bridge estão prontos
     setTimeout(loadSdk, 400);
   }
+
+  // Expõe chaves para o botão de mineração em segundo plano nativo
+  window.getBgMiningKeys = function() {
+    if (!saved || !saved.minerAddress) return null;
+    return {
+      walletName:   saved.walletName   || "",
+      minerAddress: saved.minerAddress || "",
+      publicKey:    saved.publicKey    || "",
+      secretKey:    saved.secretKey    || ""
+    };
+  };
+
+  // Mostra/esconde o card de mineração em segundo plano conforme o estado
+  window._updateBgMiningCard = function() {
+    var card = document.getElementById("bgMiningCard");
+    if (!card) return;
+    var ready = saved && saved.minerAddress && saved.propagated;
+    if (ready) card.classList.remove("hidden");
+    else card.classList.add("hidden");
+  };
 
   // Expõe estado de mineração para o header/rodapé
   window.getMiningState = function() {
