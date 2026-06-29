@@ -537,12 +537,23 @@ class BeeActivity : AppCompatActivity() {
                 if (!startApp.isNullOrBlank()) appendQueryParameter("startapp", startApp)
             }.build()
 
-            val tgIntent = Intent(Intent.ACTION_VIEW, tgUri).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                setPackage("org.telegram.messenger")
+            val packages = listOf("org.telegram.messenger", "org.thunderdog.challegram")
+            for (pkg in packages) {
+                val tgIntent = Intent(Intent.ACTION_VIEW, tgUri).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    setPackage(pkg)
+                }
+                if (tgIntent.resolveActivity(packageManager) != null) {
+                    startActivity(tgIntent)
+                    return true
+                }
             }
-            if (tgIntent.resolveActivity(packageManager) != null) {
-                startActivity(tgIntent)
+            // Fallback sem restrição de pacote
+            val fallback = Intent(Intent.ACTION_VIEW, tgUri).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (fallback.resolveActivity(packageManager) != null) {
+                startActivity(fallback)
                 return true
             }
         } catch (e: Exception) {
