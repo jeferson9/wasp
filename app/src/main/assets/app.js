@@ -1082,6 +1082,9 @@ function renderHive(){
     const div = document.createElement('div');
     div.className = 'hive-item' + (item.pinned ? ' hive-config' : '');
     div.innerHTML = iconHTML(item) + '<span>' + item.name + '</span>';
+    div.style.userSelect = 'none';
+    div.style.webkitUserSelect = 'none';
+    div.oncontextmenu = function(e){ e.preventDefault(); return false; };
     div.onclick = function(){ hiveOpenItem(item.id); };
     return div;
 }

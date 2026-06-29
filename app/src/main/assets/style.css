@@ -1254,6 +1254,9 @@ body[data-theme="light"] .hive-handle-top { background: rgba(0,0,0,0.35); }
   transition: background .15s ease;
   animation: hivePop .2s ease;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .hive-item:active {
