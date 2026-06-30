@@ -95,6 +95,11 @@ class BeeActivity : AppCompatActivity() {
                     Log.d(TAG, "[PersistentBee] enableBackgroundMining wallet=$wallet")
                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
                         .edit().putBoolean("bg_participation_enabled", true).apply()
+                    // Mantém a página "visível" para o Chromium não congelar as tarefas
+                    // assíncronas (add_tap/get_reward) com a tela apagada/minimizado.
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        (wv as? KeepAliveWebView)?.keepVisible = true
+                    }
                     try {
                         val intent = BeeBackgroundService.buildStartIntent(context, wallet)
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -125,6 +130,9 @@ class BeeActivity : AppCompatActivity() {
                 fun stopBgMining() {
                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
                         .edit().putBoolean("bg_participation_enabled", false).apply()
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        (wv as? KeepAliveWebView)?.keepVisible = false
+                    }
                     try { context.startService(BeeBackgroundService.buildStopIntent(context)) }
                     catch (_: Exception) {}
                 }

@@ -1324,7 +1324,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupPersistentBee() {
         val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
 
-        val wv = android.webkit.WebView(this)
+        val wv = KeepAliveWebView(this)
         wv.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
