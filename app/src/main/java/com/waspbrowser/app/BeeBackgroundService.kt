@@ -37,7 +37,7 @@ class BeeBackgroundService : Service() {
         private const val TAG          = "BeeBackgroundService"
         private const val CHANNEL_ID   = "bee_mining_channel"
         private const val NOTIF_ID     = 42
-        private const val TICK_MS      = 10_000L   // keep-alive a cada 10s
+        private const val TICK_MS      = 8_000L    // keep-alive + bgPump a cada 8s
 
         const val PREFS_BG      = "bee_bg_mining"
         const val KEY_ACTIVE    = "bg_active"
@@ -166,9 +166,12 @@ class BeeBackgroundService : Service() {
             runCatching {
                 wv.resumeTimers()
                 wv.onResume()
-                // Lê o estado real da mineração e atualiza a notificação.
+                // Conduz as transições do epoch (bgPump) — imune ao throttling do
+                // Chromium porque evaluateJavascript roda na hora — e lê o estado
+                // para atualizar a notificação, tudo numa só passada.
                 wv.evaluateJavascript(
-                    "(function(){try{return (window.getMiningState&&window.getMiningState())||{};}catch(e){return {};}})()"
+                    "(function(){try{if(window.bgPump)window.bgPump();}catch(e){}" +
+                    "try{return (window.getMiningState&&window.getMiningState())||{};}catch(e){return {};}})()"
                 ) { result -> handler.post { updateNotificationFromState(result) } }
             }
         }

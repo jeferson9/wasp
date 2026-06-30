@@ -732,6 +732,10 @@
   }
 
   async function startMining() {
+    // Debounce: evita corrida entre o reinício via setTimeout (JS) e via bgPump (Kotlin).
+    var _nowTs = Date.now();
+    if (window._startMiningLast && _nowTs - window._startMiningLast < 8000) return;
+    window._startMiningLast = _nowTs;
     if (!wasmReady || !saved.authorized || mining) return;
 
     // ── FIX corrida claim×restart: se ainda há um claim em andamento, NÃO
@@ -1030,6 +1034,8 @@
     function handleEpochEnd(reason) {
       if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
       if (window._epochTimer)    { clearTimeout(window._epochTimer);     window._epochTimer    = null; }
+      // Cooldown para o bgPump não tentar reiniciar antes do slashing/claim terminar.
+      window._nextStartAllowedAt = Date.now() + 25000;
 
       // FIX: guardar a instância que minerou — get_reward() precisa do contexto da sessão
       // NÃO chamar .stop() antes do get_reward() pois invalida o objeto WASM
@@ -1044,8 +1050,14 @@
       if (tapSection) tapSection.classList.add("hidden");
       notifyMiningStatus();
 
-      // Slashing period: aguardar ~16s antes do claim
-      setTimeout(function() {
+      // Slashing period: aguardar ~16s antes do claim.
+      // doClaimNow é disparado pelo setTimeout (foreground) OU pelo bgPump/Kotlin
+      // (background, quando o setTimeout está congelado pelo Chromium).
+      var _claimDone = false;
+      function doClaimNow() {
+        if (_claimDone) return;
+        _claimDone = true;
+        window._pendingClaim = null;
         if (!claimMiner) {
           log(window.bt?bt("log_miner_lost"):"⚠️ Miner instance lost.", "lerr");
           scheduleRestart();
@@ -1063,7 +1075,9 @@
           window.AndroidBee.resumeForClaim();
         }
         claimRewardSafe(claimMiner).finally(scheduleRestart);
-      }, 16000);
+      }
+      window._pendingClaim = { at: Date.now() + 16000, run: doClaimNow };
+      setTimeout(doClaimNow, 16000); // fallback foreground
 
       function scheduleRestart() {
         setStatus("warn", "Waiting for next epoch...", "Reiniciando em ~30s");
@@ -1073,6 +1087,15 @@
         }, 30000);
       }
     }
+
+    // Permite que o Kotlin (bgPump) force o fim do epoch sem depender do setTimeout,
+    // que o Chromium congela quando a página fica oculta (tela apagada/minimizado).
+    window._triggerEpochEnd = function(reason) {
+      if (epochDone) return;
+      epochDone = true;
+      handleEpochEnd(reason || "bgpump");
+    };
+    window._pendingClaim = null; // limpa claim pendente de epoch anterior
 
     miner.start(MINING_DURATION_MS, function(event) {
       cycles++;
@@ -1512,6 +1535,45 @@
       if (window.AndroidBee && window.AndroidBee.stopBgMining) window.AndroidBee.stopBgMining();
     } catch (_) {}
     log("Participação em segundo plano desligada.", "lwrn");
+  };
+
+  // Chamado pelo BeeBackgroundService a cada tick (~8s). Roda mesmo com a página
+  // congelada pelo Chromium, porque é injetado via evaluateJavascript. Conduz as
+  // transições que o setTimeout/setInterval não conseguem em background:
+  //  - 1 tap por tick (mantém participação e o watchdog vivos)
+  //  - força o fim do epoch por tempo decorrido → dispara o get_reward()
+  //  - reinicia o próximo epoch quando ocioso
+  window.bgPump = function() {
+    try {
+      if (!saved || !saved.authorized || !saved.minerAddress) return;
+      var now = Date.now();
+      if (mining && miner) {
+        // Só tapa aqui quando a página está oculta (em foreground o setInterval
+        // de auto-tap já cuida disso — evita tap duplicado).
+        if (document.hidden) {
+          try {
+            miner.add_tap(Math.floor(Math.random()*300+50), Math.floor(Math.random()*300+50));
+            window._tapCount = (window._tapCount || 0) + 1;
+          } catch(_) {}
+        }
+        if (sessionStart && (now - sessionStart) >= (MINING_DURATION_MS + 2000)) {
+          if (window._triggerEpochEnd) window._triggerEpochEnd("bgpump");
+        }
+        return;
+      }
+      // Claim pendente (pós-epoch): dispara mesmo com o setTimeout congelado.
+      if (window._pendingClaim && now >= window._pendingClaim.at) {
+        var pc = window._pendingClaim; window._pendingClaim = null;
+        try { pc.run(); } catch(_) {}
+        return;
+      }
+      // Ocioso: reinicia novo epoch se o usuário quer minerar e tem WP.
+      if (!mining && !claiming) {
+        if (window._nextStartAllowedAt && now < window._nextStartAllowedAt) return;
+        var wantsOn = miningSwitch ? miningSwitch.checked : true;
+        if (wantsOn && getWP() >= WP_MINING_COST) startMining();
+      }
+    } catch(e) {}
   };
 
   window.isBackgroundParticipationOn = function() {
