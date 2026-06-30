@@ -37,7 +37,7 @@ class BeeBackgroundService : Service() {
         private const val TAG          = "BeeBackgroundService"
         private const val CHANNEL_ID   = "bee_mining_channel"
         private const val NOTIF_ID     = 42
-        private const val TICK_MS      = 8_000L    // keep-alive + bgPump a cada 8s
+        private const val TICK_MS      = 4_000L    // keep-alive + bgPump a cada 4s (cadência de tap ~3.75s)
 
         const val PREFS_BG      = "bee_bg_mining"
         const val KEY_ACTIVE    = "bg_active"
