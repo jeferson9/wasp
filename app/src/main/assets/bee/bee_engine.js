@@ -1476,6 +1476,53 @@
     else card.classList.add("hidden");
   };
 
+  // ─── PARTICIPAÇÃO EM SEGUNDO PLANO (mesma WebView, mesmo miner) ───────────
+  // Liga a mineração (se ainda não estiver) e sobe o foreground service que
+  // mantém ESTA WebView viva com a tela apagada. Não há segunda engine.
+  window.enableBackgroundParticipation = function() {
+    try {
+      if (!saved.authorized || !saved.minerAddress) {
+        toast("Configure e autorize o Bee Engine primeiro.");
+        return false;
+      }
+      // Garante que a participação (foreground) está ligada — é ela que minera.
+      if (!mining) {
+        if (getWP() < WP_MINING_COST) {
+          toast((window.bt?bt("sw_need_wp"):"Need {n} WP to start").replace("{n}", WP_MINING_COST));
+          return false;
+        }
+        if (miningSwitch) miningSwitch.checked = true;
+        startMining();
+      }
+      window._bgParticipation = true;
+      if (window.AndroidBee && window.AndroidBee.enableBackgroundMining) {
+        window.AndroidBee.enableBackgroundMining(saved.walletName || "");
+      }
+      log("⚡ Participação em segundo plano ligada — pode minimizar/apagar a tela.", "lok");
+      return true;
+    } catch (e) {
+      log("Erro ao ligar segundo plano: " + (e.message || String(e)), "lerr");
+      return false;
+    }
+  };
+
+  window.disableBackgroundParticipation = function() {
+    window._bgParticipation = false;
+    try {
+      if (window.AndroidBee && window.AndroidBee.stopBgMining) window.AndroidBee.stopBgMining();
+    } catch (_) {}
+    log("Participação em segundo plano desligada.", "lwrn");
+  };
+
+  window.isBackgroundParticipationOn = function() {
+    try {
+      if (window.AndroidBee && window.AndroidBee.isBgMiningEnabled) {
+        return !!window.AndroidBee.isBgMiningEnabled();
+      }
+    } catch (_) {}
+    return !!window._bgParticipation;
+  };
+
   // Expõe estado de mineração para o header/rodapé
   window.getMiningState = function() {
     return {

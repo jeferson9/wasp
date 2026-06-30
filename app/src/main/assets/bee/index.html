@@ -722,45 +722,46 @@
         }
     }
 
-    // ── Mineração em segundo plano (arquitetura nativa) ───────────────────────
-    function startBgMiningNative() {
-        try {
-            var keys = window.getBgMiningKeys ? window.getBgMiningKeys() : null;
-            if (!keys || !keys.minerAddress) {
-                alert("Configure e autorize o Bee Engine primeiro.");
-                return;
-            }
-            var btn = document.getElementById("btnBgMining");
-            var status = document.getElementById("bgMiningStatus");
-            if (btn) btn.disabled = true;
-            if (btn) btn.textContent = "Iniciando...";
-            if (status) { status.style.display = "block"; status.textContent = "Carregando SDK em segundo plano..."; }
-
-            try {
-                window.AndroidBee.startBgMiningFull(
-                    keys.walletName   || "",
-                    keys.minerAddress || "",
-                    keys.publicKey    || "",
-                    keys.secretKey    || ""
-                );
-                if (btn) btn.textContent = "⚡ Minerando em segundo plano";
-                if (status) status.textContent = "Kotlin controla o timing — tela pode apagar normalmente.";
-            } catch(err) {
-                // Fallback: tenta startBgMining simples
-                try {
-                    window.AndroidBee.startBgMining(0, keys.walletName || "");
-                    if (btn) btn.textContent = "⚡ Segundo plano ativo";
-                    if (status) status.textContent = "Modo legado ativo.";
-                } catch(err2) {
-                    if (btn) { btn.disabled = false; btn.textContent = "Minerar em Segundo Plano"; }
-                    if (status) status.textContent = "Erro: " + err.message;
-                }
-            }
-        } catch(e) {
-            var btn2 = document.getElementById("btnBgMining");
-            if (btn2) { btn2.disabled = false; btn2.textContent = "Minerar em Segundo Plano"; }
+    // ── Participação em segundo plano (mesma WebView, mesmo miner) ─────────────
+    // Liga/desliga o keep-alive nativo. Não há segunda engine: a mineração
+    // continua na WebView do painel, que o foreground service mantém viva.
+    function renderBgButton() {
+        var btn = document.getElementById("btnBgMining");
+        var status = document.getElementById("bgMiningStatus");
+        var on = window.isBackgroundParticipationOn ? window.isBackgroundParticipationOn() : false;
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = on ? "⚡ Segundo plano ATIVO — toque para desligar"
+                                 : "Minerar em Segundo Plano";
+            btn.style.opacity = on ? "1" : "";
+        }
+        if (status) {
+            status.style.display = "block";
+            status.textContent = on
+                ? "Minerando com a tela apagada/minimizado. Notificação ativa."
+                : "Mantém a mineração viva com o Wasp minimizado ou a tela apagada.";
         }
     }
+
+    function startBgMiningNative() {
+        var on = window.isBackgroundParticipationOn ? window.isBackgroundParticipationOn() : false;
+        if (on) {
+            if (window.disableBackgroundParticipation) window.disableBackgroundParticipation();
+            renderBgButton();
+            return;
+        }
+        var ok = window.enableBackgroundParticipation ? window.enableBackgroundParticipation() : false;
+        if (!ok) {
+            var keys = window.getBgMiningKeys ? window.getBgMiningKeys() : null;
+            if (!keys || !keys.minerAddress) alert("Configure e autorize o Bee Engine primeiro.");
+        }
+        // Pequeno atraso para o serviço subir antes de reler o estado.
+        setTimeout(renderBgButton, 600);
+    }
+
+    // Reflete o estado real do botão ao abrir o painel e periodicamente.
+    setTimeout(renderBgButton, 800);
+    setInterval(renderBgButton, 5000);
 
     function hideMambaCard() {
         var el = document.getElementById("mambaCard");

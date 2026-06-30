@@ -13,23 +13,23 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
-import android.webkit.JavascriptInterface
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.core.app.NotificationCompat
+import org.json.JSONObject
 
 /**
- * BeeBackgroundService — mineração em segundo plano com arquitetura mínima.
+ * BeeBackgroundService — mantém a mineração viva com o app minimizado / tela apagada.
  *
- * Diferente da abordagem anterior (JS controla timers), aqui:
- * - WebView mínima carrega apenas o WASM SDK (bee_bg_minimal.html)
- * - Kotlin Handler controla todo o timing (check a cada 60s, reward após 5min)
- * - JS só executa quando Kotlin chama evaluateJavascript()
- * - Sem logs, sem UI, sem timers JS — Android não pode throttlar o que não existe
- * - WakeLock PARTIAL mantém CPU ativo
+ * ARQUITETURA (uma única WebView):
+ * - NÃO cria WebView própria. A mineração acontece na WebView persistente do
+ *   painel (MainActivity / BeeActivity), que nunca é destruída.
+ * - Este serviço apenas: (1) roda em foreground com WakeLock para o processo
+ *   não ser suspenso, (2) a cada tick chama resumeTimers()/onResume() na WebView
+ *   persistente para os timers JS (epoch, auto-tap, get_reward) continuarem
+ *   rodando em background, e (3) atualiza a notificação com o estado real lido
+ *   de window.getMiningState().
+ *
+ * Isso elimina o conflito de "duas sessões no mesmo miner_address" (stale 410)
+ * e a sobrecarga de carregar o WASM duas vezes — que era o que congelava o painel.
  */
 class BeeBackgroundService : Service() {
 
@@ -37,8 +37,7 @@ class BeeBackgroundService : Service() {
         private const val TAG          = "BeeBackgroundService"
         private const val CHANNEL_ID   = "bee_mining_channel"
         private const val NOTIF_ID     = 42
-        private const val CHECK_INTERVAL_MS  = 60_000L   // verifica can_start a cada 1 min
-        private const val EPOCH_DURATION_MS  = 5 * 60_000L + 15_000L // 5min15s para get_reward
+        private const val TICK_MS      = 10_000L   // keep-alive a cada 10s
 
         const val PREFS_BG      = "bee_bg_mining"
         const val KEY_ACTIVE    = "bg_active"
@@ -62,6 +61,9 @@ class BeeBackgroundService : Service() {
                 putExtra(EXTRA_WALLET, walletName)
             }
 
+        // Mantido por compatibilidade com chamadas existentes. As chaves não são
+        // mais necessárias aqui (a WebView do painel já as tem) — apenas o wallet
+        // name é usado para o texto da notificação.
         fun buildStartIntentFull(
             context: Context, walletName: String,
             minerAddress: String, publicKey: String, secretKey: String
@@ -94,15 +96,10 @@ class BeeBackgroundService : Service() {
         fun runJs(js: String) { BeeActivity.runJs(js) }
     }
 
-    private val handler     = Handler(Looper.getMainLooper())
-    private var walletName  = ""
-    private var minerAddr   = ""
-    private var publicKey   = ""
-    private var secretKey   = ""
-    private var bgWebView   : WebView? = null
-    private var wakeLock    : PowerManager.WakeLock? = null
-    private var sdkReady    = false
-    private var epochActive = false
+    private val handler    = Handler(Looper.getMainLooper())
+    private var walletName = ""
+    private var wakeLock   : PowerManager.WakeLock? = null
+    private var ticking    = false
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -118,32 +115,22 @@ class BeeBackgroundService : Service() {
         if (intent?.action == ACTION_STOP) {
             shutdown(); return START_NOT_STICKY
         }
+        // Ações legadas de epoch viraram no-op — o timing agora é 100% da WebView.
         if (intent?.action == ACTION_EPOCH_ENDED ||
             intent?.action == "com.waspbrowser.app.BEE_EPOCH_STARTED") {
             return START_STICKY
         }
 
-        walletName = intent?.getStringExtra(EXTRA_WALLET)     ?: walletName
-        minerAddr  = intent?.getStringExtra(EXTRA_MINER_ADDR) ?: ""
-        publicKey  = intent?.getStringExtra(EXTRA_PUBLIC_KEY) ?: ""
-        secretKey  = intent?.getStringExtra(EXTRA_SECRET_KEY) ?: ""
+        walletName = intent?.getStringExtra(EXTRA_WALLET)?.takeIf { it.isNotBlank() }
+            ?: getSharedPreferences(PREFS_BG, MODE_PRIVATE).getString(KEY_WALLET, "") ?: ""
 
-        // Fallback: tenta ler do SharedPreferences se não veio no intent
-        val prefs = getSharedPreferences(PREFS_BG, MODE_PRIVATE)
-        if (minerAddr.isBlank()) minerAddr = prefs.getString(KEY_MINER_ADDR, "") ?: ""
-        if (publicKey.isBlank()) publicKey = prefs.getString(KEY_PUBLIC_KEY, "") ?: ""
-        if (secretKey.isBlank()) secretKey = prefs.getString(KEY_SECRET_KEY, "") ?: ""
-
-        prefs.edit()
-            .putBoolean(KEY_ACTIVE,    true)
-            .putString(KEY_WALLET,     walletName)
-            .putString(KEY_MINER_ADDR, minerAddr)
-            .putString(KEY_PUBLIC_KEY, publicKey)
-            .putString(KEY_SECRET_KEY, secretKey)
+        getSharedPreferences(PREFS_BG, MODE_PRIVATE).edit()
+            .putBoolean(KEY_ACTIVE, true)
+            .putString(KEY_WALLET, walletName)
             .apply()
 
-        startForeground(NOTIF_ID, buildNotification("⏳ Iniciando..."))
-        handler.post { startMinimalWebView() }
+        startForeground(NOTIF_ID, buildNotification("Mantendo mineração ativa…"))
+        startTicking()
         return START_STICKY
     }
 
@@ -152,183 +139,82 @@ class BeeBackgroundService : Service() {
         super.onDestroy()
     }
 
-    // ── WebView mínima ───────────────────────────────────────────────────────
+    // ── Keep-alive: mantém os timers JS da WebView persistente vivos ──────────
 
-    private fun startMinimalWebView() {
-        if (bgWebView != null) return
-        try {
-            val wv = WebView(applicationContext)
-            wv.settings.apply {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-                allowFileAccessFromFileURLs = true
-                allowUniversalAccessFromFileURLs = true
-                cacheMode = WebSettings.LOAD_DEFAULT
-            }
-            wv.addJavascriptInterface(BgBridge(), "AndroidBgBridge")
-            wv.addJavascriptInterface(BgBridge(), "AndroidBee")
-
-            wv.webViewClient = object : WebViewClient() {
-                override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
-                    val url = request?.url?.toString() ?: return null
-                    if (url.endsWith(".wasm")) {
-                        return try {
-                            WebResourceResponse("application/wasm", "binary", 200, "OK",
-                                mapOf("Access-Control-Allow-Origin" to "*"),
-                                assets.open("bee/bee_sdk_bg.wasm"))
-                        } catch (e: Exception) { null }
-                    }
-                    return null
-                }
-
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    // SDK vai notificar via AndroidBgBridge.onEvent("sdk_ready")
-                    Log.d(TAG, "Página mínima carregada")
-                }
-            }
-
-            // Usa o index.html original — o carregamento de WASM ja funciona la
-            wv.loadUrl("file:///android_asset/bee/index.html?bgmode=true")
-            bgWebView = wv
-            Log.d(TAG, "WebView mínima iniciada")
-            scheduleKeepAlive()
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao criar WebView mínima: ${e.message}")
-        }
+    private fun startTicking() {
+        if (ticking) return
+        ticking = true
+        scheduleTick()
     }
 
-    // ── Keep-alive: resume WebView a cada 30s para JS timers nao serem throttlados ──
-
-    private fun scheduleKeepAlive() {
+    private fun scheduleTick() {
         handler.postDelayed({
-            bgWebView?.let { wv ->
-                wv.onResume()
+            if (!ticking) return@postDelayed
+            keepAliveTick()
+            scheduleTick()
+        }, TICK_MS)
+    }
+
+    private fun keepAliveTick() {
+        val wv = BeeActivity.getPersistentWebView()
+        if (wv == null) {
+            // App foi fechado/swiped — a WebView que minera não existe mais.
+            updateNotification("Toque para abrir o Wasp e continuar minerando")
+            return
+        }
+        wv.post {
+            runCatching {
                 wv.resumeTimers()
-            }
-            if (isActive(this)) scheduleKeepAlive()
-        }, 30_000L)
-    }
-
-    // ── Ciclo de mineração (controlado pelo Kotlin) ──────────────────────────
-
-    private fun scheduleNextCheck() {
-        handler.postDelayed({ triggerBgCycle() }, CHECK_INTERVAL_MS)
-    }
-
-    private fun triggerBgCycle() {
-        if (!isActive(this)) return
-        if (epochActive) { scheduleNextCheck(); return }
-        val wv = bgWebView ?: run { Log.w(TAG, "WebView nula em doBgCycle"); return }
-        wv.onResume()
-        wv.resumeTimers()
-        wv.evaluateJavascript("window.doBgCycle();", null)
-    }
-
-    private fun triggerGetReward() {
-        if (!isActive(this)) return
-        val wv = bgWebView ?: run { Log.w(TAG, "WebView nula em doBgGetReward"); return }
-        wv.onResume()
-        wv.resumeTimers()
-        wv.evaluateJavascript("window.doBgGetReward();", null)
-    }
-
-    private fun onEpochStarted() {
-        epochActive = true
-        updateNotification("⛏ Minerando...")
-        // Kotlin agenda get_reward após duração do epoch
-        handler.postDelayed({
-            epochActive = false
-            triggerGetReward()
-        }, EPOCH_DURATION_MS)
-    }
-
-    private fun onRewardClaimed() {
-        val prefs = getSharedPreferences(PREFS_BG, MODE_PRIVATE)
-        val cycles = prefs.getInt(KEY_CYCLES, 0) + 1
-        prefs.edit().putInt(KEY_CYCLES, cycles).apply()
-        updateNotification("✅ Epoch $cycles completo")
-        BeeActivity.runJs("if(window.waspAddWP) waspAddWP(0,'bg_epoch');")
-        // Aguarda 30s e tenta próximo epoch
-        handler.postDelayed({ triggerBgCycle() }, 30_000L)
-    }
-
-    // ── Bridge JS → Kotlin ───────────────────────────────────────────────────
-
-    inner class BgBridge {
-        @JavascriptInterface
-        fun onEvent(event: String) {
-            Log.d(TAG, "BgBridge event: $event")
-            handler.post {
-                when {
-                    event == "propagating" -> updateNotification("🔗 Verificando chaves na rede...")
-                    event == "sdk_ready" -> {
-                        sdkReady = true
-                        updateNotification("🔑 SDK pronto — iniciando ciclo...")
-                        // Injeta chaves explicitamente (garante que bgmode as tem)
-                        val keys = "if(window.initBgKeys) window.initBgKeys('${esc(minerAddr)}','${esc(publicKey)}','${esc(secretKey)}');"
-                        bgWebView?.evaluateJavascript(keys, null)
-                        // Aguarda 2s e dispara primeiro ciclo
-                        handler.postDelayed({ triggerBgCycle() }, 2_000L)
-                    }
-                    event == "epoch_started" -> onEpochStarted()
-                    event == "reward_claimed" -> onRewardClaimed()
-                    event == "wait" -> {
-                        updateNotification("⏳ Aguardando epoch... próxima tentativa em 1min")
-                        scheduleNextCheck()
-                    }
-                    event == "not_ready" -> {
-                        updateNotification("⏳ SDK não pronto, aguardando...")
-                        handler.postDelayed({ triggerBgCycle() }, 10_000L)
-                    }
-                    event.startsWith("error") -> {
-                        epochActive = false
-                        updateNotification("⚠️ ${event.take(60)}")
-                        Log.e(TAG, "Erro mining bg: $event")
-                        scheduleNextCheck()
-                    }
-                    event.startsWith("reward_error") -> {
-                        epochActive = false
-                        updateNotification("⚠️ Reward falhou, tentando novamente...")
-                        scheduleNextCheck()
-                    }
-                    event == "no_keys" -> updateNotification("⚠️ Chaves não encontradas — reabra o painel")
-                }
+                wv.onResume()
+                // Lê o estado real da mineração e atualiza a notificação.
+                wv.evaluateJavascript(
+                    "(function(){try{return (window.getMiningState&&window.getMiningState())||{};}catch(e){return {};}})()"
+                ) { result -> handler.post { updateNotificationFromState(result) } }
             }
         }
-
-        // Métodos legados — necessários pelo bee_engine.js se carregado
-        @JavascriptInterface fun goBack() {}
-        @JavascriptInterface fun openCentral() {}
-        @JavascriptInterface fun openUrl(url: String) {}
-        @JavascriptInterface fun toast(msg: String) { Log.d(TAG, "bg toast: $msg") }
-        @JavascriptInterface fun log(msg: String) { Log.d(TAG, "bg js: $msg") }
-        @JavascriptInterface fun setMiningStatus(active: Boolean, wallet: String) {}
-        @JavascriptInterface fun closePanel() {}
-        @JavascriptInterface fun getBgMiningStatus(): String {
-            val prefs = getSharedPreferences(PREFS_BG, MODE_PRIVATE)
-            return """{"active":true,"remainingMs":${Long.MAX_VALUE},"cycles":${prefs.getInt(KEY_CYCLES,0)},"wallet":"${esc(walletName)}"}"""
-        }
     }
 
-    private fun esc(s: String) = s.replace("'", "\\'").replace("\\", "\\\\")
+    private fun updateNotificationFromState(json: String?) {
+        val text = try {
+            // evaluateJavascript devolve o objeto já em JSON (ex.: {"mining":true,...})
+            val clean = json?.takeIf { it.isNotBlank() && it != "null" } ?: "{}"
+            val o = JSONObject(clean)
+            val mining     = o.optBoolean("mining", false)
+            val wallet     = o.optString("wallet", walletName)
+            val taps       = o.optInt("tapCount", 0)
+            val tapTotal   = o.optInt("tapTotal", 80)
+            val epochsPaid = o.optInt("epochsPaid", 0)
+            if (wallet.isNotBlank()) walletName = wallet
+            when {
+                mining     -> "⛏ Minerando • $taps/$tapTotal • epochs pagos: $epochsPaid"
+                else       -> "⏳ Aguardando próximo epoch • epochs pagos: $epochsPaid"
+            }
+        } catch (e: Exception) {
+            "Mantendo mineração ativa…"
+        }
+        updateNotification(text)
+    }
 
     // ── WakeLock ─────────────────────────────────────────────────────────────
 
     private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         @Suppress("DEPRECATION")
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WaspBrowser:BgMinerLock")
         wakeLock?.acquire(6 * 60 * 60 * 1000L) // 6 horas
     }
 
-    // ── Notificação ──────────────────────────────────────────────────────────
+    // ── Shutdown ─────────────────────────────────────────────────────────────
 
     private fun shutdown() {
+        ticking = false
         handler.removeCallbacksAndMessages(null)
-        try { bgWebView?.destroy(); bgWebView = null } catch (_: Exception) {}
         try { wakeLock?.release(); wakeLock = null } catch (_: Exception) {}
         getSharedPreferences(PREFS_BG, MODE_PRIVATE).edit().putBoolean(KEY_ACTIVE, false).apply()
     }
+
+    // ── Notificação ──────────────────────────────────────────────────────────
 
     private fun updateNotification(status: String) {
         val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -347,6 +233,7 @@ class BeeBackgroundService : Service() {
         val open = PendingIntent.getActivity(this, 0,
             Intent(this, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                putExtra("navigate_to", "bee")
             }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val stop = PendingIntent.getService(this, 0, buildStopIntent(this),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

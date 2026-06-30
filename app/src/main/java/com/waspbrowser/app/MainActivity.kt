@@ -396,8 +396,11 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         bonusHandler.removeCallbacksAndMessages(null)
         hideBonusBanner()
-        // Pausa timers quando app vai para background
-        webAppView.pauseTimers()
+        // pauseTimers() é GLOBAL ao processo — pausaria também a WebView persistente
+        // que minera. Só pausa quando a participação em segundo plano NÃO está ativa.
+        if (!BeeBackgroundService.isActive(this)) {
+            webAppView.pauseTimers()
+        }
     }
 
     override fun onUserLeaveHint() {

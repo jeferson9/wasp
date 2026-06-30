@@ -77,22 +77,30 @@ class BeeActivity : AppCompatActivity() {
 
                 @android.webkit.JavascriptInterface
                 fun setMiningStatus(active: Boolean, wallet: String) {
+                    // APENAS reflete o estado na toolbar (dot verde). NÃO liga/desliga o
+                    // serviço de background — senão a pausa entre epochs (mining=false por
+                    // ~30s) mataria a mineração em segundo plano. O serviço é controlado
+                    // exclusivamente por enableBackgroundMining()/stopBgMining().
                     Log.d(TAG, "[PersistentBee] setMiningStatus: $active wallet=$wallet")
                     context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
                         .edit()
                         .putBoolean("mining_active", active)
-                        .putBoolean("bg_participation_allowed", active)
                         .apply()
+                }
+
+                // Liga a participação em segundo plano: sobe o foreground service que
+                // mantém a WebView persistente (e seu miner) viva com a tela apagada.
+                @android.webkit.JavascriptInterface
+                fun enableBackgroundMining(wallet: String) {
+                    Log.d(TAG, "[PersistentBee] enableBackgroundMining wallet=$wallet")
+                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .edit().putBoolean("bg_participation_enabled", true).apply()
                     try {
-                        if (active) {
-                            val intent = BeeBackgroundService.buildStartIntent(context, wallet)
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                context.startForegroundService(intent)
-                            } else { context.startService(intent) }
-                        } else {
-                            context.startService(BeeBackgroundService.buildStopIntent(context))
-                        }
-                    } catch (e: Exception) { Log.e(TAG, "setMiningStatus error: ${e.message}") }
+                        val intent = BeeBackgroundService.buildStartIntent(context, wallet)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            context.startForegroundService(intent)
+                        } else { context.startService(intent) }
+                    } catch (e: Exception) { Log.e(TAG, "enableBackgroundMining error: ${e.message}") }
                 }
 
                 @android.webkit.JavascriptInterface
@@ -115,6 +123,8 @@ class BeeActivity : AppCompatActivity() {
 
                 @android.webkit.JavascriptInterface
                 fun stopBgMining() {
+                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .edit().putBoolean("bg_participation_enabled", false).apply()
                     try { context.startService(BeeBackgroundService.buildStopIntent(context)) }
                     catch (_: Exception) {}
                 }
@@ -174,8 +184,19 @@ class BeeActivity : AppCompatActivity() {
 
                 @android.webkit.JavascriptInterface
                 fun startBgMining(durationMs: Long, walletName: String) {
-                    setMiningStatus(true, walletName)
+                    enableBackgroundMining(walletName)
                 }
+
+                // Compat: o index.html antigo chama startBgMiningFull(). No modelo de
+                // WebView única as chaves não são necessárias aqui — a WebView do painel
+                // já minera. Apenas liga o keep-alive em segundo plano.
+                @android.webkit.JavascriptInterface
+                fun startBgMiningFull(walletName: String, minerAddress: String, publicKey: String, secretKey: String) {
+                    enableBackgroundMining(walletName)
+                }
+
+                @android.webkit.JavascriptInterface
+                fun isBgMiningEnabled(): Boolean = BeeBackgroundService.isActive(context)
 
                 @android.webkit.JavascriptInterface
                 fun getBgMiningStatus(): String {
