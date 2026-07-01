@@ -217,14 +217,31 @@ class BeeBridge(
             .any { m.contains(it) }
     }
 
-    /** Abre a LISTA de otimização de bateria (sem permissão especial — seguro no Play). */
+    /**
+     * Pede a isenção de otimização de bateria. Se ainda não isento, mostra o diálogo
+     * DIRETO (um toque em "Permitir" altera a whitelist do Doze — que é a flag que
+     * isBatteryOptimized() lê). Se já isento, abre a lista para o usuário conferir.
+     * Obs.: o diálogo direto é ok para distribuição por APK; para publicar no Play,
+     * trocar por ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS (lista).
+     */
     @JavascriptInterface
     fun openBatterySettings() {
         Handler(Looper.getMainLooper()).post {
             try {
-                context.startActivity(Intent(
-                    android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
-                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+                val alreadyOk = pm.isIgnoringBatteryOptimizations(context.packageName)
+                if (!alreadyOk) {
+                    @android.annotation.SuppressLint("BatteryLife")
+                    val req = Intent(
+                        android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                        android.net.Uri.parse("package:${context.packageName}")
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(req)
+                } else {
+                    context.startActivity(Intent(
+                        android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
             } catch (_: Exception) {
                 openAppDetails()
             }
