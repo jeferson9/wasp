@@ -1576,6 +1576,25 @@ class MainActivity : AppCompatActivity() {
                 cm.flush()
                 try { geckoSession.purgeHistory() } catch (_: Exception) {}
 
+                // CRÍTICO: o navegador real é o GeckoView. clearCache() do WebView
+                // não toca no cache do Gecko (o que aparece nos Ajustes do app).
+                // StorageController.clearData(ALL) zera cache de rede/imagens,
+                // cookies, DOM storage e dados de site do motor Gecko.
+                try {
+                    geckoRuntime?.storageController?.clearData(
+                        org.mozilla.geckoview.StorageController.ClearFlags.ALL
+                    )
+                } catch (e: Exception) {
+                    android.util.Log.e("ClearCache", "Gecko clearData falhou: ${e.message}")
+                }
+                // Limpa os diretórios de cache do app que contam no "balde Cache"
+                // dos Ajustes do Android (cacheDir + codeCacheDir + externalCacheDir).
+                try {
+                    listOfNotNull(cacheDir, codeCacheDir, externalCacheDir).forEach { dir ->
+                        dir.listFiles()?.forEach { it.deleteRecursively() }
+                    }
+                } catch (_: Exception) {}
+
                 // 3. Restaura as chaves salvas após o WebView recarregar
                 val raw = jsonResult?.trim('"')?.replace("\\\"", "\"") ?: "{}"
                 try {
