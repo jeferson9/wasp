@@ -1681,13 +1681,9 @@ class MainActivity : AppCompatActivity() {
             textSize = 13f
             setTypeface(null, android.graphics.Typeface.BOLD)
         }
-        val tvBody = android.widget.TextView(ctx).apply {
-            text = getString(R.string.bonus_banner_body)
-            setTextColor(android.graphics.Color.parseColor("#AAC0D0E0"))
-            textSize = 11f
-        }
+        // Corpo "assista um anúncio e ganhe WP" removido — o bônus já está
+        // disponível para coletar; não é recompensa por assistir anúncio.
         textCol.addView(tvTitle)
-        textCol.addView(tvBody)
         row.addView(textCol)
 
         // Botão CTA

@@ -125,8 +125,8 @@
     <string name="ad_next_in">Next ad in ~%d min</string>
     <string name="bonus_banner_title">+15 WP available!</string>
     <string name="bonus_banner_body">Watch a quick ad and earn bonus WP</string>
-    <string name="bonus_banner_cta">CLAIM</string>
-    <string name="bonus_loading_ad">Loading bonus ad...</string>
+    <string name="bonus_banner_cta">COLLECT</string>
+    <string name="bonus_loading_ad">Loading…</string>
     <string name="bonus_rewarded">+15 WP credited!</string>
     <string name="toast_translate_error">Could not start translation</string>
     <string name="toast_no_page_translate">No page to translate</string>

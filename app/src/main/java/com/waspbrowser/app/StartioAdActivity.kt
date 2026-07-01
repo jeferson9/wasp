@@ -85,8 +85,9 @@ class StartioAdActivity : AppCompatActivity() {
             // Mostramos a tela de confirmação e o anúncio é disparado
             // apenas quando o usuário toca "Voltar ao Wasp".
             setContentView(buildRewardConfirmScreen {
-                // Callback do botão "Voltar ao Wasp"
-                setContentView(buildLoadingOverlay())
+                // Callback do botão "Voltar ao Wasp" — o intersticial abre sem a
+                // mensagem de bônus (WP já foi coletado antes).
+                setContentView(buildLoadingOverlay(showRewardHint = false))
                 diag(getString(R.string.bonus_loading_ad))
                 val adBonus = StartAppAd(this)
                 adBonus.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
@@ -211,7 +212,7 @@ class StartioAdActivity : AppCompatActivity() {
         return root
     }
 
-    private fun buildLoadingOverlay(): View {
+    private fun buildLoadingOverlay(showRewardHint: Boolean = true): View {
         val root = FrameLayout(this).apply {
             setBackgroundColor(Color.parseColor("#08090d"))
         }
@@ -240,16 +241,18 @@ class StartioAdActivity : AppCompatActivity() {
             LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = dp(18) })
 
-        val hint = TextView(this).apply {
-            text = getString(R.string.ad_wait_reward, 30)
-            setTextColor(Color.parseColor("#66ffffff"))
-            textSize = 11f
-            gravity = Gravity.CENTER
+        if (showRewardHint) {
+            val hint = TextView(this).apply {
+                text = getString(R.string.ad_wait_reward, 30)
+                setTextColor(Color.parseColor("#66ffffff"))
+                textSize = 11f
+                gravity = Gravity.CENTER
+            }
+            column.addView(hint, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(8) })
         }
-        column.addView(hint, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply { topMargin = dp(8) })
 
         root.addView(column, FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
