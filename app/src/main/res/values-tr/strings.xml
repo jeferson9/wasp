@@ -126,8 +126,11 @@
 
     <string name="bonus_banner_title">+15 WP mevcut!</string>
     <string name="bonus_banner_body">Kısa bir reklam izle ve bonus WP kazan</string>
-    <string name="bonus_banner_cta">AL</string>
-    <string name="bonus_loading_ad">Bonus reklam yükleniyor...</string>
+    <string name="bonus_banner_cta">TOPLA</string>
+    <string name="bonus_loading_ad">Yükleniyor…</string>
+    <string name="bonus_earned_title" formatted="false">%d WP kazandın!</string>
+    <string name="bonus_earned_sub">Bonusun Wasp hesabına eklendi.</string>
+    <string name="bonus_back_to_wasp">"Wasp'a dön"</string>
     <string name="bonus_rewarded">+15 WP eklendi!</string>
     <string name="tr_reg_americas">Amerika\'lar</string>
     <string name="tr_reg_west_europe">Batı Avrupa</string>

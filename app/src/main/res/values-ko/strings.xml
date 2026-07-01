@@ -127,7 +127,10 @@
     <string name="bonus_banner_title">+15 WP 획득 가능!</string>
     <string name="bonus_banner_body">짧은 광고를 보고 보너스 WP를 받으세요</string>
     <string name="bonus_banner_cta">받기</string>
-    <string name="bonus_loading_ad">보너스 광고 로딩 중...</string>
+    <string name="bonus_loading_ad">로딩 중…</string>
+    <string name="bonus_earned_title" formatted="false">%d WP를 획득했습니다!</string>
+    <string name="bonus_earned_sub">보너스가 Wasp 계정에 추가되었습니다.</string>
+    <string name="bonus_back_to_wasp">Wasp으로 돌아가기</string>
     <string name="bonus_rewarded">+15 WP 지급!</string>
     <string name="tr_reg_americas">아메리카</string>
     <string name="tr_reg_west_europe">서유럽</string>

@@ -127,7 +127,10 @@
     <string name="bonus_banner_title">+15 WP dostępnych!</string>
     <string name="bonus_banner_body">Obejrzyj krótką reklamę i zdobądź bonus WP</string>
     <string name="bonus_banner_cta">ODBIERZ</string>
-    <string name="bonus_loading_ad">Ładowanie reklamy bonus...</string>
+    <string name="bonus_loading_ad">Ładowanie…</string>
+    <string name="bonus_earned_title" formatted="false">Zdobyłeś %d WP!</string>
+    <string name="bonus_earned_sub">Twój bonus został dodany do konta Wasp.</string>
+    <string name="bonus_back_to_wasp">Wróć do Wasp</string>
     <string name="bonus_rewarded">+15 WP dodane!</string>
     <string name="tr_reg_americas">Ameryki</string>
     <string name="tr_reg_west_europe">Europa Zachodnia</string>

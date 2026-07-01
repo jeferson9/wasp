@@ -127,7 +127,10 @@
     <string name="bonus_banner_title">+15 WP 可领取！</string>
     <string name="bonus_banner_body">观看一个简短广告，赚取奖励WP</string>
     <string name="bonus_banner_cta">领取</string>
-    <string name="bonus_loading_ad">加载奖励广告...</string>
+    <string name="bonus_loading_ad">加载中…</string>
+    <string name="bonus_earned_title" formatted="false">你获得了 %d WP！</string>
+    <string name="bonus_earned_sub">你的奖励已添加到你的 Wasp 账户。</string>
+    <string name="bonus_back_to_wasp">返回 Wasp</string>
     <string name="bonus_rewarded">+15 WP 已到账！</string>
     <string name="tr_reg_americas">美洲</string>
     <string name="tr_reg_west_europe">西欧</string>

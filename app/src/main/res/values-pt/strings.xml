@@ -130,6 +130,9 @@
     <string name="bonus_banner_body">Assista um anúncio rápido e ganhe WP bônus</string>
     <string name="bonus_banner_cta">COLETAR</string>
     <string name="bonus_loading_ad">Carregando…</string>
+    <string name="bonus_earned_title" formatted="false">Você ganhou %d WP!</string>
+    <string name="bonus_earned_sub">Seu bônus foi adicionado à sua conta Wasp.</string>
+    <string name="bonus_back_to_wasp">Voltar ao Wasp</string>
     <string name="bonus_rewarded">+15 WP creditados!</string>
     <string name="tr_reg_americas">Américas</string>
     <string name="tr_reg_west_europe">Europa Ocidental</string>

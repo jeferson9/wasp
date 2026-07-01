@@ -126,8 +126,11 @@
 
     <string name="bonus_banner_title">+15 WP доступно!</string>
     <string name="bonus_banner_body">Посмотрите короткую рекламу и получите бонусные WP</string>
-    <string name="bonus_banner_cta">ПОЛУЧИТЬ</string>
-    <string name="bonus_loading_ad">Загрузка бонусной рекламы...</string>
+    <string name="bonus_banner_cta">ЗАБРАТЬ</string>
+    <string name="bonus_loading_ad">Загрузка…</string>
+    <string name="bonus_earned_title" formatted="false">Вы получили %d WP!</string>
+    <string name="bonus_earned_sub">Ваш бонус добавлен на ваш аккаунт Wasp.</string>
+    <string name="bonus_back_to_wasp">Вернуться в Wasp</string>
     <string name="bonus_rewarded">+15 WP начислено!</string>
     <string name="tr_reg_americas">Америки</string>
     <string name="tr_reg_west_europe">Западная Европа</string>

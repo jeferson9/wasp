@@ -126,8 +126,11 @@
 
     <string name="bonus_banner_title">+15 WP tersedia!</string>
     <string name="bonus_banner_body">Tonton iklan singkat dan dapatkan WP bonus</string>
-    <string name="bonus_banner_cta">KLAIM</string>
-    <string name="bonus_loading_ad">Memuat iklan bonus...</string>
+    <string name="bonus_banner_cta">AMBIL</string>
+    <string name="bonus_loading_ad">Memuat…</string>
+    <string name="bonus_earned_title" formatted="false">Kamu mendapat %d WP!</string>
+    <string name="bonus_earned_sub">Bonusmu telah ditambahkan ke akun Wasp-mu.</string>
+    <string name="bonus_back_to_wasp">Kembali ke Wasp</string>
     <string name="bonus_rewarded">+15 WP dikreditkan!</string>
     <string name="tr_reg_americas">Amerika</string>
     <string name="tr_reg_west_europe">Eropa Barat</string>

@@ -126,8 +126,11 @@
 
     <string name="bonus_banner_title">+15 WP beschikbaar!</string>
     <string name="bonus_banner_body">Bekijk een korte advertentie en verdien bonus WP</string>
-    <string name="bonus_banner_cta">CLAIMEN</string>
-    <string name="bonus_loading_ad">Bonus advertentie laden...</string>
+    <string name="bonus_banner_cta">OPHALEN</string>
+    <string name="bonus_loading_ad">Laden…</string>
+    <string name="bonus_earned_title" formatted="false">Je hebt %d WP verdiend!</string>
+    <string name="bonus_earned_sub">Je bonus is toegevoegd aan je Wasp-account.</string>
+    <string name="bonus_back_to_wasp">Terug naar Wasp</string>
     <string name="bonus_rewarded">+15 WP bijgeschreven!</string>
     <string name="tr_reg_americas">Amerika\'s</string>
     <string name="tr_reg_west_europe">West-Europa</string>

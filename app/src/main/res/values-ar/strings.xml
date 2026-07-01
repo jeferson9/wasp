@@ -10,8 +10,11 @@
 
     <string name="bonus_banner_title">+15 WP متاحة!</string>
     <string name="bonus_banner_body">شاهد إعلانًا سريعًا واحصل على WP إضافية</string>
-    <string name="bonus_banner_cta">استرداد</string>
-    <string name="bonus_loading_ad">جارٍ تحميل الإعلان...</string>
+    <string name="bonus_banner_cta">استلام</string>
+    <string name="bonus_loading_ad">جارٍ التحميل…</string>
+    <string name="bonus_earned_title" formatted="false">لقد ربحت %d WP!</string>
+    <string name="bonus_earned_sub">تمت إضافة مكافأتك إلى حساب Wasp.</string>
+    <string name="bonus_back_to_wasp">العودة إلى Wasp</string>
     <string name="bonus_rewarded">تمت إضافة +15 WP!</string>
     <string name="tr_reg_americas">الأمريكتان</string>
     <string name="tr_reg_west_europe">أوروبا الغربية</string>

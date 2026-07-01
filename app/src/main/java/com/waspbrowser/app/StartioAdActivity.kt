@@ -66,13 +66,9 @@ class StartioAdActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Mostra um overlay imediato para a tela nao ficar preta/vazia enquanto
-        // o video carrega pela rede. So feedback visual; nao acelera o load.
-        setContentView(buildLoadingOverlay())
-
         fun diag(m: String) {
             Log.d(TAG, m)
-            statusText.text = m
+            if (::statusText.isInitialized) statusText.text = m
         }
 
         StartAppSDK.setTestAdsEnabled(true) // REMOVER ANTES DE PUBLICAR
@@ -81,9 +77,9 @@ class StartioAdActivity : AppCompatActivity() {
 
         if (mode == MODE_INTERSTITIAL_BONUS) {
             // ── MODO INTERSTITIAL BÔNUS ───────────────────────────────────
-            // WP já foi creditado antes de abrir esta Activity.
-            // Mostramos a tela de confirmação e o anúncio é disparado
-            // apenas quando o usuário toca "Voltar ao Wasp".
+            // WP já foi creditado antes de abrir esta Activity. Vai DIRETO para a
+            // tela de confirmação (sem overlay de "assista e ganhe WP"). O anúncio
+            // só dispara quando o usuário toca "Voltar ao Wasp".
             setContentView(buildRewardConfirmScreen {
                 // Callback do botão "Voltar ao Wasp" — o intersticial abre sem a
                 // mensagem de bônus (WP já foi coletado antes).
@@ -106,6 +102,9 @@ class StartioAdActivity : AppCompatActivity() {
         }
 
         // ── MODO REWARDED VIDEO (30 WP) — comportamento original ─────────
+        // Aqui SIM mostra o overlay com "você receberá WP por assistir", pois
+        // neste modo o WP é a recompensa por assistir o vídeo.
+        setContentView(buildLoadingOverlay())
         val ad = StartAppAd(this)
 
         // Marca rewarded so quando o video e assistido ate o fim.
@@ -175,7 +174,7 @@ class StartioAdActivity : AppCompatActivity() {
         })
         // Título
         col.addView(TextView(this).apply {
-            text = "Você ganhou $INTERSTITIAL_BONUS_WP WP!"
+            text = getString(R.string.bonus_earned_title, INTERSTITIAL_BONUS_WP)
             textSize = 24f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
@@ -184,7 +183,7 @@ class StartioAdActivity : AppCompatActivity() {
         })
         // Subtítulo
         col.addView(TextView(this).apply {
-            text = "Seu bônus foi adicionado à sua conta Wasp."
+            text = getString(R.string.bonus_earned_sub)
             textSize = 14f
             gravity = Gravity.CENTER
             setTextColor(Color.parseColor("#99C8D0E0"))
@@ -192,7 +191,7 @@ class StartioAdActivity : AppCompatActivity() {
         })
         // Botão "Voltar ao Wasp"
         col.addView(TextView(this).apply {
-            text = "Voltar ao Wasp"
+            text = getString(R.string.bonus_back_to_wasp)
             textSize = 15f
             gravity = Gravity.CENTER
             setTextColor(Color.parseColor("#111420"))

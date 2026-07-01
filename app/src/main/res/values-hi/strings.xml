@@ -127,7 +127,10 @@
     <string name="bonus_banner_title">+15 WP उपलब्ध!</string>
     <string name="bonus_banner_body">एक छोटा विज्ञापन देखें और बोनस WP पाएं</string>
     <string name="bonus_banner_cta">प्राप्त करें</string>
-    <string name="bonus_loading_ad">बोनस विज्ञापन लोड हो रहा है...</string>
+    <string name="bonus_loading_ad">लोड हो रहा है…</string>
+    <string name="bonus_earned_title" formatted="false">आपने %d WP जीते!</string>
+    <string name="bonus_earned_sub">आपका बोनस आपके Wasp खाते में जोड़ दिया गया।</string>
+    <string name="bonus_back_to_wasp">Wasp पर वापस</string>
     <string name="bonus_rewarded">+15 WP जमा!</string>
     <string name="tr_reg_americas">अमेरिका</string>
     <string name="tr_reg_west_europe">पश्चिमी यूरोप</string>

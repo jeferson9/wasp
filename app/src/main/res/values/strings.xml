@@ -127,6 +127,9 @@
     <string name="bonus_banner_body">Watch a quick ad and earn bonus WP</string>
     <string name="bonus_banner_cta">COLLECT</string>
     <string name="bonus_loading_ad">Loading…</string>
+    <string name="bonus_earned_title" formatted="false">You earned %d WP!</string>
+    <string name="bonus_earned_sub">Your bonus was added to your Wasp account.</string>
+    <string name="bonus_back_to_wasp">Back to Wasp</string>
     <string name="bonus_rewarded">+15 WP credited!</string>
     <string name="toast_translate_error">Could not start translation</string>
     <string name="toast_no_page_translate">No page to translate</string>

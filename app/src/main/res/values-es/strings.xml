@@ -126,8 +126,11 @@
 
     <string name="bonus_banner_title">¡+15 WP disponibles!</string>
     <string name="bonus_banner_body">Mira un anuncio rápido y gana WP extra</string>
-    <string name="bonus_banner_cta">CANJEAR</string>
-    <string name="bonus_loading_ad">Cargando anuncio bono...</string>
+    <string name="bonus_banner_cta">RECOGER</string>
+    <string name="bonus_loading_ad">Cargando…</string>
+    <string name="bonus_earned_title" formatted="false">¡Ganaste %d WP!</string>
+    <string name="bonus_earned_sub">Tu bono se agregó a tu cuenta Wasp.</string>
+    <string name="bonus_back_to_wasp">Volver a Wasp</string>
     <string name="bonus_rewarded">¡+15 WP acreditados!</string>
     <string name="tr_reg_americas">Américas</string>
     <string name="tr_reg_west_europe">Europa Occidental</string>

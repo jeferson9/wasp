@@ -126,8 +126,11 @@
 
     <string name="bonus_banner_title">+15 WP disponibles !</string>
     <string name="bonus_banner_body">Regardez une pub rapide et gagnez des WP bonus</string>
-    <string name="bonus_banner_cta">RÉCLAMER</string>
-    <string name="bonus_loading_ad">Chargement de la pub bonus...</string>
+    <string name="bonus_banner_cta">RÉCUPÉRER</string>
+    <string name="bonus_loading_ad">Chargement…</string>
+    <string name="bonus_earned_title" formatted="false">Vous avez gagné %d WP !</string>
+    <string name="bonus_earned_sub">Votre bonus a été ajouté à votre compte Wasp.</string>
+    <string name="bonus_back_to_wasp">Retour à Wasp</string>
     <string name="bonus_rewarded">+15 WP crédités !</string>
     <string name="tr_reg_americas">Amériques</string>
     <string name="tr_reg_west_europe">Europe de l\'Ouest</string>
