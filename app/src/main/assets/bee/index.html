@@ -440,6 +440,18 @@
     </label>
 </div>
 
+<!-- Toggle de participação em segundo plano (aparece após autorizar) -->
+<div class="switch-row hidden" id="bgSwitchRow" style="margin-top:10px;">
+    <div>
+        <div style="font-weight:700;font-size:15px;">Participação em segundo plano</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Minera com a tela apagada ou o app minimizado.</div>
+    </div>
+    <label class="switch">
+        <input type="checkbox" id="bgSwitch">
+        <span class="slider"></span>
+    </label>
+</div>
+
 <!-- WP balance card abaixo do switch -->
 <div id="wpInfoRow" style="
     display:flex; align-items:center; justify-content:space-between;
@@ -576,15 +588,7 @@
     </div>
 </div>
 
-<!-- Botão mineração em segundo plano -->
-<div id="bgMiningCard" class="card hidden" style="margin-bottom:14px;text-align:center;border:1px solid rgba(255,193,7,0.25);">
-    <div style="font-size:13px;font-weight:700;color:var(--yellow);margin-bottom:6px;">⚡ Segundo Plano</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Minera mesmo com a tela apagada. Kotlin controla o timing.</div>
-    <button class="btn" id="btnBgMining" onclick="startBgMiningNative()" style="font-size:14px;">
-        Minerar em Segundo Plano
-    </button>
-    <div id="bgMiningStatus" style="font-size:11px;color:var(--muted);margin-top:8px;display:none;"></div>
-</div>
+<!-- (segundo plano agora é um toggle abaixo da Participação) -->
 
 <div class="log-card">
     <div class="log-header">
@@ -722,44 +726,33 @@
         }
     }
 
-    // ── Participação em segundo plano (mesma WebView, mesmo miner) ─────────────
-    // Liga/desliga o keep-alive nativo. Não há segunda engine: a mineração
-    // continua na WebView do painel, que o foreground service mantém viva.
+    // ── Participação em segundo plano (toggle abaixo da Participação) ──────────
+    // Mesma WebView, mesmo miner. Liga/desliga o keep-alive nativo.
     function renderBgButton() {
-        var btn = document.getElementById("btnBgMining");
-        var status = document.getElementById("bgMiningStatus");
+        var sw = document.getElementById("bgSwitch");
+        if (!sw) return;
         var on = window.isBackgroundParticipationOn ? window.isBackgroundParticipationOn() : false;
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = on ? "⚡ Segundo plano ATIVO — toque para desligar"
-                                 : "Minerar em Segundo Plano";
-            btn.style.opacity = on ? "1" : "";
-        }
-        if (status) {
-            status.style.display = "block";
-            status.textContent = on
-                ? "Minerando com a tela apagada/minimizado. Notificação ativa."
-                : "Mantém a mineração viva com o Wasp minimizado ou a tela apagada.";
-        }
+        if (sw.checked !== on) sw.checked = on;
     }
 
-    function startBgMiningNative() {
-        var on = window.isBackgroundParticipationOn ? window.isBackgroundParticipationOn() : false;
-        if (on) {
+    function onBgSwitchChange() {
+        var sw = document.getElementById("bgSwitch");
+        if (!sw) return;
+        if (sw.checked) {
+            var ok = window.enableBackgroundParticipation ? window.enableBackgroundParticipation() : false;
+            if (!ok) {
+                sw.checked = false; // reverte se faltou WP/autorização
+                var keys = window.getBgMiningKeys ? window.getBgMiningKeys() : null;
+                if (!keys || !keys.minerAddress) alert("Configure e autorize o Bee Engine primeiro.");
+            }
+        } else {
             if (window.disableBackgroundParticipation) window.disableBackgroundParticipation();
-            renderBgButton();
-            return;
         }
-        var ok = window.enableBackgroundParticipation ? window.enableBackgroundParticipation() : false;
-        if (!ok) {
-            var keys = window.getBgMiningKeys ? window.getBgMiningKeys() : null;
-            if (!keys || !keys.minerAddress) alert("Configure e autorize o Bee Engine primeiro.");
-        }
-        // Pequeno atraso para o serviço subir antes de reler o estado.
         setTimeout(renderBgButton, 600);
     }
 
-    // Reflete o estado real do botão ao abrir o painel e periodicamente.
+    (function(){ var sw = document.getElementById("bgSwitch"); if (sw) sw.addEventListener("change", onBgSwitchChange); })();
+    // Reflete o estado real do toggle ao abrir o painel e periodicamente.
     setTimeout(renderBgButton, 800);
     setInterval(renderBgButton, 5000);
 

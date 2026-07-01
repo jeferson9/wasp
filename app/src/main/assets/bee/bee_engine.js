@@ -1496,11 +1496,11 @@
 
   // Mostra/esconde o card de mineração em segundo plano conforme o estado
   window._updateBgMiningCard = function() {
-    var card = document.getElementById("bgMiningCard");
-    if (!card) return;
+    var row = document.getElementById("bgSwitchRow");
+    if (!row) return;
     var ready = saved && saved.minerAddress && saved.authorized;
-    if (ready) card.classList.remove("hidden");
-    else card.classList.add("hidden");
+    if (ready) row.classList.remove("hidden");
+    else row.classList.add("hidden");
   };
 
   // ─── PARTICIPAÇÃO EM SEGUNDO PLANO (mesma WebView, mesmo miner) ───────────
