@@ -1193,6 +1193,11 @@
     }
     if (window._watchdogTimer) { clearInterval(window._watchdogTimer); window._watchdogTimer = null; }
     if (window._autoTapTimer)  { clearInterval(window._autoTapTimer);  window._autoTapTimer  = null; }
+    // Cancela o timer de fim de epoch e o claim pendente — sem isso, o
+    // _epochTimer disparava ~5min depois, religava o switch e reiniciava a
+    // mineração (debitando WP) mesmo com o usuário tendo desligado.
+    if (window._epochTimer)    { clearTimeout(window._epochTimer);     window._epochTimer    = null; }
+    window._pendingClaim = null;
     try { if (miner) miner.stop(); } catch(_) {}
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
@@ -1552,19 +1557,23 @@
       if (!saved || !saved.authorized || !saved.minerAddress) return;
       var now = Date.now();
       if (mining && miner) {
-        // Só tapa aqui quando a página está oculta (em foreground o setInterval
-        // de auto-tap já cuida disso — evita tap duplicado). Como o setInterval
-        // congela em background, recuperamos o atraso: calculamos quantos taps já
-        // deviam ter ocorrido pelo tempo decorrido e disparamos até alcançar (cap
-        // por tick para não estourar a sessão com um burst grande).
-        if (document.hidden && sessionStart) {
+        // Recupera taps atrasados: calcula quantos já deviam ter ocorrido pelo
+        // tempo decorrido e dispara até alcançar (cap por tick para não estourar
+        // a sessão com um burst grande). Não depende de document.hidden — a
+        // KeepAliveWebView força a página como visível em background, então essa
+        // flag nunca fica true; o alvo por tempo já evita duplicar com o
+        // setInterval de auto-tap quando ele está em dia.
+        if (sessionStart) {
           var TAP_TOTAL = 80;
           var tapInterval = MINING_DURATION_MS / TAP_TOTAL; // ~3750ms
           var target = Math.min(TAP_TOTAL, Math.floor((now - sessionStart) / tapInterval));
           var have = window._tapCount || 0;
           var burst = 0;
           while (have < target && burst < 3) {
-            try { miner.add_tap(Math.floor(Math.random()*300+50), Math.floor(Math.random()*300+50)); } catch(_) {}
+            try {
+              var _tp = miner.add_tap(Math.floor(Math.random()*300+50), Math.floor(Math.random()*300+50));
+              if (_tp && _tp.catch) _tp.catch(function(){});
+            } catch(_) {}
             have++; burst++;
           }
           window._tapCount = have;
