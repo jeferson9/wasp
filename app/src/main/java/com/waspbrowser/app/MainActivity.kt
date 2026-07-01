@@ -121,8 +121,10 @@ class MainActivity : AppCompatActivity() {
         if (tabs.size <= 1) { goHome(); return }
         tabs[index].session.close()
         tabs.removeAt(index)
-        val newIndex = if (activeTabIndex >= tabs.size) tabs.size - 1 else activeTabIndex
-        activeTabIndex = newIndex
+        // Fechar uma aba antes da ativa desloca os índices — sem o ajuste,
+        // a aba visível trocava sozinha.
+        if (index < activeTabIndex) activeTabIndex--
+        if (activeTabIndex >= tabs.size) activeTabIndex = tabs.size - 1
         switchToTab(activeTabIndex)
         updateTabIndicator()
     }
