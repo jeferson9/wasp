@@ -474,6 +474,8 @@
       log("Session restored: " + saved.walletName, "lok");
       // Mostra botão de mineração em segundo plano nativo
       try { if (window._updateBgMiningCard) window._updateBgMiningCard(); } catch(_) {}
+      // Autostart ao abrir o Wasp (se ligado no menu Configurações → Bee Engine)
+      try { setTimeout(function(){ if (window.maybeAutostartBee) window.maybeAutostartBee(); }, 1500); } catch(_) {}
       // Mostrar aviso Mambaboard se não foi dismissado (rewards requerem ativação)
       try {
         var mambaDismissed = localStorage.getItem("wasp_mamba_dismissed");
@@ -1583,6 +1585,31 @@
         if (wantsOn && getWP() >= WP_MINING_COST) startMining();
       }
     } catch(e) {}
+  };
+
+  // Autostart: liga a mineração ao abrir o Wasp, conforme as opções do menu.
+  // Chamado uma vez quando a sessão está autorizada.
+  window.maybeAutostartBee = function() {
+    try {
+      if (window._autostartDone) return;
+      if (!saved || !saved.authorized || !saved.minerAddress) return;
+      if (mining) { window._autostartDone = true; return; }
+      var ab = window.AndroidBee;
+      if (!ab || !ab.isAutostartOnOpen || !ab.isAutostartOnOpen()) return;
+      window._autostartDone = true;
+      if (getWP() < WP_MINING_COST) {
+        log("Autostart: sem WP suficiente para iniciar.", "lwrn");
+        return;
+      }
+      var keepBg = ab.isKeepBackground && ab.isKeepBackground();
+      log("▶️ Autostart: iniciando mineração ao abrir o Wasp" + (keepBg ? " (segundo plano)" : ""), "lok");
+      if (keepBg && window.enableBackgroundParticipation) {
+        window.enableBackgroundParticipation();
+      } else {
+        if (miningSwitch) miningSwitch.checked = true;
+        startMining();
+      }
+    } catch (e) { log("Autostart erro: " + (e.message || String(e)), "lwrn"); }
   };
 
   window.isBackgroundParticipationOn = function() {

@@ -154,6 +154,66 @@ function toggleThemeOptions(){
 }
 
 /* =========================
+   BEE ENGINE · SUBMENU DE CONFIG
+========================= */
+var BEE_CFG_I18N = {
+  en:{title:"Bee Engine",autostart:"Mine when opening Wasp",keepbg:"Keep mining in background",battery:"Allow unrestricted battery",autostart_oem:"Enable Autostart (device)",open_panel:"Open Bee panel",on:"ON",off:"OFF",hint:"Keep mining with the screen off or app minimized."},
+  pt:{title:"Bee Engine",autostart:"Minerar ao abrir o Wasp",keepbg:"Manter em segundo plano",battery:"Permitir bateria sem restrição",autostart_oem:"Ativar Autostart (aparelho)",open_panel:"Abrir painel Bee",on:"LIG",off:"DESL",hint:"Continua minerando com a tela apagada ou app minimizado."},
+  es:{title:"Bee Engine",autostart:"Minar al abrir Wasp",keepbg:"Mantener en segundo plano",battery:"Permitir batería sin restricción",autostart_oem:"Activar Autostart (dispositivo)",open_panel:"Abrir panel Bee",on:"ON",off:"OFF",hint:"Sigue minando con la pantalla apagada o app minimizada."}
+};
+function beeT(k){
+  var l = (window.HOME_LANG || "en");
+  return (BEE_CFG_I18N[l] && BEE_CFG_I18N[l][k]) || BEE_CFG_I18N.en[k] || k;
+}
+function _beeCfg(){
+  try { if(window.Android && Android.getBeeConfig) return JSON.parse(Android.getBeeConfig()); } catch(e){}
+  return { autostartOnOpen:false, keepBackground:false, batteryOptimized:false, aggressiveOem:false };
+}
+function renderBeeConfig(){
+  var box = document.getElementById("beeOptions");
+  if(!box) return;
+  var cfg = _beeCfg();
+  function toggleRow(label, on, handler){
+    return '<div class="settings-subitem" onclick="'+handler+'" '
+      + 'style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
+      + '<span>'+label+'</span>'
+      + '<span style="font-weight:700;font-size:11px;padding:2px 8px;border-radius:10px;'
+      + 'background:'+(on?'rgba(49,196,109,.15)':'rgba(255,255,255,.06)')+';'
+      + 'color:'+(on?'#31c46d':'#888')+'">'+(on?beeT("on"):beeT("off"))+'</span></div>';
+  }
+  var html = '<div style="font-size:11px;color:#888;padding:4px 14px 8px">'+beeT("hint")+'</div>';
+  html += toggleRow(beeT("autostart"), cfg.autostartOnOpen, "_beeToggleAutostart()");
+  html += toggleRow(beeT("keepbg"),    cfg.keepBackground,  "_beeToggleKeepBg()");
+  if(cfg.batteryOptimized){
+    html += '<div class="settings-subitem" style="color:#f7c600" '
+      + 'onclick="if(window.Android)Android.openBatterySettings()">⚙️ '+beeT("battery")+'</div>';
+  }
+  if(cfg.aggressiveOem){
+    html += '<div class="settings-subitem" style="color:#f7c600" '
+      + 'onclick="if(window.Android)Android.openAutostartSettings()">🚀 '+beeT("autostart_oem")+'</div>';
+  }
+  html += '<div class="settings-subitem" '
+    + 'onclick="if(window.Android&&Android.openBeePanel)Android.openBeePanel()">🐝 '+beeT("open_panel")+'</div>';
+  box.innerHTML = html;
+}
+function toggleBeeOptions(){
+  var menu = document.getElementById("beeOptions");
+  if(!menu) return;
+  menu.classList.toggle("active");
+  if(menu.classList.contains("active")) renderBeeConfig();
+}
+window._beeToggleAutostart = function(){
+  var cfg = _beeCfg();
+  try { if(window.Android) Android.setBeeAutostart(!cfg.autostartOnOpen); } catch(e){}
+  renderBeeConfig();
+};
+window._beeToggleKeepBg = function(){
+  var cfg = _beeCfg();
+  try { if(window.Android) Android.setBeeKeepBackground(!cfg.keepBackground); } catch(e){}
+  renderBeeConfig();
+};
+
+/* =========================
    URL NORMALIZER
 ========================= */
 function normalizeUrl(input){

@@ -207,6 +207,16 @@ class BeeActivity : AppCompatActivity() {
                 fun isBgMiningEnabled(): Boolean = BeeBackgroundService.isActive(context)
 
                 @android.webkit.JavascriptInterface
+                fun isAutostartOnOpen(): Boolean =
+                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .getBoolean("autostart_on_open", false)
+
+                @android.webkit.JavascriptInterface
+                fun isKeepBackground(): Boolean =
+                    context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        .getBoolean("keep_background", false)
+
+                @android.webkit.JavascriptInterface
                 fun getBgMiningStatus(): String {
                     val active = BeeBackgroundService.isActive(context)
                     return """{"active":$active,"remainingMs":999999999,"cycles":0,"wallet":""}"""

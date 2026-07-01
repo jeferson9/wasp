@@ -180,6 +180,95 @@ class BeeBridge(
         }
     }
 
+    // ─── Configurações do Bee (menu Configurações → Bee Engine) ──────────────
+
+    private fun beePrefs() =
+        context.getSharedPreferences("bee_mining", Context.MODE_PRIVATE)
+
+    /** Estado atual das opções, para o menu renderizar. */
+    @JavascriptInterface
+    fun getBeeConfig(): String {
+        val p = beePrefs()
+        val autostart = p.getBoolean("autostart_on_open", false)
+        val keepBg    = p.getBoolean("keep_background", false)
+        val optimized = try {
+            val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+            pm.isIgnoringBatteryOptimizations(context.packageName).not()
+        } catch (_: Exception) { false }
+        return """{"autostartOnOpen":$autostart,"keepBackground":$keepBg,"batteryOptimized":$optimized,"aggressiveOem":${isAggressiveOem()}}"""
+    }
+
+    @JavascriptInterface
+    fun setBeeAutostart(enabled: Boolean) {
+        beePrefs().edit().putBoolean("autostart_on_open", enabled).apply()
+    }
+
+    @JavascriptInterface
+    fun setBeeKeepBackground(enabled: Boolean) {
+        beePrefs().edit().putBoolean("keep_background", enabled).apply()
+    }
+
+    /** Fabricantes conhecidos por matar apps em background de forma agressiva. */
+    @JavascriptInterface
+    fun isAggressiveOem(): Boolean {
+        val m = (Build.MANUFACTURER + " " + Build.BRAND).lowercase()
+        return listOf("xiaomi", "redmi", "poco", "oppo", "vivo", "realme",
+            "oneplus", "huawei", "honor", "meizu", "letv", "iqoo")
+            .any { m.contains(it) }
+    }
+
+    /** Abre a LISTA de otimização de bateria (sem permissão especial — seguro no Play). */
+    @JavascriptInterface
+    fun openBatterySettings() {
+        Handler(Looper.getMainLooper()).post {
+            try {
+                context.startActivity(Intent(
+                    android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (_: Exception) {
+                openAppDetails()
+            }
+        }
+    }
+
+    /** Abre a tela de Autostart do fabricante (só Intent — sem risco de política). */
+    @JavascriptInterface
+    fun openAutostartSettings() {
+        Handler(Looper.getMainLooper()).post {
+            val components = listOf(
+                "com.miui.securitycenter" to "com.miui.permcenter.autostart.AutoStartManagementActivity",
+                "com.coloros.safecenter" to "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+                "com.coloros.safecenter" to "com.coloros.safecenter.startupapp.StartupAppListActivity",
+                "com.oppo.safe" to "com.oppo.safe.permission.startup.StartupAppListActivity",
+                "com.iqoo.secure" to "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity",
+                "com.iqoo.secure" to "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager",
+                "com.vivo.permissionmanager" to "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+                "com.huawei.systemmanager" to "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+                "com.huawei.systemmanager" to "com.huawei.systemmanager.optimize.process.ProtectActivity",
+                "com.letv.android.letvsafe" to "com.letv.android.letvsafe.AutobootManageActivity"
+            )
+            for ((pkg, cls) in components) {
+                try {
+                    val i = Intent().setComponent(android.content.ComponentName(pkg, cls))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    if (i.resolveActivity(context.packageManager) != null) {
+                        context.startActivity(i); return@post
+                    }
+                } catch (_: Exception) {}
+            }
+            openAppDetails() // fallback universal
+        }
+    }
+
+    private fun openAppDetails() {
+        try {
+            context.startActivity(Intent(
+                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                android.net.Uri.parse("package:${context.packageName}")
+            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: Exception) {}
+    }
+
     @JavascriptInterface
     fun startBgMiningFull(walletName: String, minerAddress: String, publicKey: String, secretKey: String) {
         Log.d("BeeBridge", "startBgMiningFull: wallet=$walletName")
