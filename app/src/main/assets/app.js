@@ -184,10 +184,15 @@ function renderBeeConfig(){
   var html = '<div style="font-size:11px;color:#888;padding:4px 14px 8px">'+beeT("hint")+'</div>';
   html += toggleRow(beeT("autostart"), cfg.autostartOnOpen, "_beeToggleAutostart()");
   html += toggleRow(beeT("keepbg"),    cfg.keepBackground,  "_beeToggleKeepBg()");
-  if(cfg.batteryOptimized){
-    html += '<div class="settings-subitem" style="color:#f7c600" '
-      + 'onclick="if(window.Android)Android.openBatterySettings()">⚙️ '+beeT("battery")+'</div>';
-  }
+  // Bateria: batteryOptimized=true significa AINDA restrito → estado DESL.
+  // Sempre visível, com badge de estado; toque abre os Ajustes.
+  var batteryOk = !cfg.batteryOptimized;
+  html += '<div class="settings-subitem" onclick="if(window.Android)Android.openBatterySettings()" '
+    + 'style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
+    + '<span>⚙️ '+beeT("battery")+'</span>'
+    + '<span style="font-weight:700;font-size:11px;padding:2px 8px;border-radius:10px;'
+    + 'background:'+(batteryOk?'rgba(49,196,109,.15)':'rgba(255,90,90,.15)')+';'
+    + 'color:'+(batteryOk?'#31c46d':'#ff6b6b')+'">'+(batteryOk?beeT("on"):beeT("off"))+'</span></div>';
   if(cfg.aggressiveOem){
     html += '<div class="settings-subitem" style="color:#f7c600" '
       + 'onclick="if(window.Android)Android.openAutostartSettings()">🚀 '+beeT("autostart_oem")+'</div>';
@@ -212,6 +217,12 @@ window._beeToggleKeepBg = function(){
   try { if(window.Android) Android.setBeeKeepBackground(!cfg.keepBackground); } catch(e){}
   renderBeeConfig();
 };
+// Ao voltar dos Ajustes (bateria/autostart), atualiza o estado se o submenu está aberto.
+document.addEventListener("visibilitychange", function(){
+  if(document.hidden) return;
+  var menu = document.getElementById("beeOptions");
+  if(menu && menu.classList.contains("active")) renderBeeConfig();
+});
 
 /* =========================
    URL NORMALIZER

@@ -1436,7 +1436,9 @@
           // autoMine removido
           startMining();
         } else {
-          // autoMine removido
+          // Desligar a participação também desliga o segundo plano — a mineração
+          // em background só faz sentido (e consome WP) com a participação ativa.
+          if (window.disableBackgroundParticipation) window.disableBackgroundParticipation();
           stopMining();
         }
       });
