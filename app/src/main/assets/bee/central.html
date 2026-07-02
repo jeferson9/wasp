@@ -109,6 +109,15 @@
           position: relative;
           overflow: hidden;
         }
+        /* No tema claro o gradiente escuro fixo deixava o card com fundo colorido;
+           aqui trocamos por uma versão clara com leve tom de amarelo. */
+        [data-theme="light"] .c-balance-hero {
+          background:
+            radial-gradient(circle at top left, rgba(255,193,7,0.14), transparent 55%),
+            linear-gradient(135deg, rgba(255,193,7,0.10), rgba(255,255,255,0.96));
+          border-color: rgba(255,193,7,0.30);
+          box-shadow: 0 12px 32px rgba(0,0,0,.10);
+        }
         .c-balance-hero::before {
           content: "⚡";
           position: absolute;

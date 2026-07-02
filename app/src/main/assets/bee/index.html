@@ -341,10 +341,32 @@
 </head>
 <body>
 
+<!-- Auto-tema: lê wasp_theme do localStorage (compartilhado entre as WebViews) e
+     aplica data-theme. A WebView persistente do painel não recebe injeção nativa
+     de tema, então ela mesma cuida disso — e o poll pega troca de tema em tempo real. -->
+<script>
+(function () {
+  function applyTheme() {
+    try {
+      var t = localStorage.getItem("wasp_theme") || "dark";
+      if (document.documentElement.getAttribute("data-theme") !== t) {
+        document.documentElement.setAttribute("data-theme", t);
+        if (document.body) document.body.setAttribute("data-theme", t);
+      } else if (document.body && document.body.getAttribute("data-theme") !== t) {
+        document.body.setAttribute("data-theme", t);
+      }
+    } catch (e) {}
+  }
+  applyTheme();
+  document.addEventListener("DOMContentLoaded", applyTheme);
+  setInterval(applyTheme, 1000);
+})();
+</script>
+
 <!-- ── HEADER FIXO ── -->
 <div id="bee-header" style="
     position:fixed; top:0; left:0; right:0; height:56px;
-    background:#0b0b0d; border-bottom:1px solid rgba(255,193,7,0.15);
+    background:var(--body-bg); border-bottom:1px solid rgba(255,193,7,0.15);
     display:flex; align-items:center; padding:0 14px; gap:10px;
     z-index:1000; font-family:Arial,sans-serif;
 ">
