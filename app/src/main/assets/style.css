@@ -2763,6 +2763,29 @@ body[data-theme="light"] .central-wp-btn {
   object-fit: contain;
 }
 
+/* Logo recortado: mostra só o wordmark "WASP", escondendo o hexágono+abelha
+   (pintados na esquerda da imagem). Background ancorado à direita; a aspect-ratio
+   define onde corta à esquerda — dentro da faixa vazia entre o hexágono (~250px)
+   e o "W" (~285px). Aumentar a aspect-ratio mostra mais à esquerda (risco de
+   aparecer o hexágono); diminuir corta mais (risco de cortar o "W"). */
+.home-logo-center .logo-wasp {
+  display: none;              /* tema ativa o correto (block) via regras abaixo */
+  height: clamp(114px, 30vw, 156px);
+  flex: 0 0 auto;
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  background-position: right center;
+}
+/* Largura = altura × fração visível (define o corte à esquerda). */
+.logo-center-dark.logo-wasp {
+  background-image: url("img/wasp-topbar-dark.webp");
+  width: clamp(189px, 49.8vw, 259px);   /* ~1.66 × altura */
+}
+.logo-center-light.logo-wasp {
+  background-image: url("img/wasp-topbar-light.webp");
+  width: clamp(196px, 51.6vw, 268px);   /* ~1.72 × altura */
+}
+
 /* Dark/light visibility */
 body[data-theme="dark"]  .logo-center-dark  { display: block; }
 body[data-theme="dark"]  .logo-center-light { display: none;  }
