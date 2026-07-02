@@ -123,6 +123,8 @@
         [data-theme="light"] .card-boost.boost-active {
           background: #ffffff;
         }
+        /* Remove os glows coloridos (amarelo/azul/roxo/verde) atrás dos cards. */
+        [data-theme="light"] .c-game-card::before { display: none; }
         .c-balance-hero::before {
           content: "⚡";
           position: absolute;
