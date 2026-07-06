@@ -272,6 +272,14 @@ class BeeActivity : AppCompatActivity() {
                                             if (window.AndroidBee && window.AndroidBee.openWpAd) window.AndroidBee.openWpAd();
                                             else if (window.Android && window.Android.openWpAd) window.Android.openWpAd();
                                         }
+                                        if (e.data && e.data.type === 'showTapInterstitial') {
+                                            if (window.AndroidBee && window.AndroidBee.showTapInterstitial) window.AndroidBee.showTapInterstitial();
+                                            else if (window.Android && window.Android.showTapInterstitial) window.Android.showTapInterstitial();
+                                        }
+                                        if (e.data && e.data.type === 'openAckiGame') {
+                                            if (window.AndroidBee && window.AndroidBee.openAckiGame) window.AndroidBee.openAckiGame();
+                                            else if (window.Android && window.Android.openAckiGame) window.Android.openAckiGame();
+                                        }
                                     });
                                 }
                                 var existing = document.getElementById('wasp-central-frame');
@@ -358,6 +366,29 @@ class BeeActivity : AppCompatActivity() {
                         context.startActivity(i)
                     }
                 }
+                @android.webkit.JavascriptInterface
+                fun openAckiGame() {
+                    // Chamado quando a Central roda como iframe nesta WebView.
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        val i = Intent(context, AckiGameActivity::class.java)
+                        if (context !is android.app.Activity) i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(i)
+                    }
+                }
+
+                @android.webkit.JavascriptInterface
+                fun showTapInterstitial() {
+                    // Chamado quando a Central roda como iframe nesta WebView, ao
+                    // fechar o Tap Game após completar. Sem cooldown/recompensa —
+                    // o WP dos 100 taps já foi creditado antes.
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        val i = Intent(context, StartioAdActivity::class.java)
+                        i.putExtra(StartioAdActivity.EXTRA_MODE, StartioAdActivity.MODE_TAP_INTERSTITIAL)
+                        if (context !is android.app.Activity) i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(i)
+                    }
+                }
+
                 @android.webkit.JavascriptInterface
                 fun isEnergyReady(): Boolean {
                     return context.getSharedPreferences("bee_energy", android.content.Context.MODE_PRIVATE)

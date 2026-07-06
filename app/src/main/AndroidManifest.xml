@@ -93,6 +93,13 @@
             android:theme="@style/Theme.WaspBrowser.SlideUp"
             android:windowSoftInputMode="adjustResize"/>
 
+        <activity
+            android:name=".AckiGameActivity"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
+            android:theme="@style/Theme.WaspBrowser.Ad" />
+
         <activity android:name=".HiveManagerActivity" android:exported="false" />
         <activity android:name=".StartioAdActivity" android:exported="false" android:theme="@style/Theme.WaspBrowser.Ad" />
         <activity android:name=".FavoritesActivity" android:exported="false" />

@@ -144,6 +144,24 @@ class CentralActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun openAckiGame() {
+            android.util.Log.d(TAG, "openAckiGame chamado!")
+            handler.post {
+                startActivity(android.content.Intent(this@CentralActivity, AckiGameActivity::class.java))
+            }
+        }
+
+        @JavascriptInterface
+        fun showTapInterstitial() {
+            android.util.Log.d(TAG, "showTapInterstitial chamado!")
+            handler.post {
+                val i = android.content.Intent(this@CentralActivity, StartioAdActivity::class.java)
+                i.putExtra(StartioAdActivity.EXTRA_MODE, StartioAdActivity.MODE_TAP_INTERSTITIAL)
+                startActivity(i)
+            }
+        }
+
+        @JavascriptInterface
         fun closeCentral() {
             handler.post {
                 finish()
