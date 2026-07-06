@@ -44,7 +44,7 @@
     #dashBtn.cd { filter:grayscale(.8); opacity:.55; }
     #carryTag { position:fixed; right:30px; bottom:calc(232px + env(safe-area-inset-bottom)); z-index:10; font-size:12px; font-weight:900; color:#7dffab; text-shadow:0 0 10px rgba(55,214,122,.6); pointer-events:none; text-align:center; width:80px; }
     #vehTag { position:fixed; left:34px; bottom:calc(140px + env(safe-area-inset-bottom)); z-index:10; font-size:13px; font-weight:900; color:#8fd8ff; text-shadow:0 0 10px rgba(90,180,255,.6); pointer-events:none; }
-    #minimap { position:fixed; left:12px; top:calc(86px + env(safe-area-inset-top)); z-index:9; width:150px; height:100px;
+    #minimap { position:fixed; left:12px; top:calc(86px + env(safe-area-inset-top)); z-index:9; width:126px; height:126px;
         border-radius:14px; border:1px solid rgba(120,140,200,.3); background:rgba(6,8,14,.55); pointer-events:none; display:none; }
 
     /* ataque (aparece quando a Acki está armada) */
@@ -131,7 +131,7 @@
 <button id="atkBtn" style="display:none;"><span id="atkEmoji">⚔️</span><span id="atkUses">0</span></button>
 <div id="carryTag" style="display:none;"></div>
 <div id="vehTag"></div>
-<canvas id="minimap" width="150" height="100"></canvas>
+<canvas id="minimap" width="126" height="126"></canvas>
 <div id="verifyWrap"><div id="verifyRing"><div>🔍</div></div><div id="verifyTxt">VERIFICANDO…</div></div>
 <div id="popup"></div>
 <div id="hint"></div>
@@ -1993,12 +1993,16 @@ const mmC = document.getElementById("minimap");
 const mmX = mmC.getContext("2d");
 function drawMinimap() {
   const W = mmC.width, H = mmC.height;
-  const sx2 = W / (BX*2 + 16), sz2 = H / (BZ*2 + 16);
+  // escala em z usa o mundo TODO (WZ ±140) — senão praia e mata ficam fora do mapa
+  const sx2 = W / (BX*2 + 16), sz2 = H / (WZ*2 + 16);
   const px = (x) => W/2 + x*sx2, pz = (z) => H/2 + z*sz2;
   mmX.clearRect(0, 0, W, H);
-  // distritos: periferia (terracota) e condomínio (verde)
-  mmX.fillStyle = "rgba(122,74,58,.28)"; mmX.fillRect(0, 0, px(-94), H);
-  mmX.fillStyle = "rgba(46,110,74,.28)"; mmX.fillRect(px(94), 0, W - px(94), H);
+  // zonas: mata (norte), praia+mar (sul), periferia (oeste), condomínio (leste)
+  mmX.fillStyle = "rgba(30,80,42,.35)";   mmX.fillRect(0, 0, W, pz(-94));
+  mmX.fillStyle = "rgba(160,140,90,.3)";  mmX.fillRect(0, pz(94), W, pz(SEA_Z) - pz(94));
+  mmX.fillStyle = "rgba(30,90,150,.4)";   mmX.fillRect(0, pz(SEA_Z), W, H - pz(SEA_Z));
+  mmX.fillStyle = "rgba(122,74,58,.3)";   mmX.fillRect(0, pz(-94), px(-94), pz(94) - pz(-94));
+  mmX.fillStyle = "rgba(46,110,74,.3)";   mmX.fillRect(px(94), pz(-94), W - px(94), pz(94) - pz(-94));
   const dot = (x, z, c, r) => { mmX.fillStyle = c; mmX.beginPath(); mmX.arc(px(x), pz(z), r, 0, 7); mmX.fill(); };
   dot(0, 0, "#37d67a", 4);                                              // Block Keeper
   for (const b of fieldBlocks)  dot(b.pos.x, b.pos.z, "#ff4b4b", 2.4);  // blocos
@@ -2095,7 +2099,8 @@ function applyStaticI18n() {
   $("tLore").innerHTML = T.lore;
   $("tEpochLbl").textContent = T.epochCur; $("tBestLbl").textContent = T.best; $("tTodayLbl").textContent = T.today;
   $("btnHow").textContent = T.how; $("btnExitTitle").textContent = T.exit;
-  $("tNote").textContent = tt("note", { cap: WP_DAILY_CAP });
+  // selo de versão: se isto não aparecer no celular, o APK instalado é antigo
+  $("tNote").textContent = tt("note", { cap: WP_DAILY_CAP }) + " • v1.1 🏖🌲";
   $("howTitle").textContent = T.howTitle; $("howBody").innerHTML = T.howBody + "<br>" + T.how_weapons + "<br>" + T.how_items + "<br>" + T.how_mission; $("btnHowBack").textContent = T.howOk;
   $("winTitle").textContent = T.winTitle;
   $("winBlocksLbl").textContent = T.blocks; $("winComboLbl").textContent = T.maxCombo; $("winTimeLbl").textContent = T.timeLeft;
