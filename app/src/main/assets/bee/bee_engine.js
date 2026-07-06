@@ -1386,8 +1386,15 @@
   async function tryClaimPendingReward(callback) {
     if (!wasmReady || !saved.minerAddress) { if (callback) callback(); return; }
     // FIX: não colidir com um claim já em andamento (guard claiming).
-    if (claiming) {
-      log("Claim already in progress — skipping pending reward check.", "linf");
+    // FIX 2: também NÃO rodar com a mineração ativa nem quando um claim está
+    // AGENDADO (window._pendingClaim = janela de ~16s do slashing period, em
+    // que claiming ainda é false). Voltar ao app nessa janela (ex.: fechando
+    // o jogo Acki City) criava um tmpMiner concorrente — segunda sessão no
+    // mesmo miner_address — que fazia o get_reward() real falhar ("stale")
+    // e, se o get_reward do tmpMiner pendurasse, deixava claiming=true para
+    // sempre, impedindo o reinício da mineração.
+    if (claiming || mining || window._pendingClaim) {
+      log("Claim already in progress/scheduled — skipping pending reward check.", "linf");
       if (callback) callback();
       return;
     }
@@ -1399,7 +1406,14 @@
         ENDPOINTS, APP_ID, saved.minerAddress, saved.publicKey, saved.secretKey
       );
       log("Verificando reward pendente...", "linf");
-      await tmpMiner.get_reward();
+      // Timeout: se o get_reward() do tmpMiner nunca resolver (sessão
+      // conflitada/rede), NÃO pode segurar claiming=true eternamente.
+      await Promise.race([
+        tmpMiner.get_reward(),
+        new Promise(function(_ok, rej) {
+          setTimeout(function() { rej(new Error("pending claim timeout (45s)")); }, 45000);
+        })
+      ]);
       log("get_reward (resume): executed ✅ -- check your AN Wallet", "lok");
       toast("Pending reward sent to wallet ✅");
       try { localStorage.removeItem("wasp_pending_reward"); } catch(_) {}
