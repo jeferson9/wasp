@@ -156,6 +156,9 @@ class BeeBackgroundService : Service() {
     }
 
     private fun keepAliveTick() {
+        // Renova o WakeLock se expirou (acquire tem prazo de 6h — minerações
+        // longas/noturnas passavam do prazo e a CPU dormia).
+        acquireWakeLock()
         val wv = BeeActivity.getPersistentWebView()
         if (wv == null) {
             // App foi fechado/swiped — a WebView que minera não existe mais.

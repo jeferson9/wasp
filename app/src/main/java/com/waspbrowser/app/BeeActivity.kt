@@ -106,6 +106,26 @@ class BeeActivity : AppCompatActivity() {
                             context.startForegroundService(intent)
                         } else { context.startService(intent) }
                     } catch (e: Exception) { Log.e(TAG, "enableBackgroundMining error: ${e.message}") }
+                    // Sem a isenção de bateria, o Doze corta a rede após ~1h de tela
+                    // apagada e a mineração para. Pede o diálogo direto na hora em
+                    // que o segundo plano liga (1 toque em "Permitir"). Máximo 1
+                    // pedido por dia — o autostart também passa por aqui e não pode
+                    // virar um pop-up a cada abertura se o usuário negar.
+                    try {
+                        val pm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+                        val prefs = context.getSharedPreferences("bee_mining", android.content.Context.MODE_PRIVATE)
+                        val lastAsk = prefs.getLong("battery_prompt_last", 0L)
+                        if (!pm.isIgnoringBatteryOptimizations(context.packageName) &&
+                            System.currentTimeMillis() - lastAsk > 24 * 60 * 60 * 1000L) {
+                            prefs.edit().putLong("battery_prompt_last", System.currentTimeMillis()).apply()
+                            @android.annotation.SuppressLint("BatteryLife")
+                            val req = Intent(
+                                android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                android.net.Uri.parse("package:${context.packageName}")
+                            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            context.startActivity(req)
+                        }
+                    } catch (e: Exception) { Log.e(TAG, "battery exemption request: ${e.message}") }
                 }
 
                 @android.webkit.JavascriptInterface
