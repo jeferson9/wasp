@@ -927,23 +927,82 @@ const MBURGER_POS = new THREE.Vector3(27, 0, 27);
   colliders.push({ minX: 33.2, maxX: 33.8, minZ: 30.7, maxZ: 31.3 });
 }
 
-/* ── PRAIA & MAR (sul): areia, ondas, guarda-sóis — jet ski para os blocos no mar ── */
+/* ── PRAIA & MAR (sul): areia texturizada, areia molhada, mar com profundidade ── */
 const JETSKI_POS = new THREE.Vector3(14, 0, 110);
-const seaWaves = [];
+const seaWaves = [], fireflies = [];
+let seaBoat = null;
 {
+  // areia com grão (textura de ruído quente)
+  const sc = document.createElement("canvas"); sc.width = sc.height = 128;
+  const sx3 = sc.getContext("2d");
+  sx3.fillStyle = "#8a7a58"; sx3.fillRect(0, 0, 128, 128);
+  for (let n = 0; n < 900; n++) {
+    sx3.fillStyle = Math.random() < .5 ? "rgba(60,50,35,.35)" : "rgba(200,185,150,.3)";
+    sx3.fillRect(Math.random()*128, Math.random()*128, 1.5, 1.5);
+  }
+  const sandTex = new THREE.CanvasTexture(sc);
+  sandTex.wrapS = sandTex.wrapT = THREE.RepeatWrapping;
+  sandTex.repeat.set(24, 3);
   const sand = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, 30),
-    new THREE.MeshLambertMaterial({ color: 0x6a5f46 }));
+    new THREE.MeshLambertMaterial({ color: 0xb0a077, map: sandTex }));
   sand.rotation.x = -Math.PI/2; sand.position.set(0, .04, 103); sand.receiveShadow = true; scene.add(sand);
-  const sea = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, 40),
+  // faixa de areia molhada na beira (escura e com brilho de reflexo)
+  const wet = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, 4.5),
+    new THREE.MeshStandardMaterial({ color: 0x5a5040, roughness: .25, metalness: .35, envMap: ENV, envMapIntensity: .6 }));
+  wet.rotation.x = -Math.PI/2; wet.position.set(0, .045, SEA_Z - 2); scene.add(wet);
+  // mar em 3 bandas de profundidade: raso turquesa → meio → fundo escuro
+  const seaShallow = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, 7),
+    new THREE.MeshLambertMaterial({ color: 0x155a72, emissive: 0x0e4a5c, emissiveIntensity: .4 }));
+  seaShallow.rotation.x = -Math.PI/2; seaShallow.position.set(0, .05, SEA_Z + 3.5); scene.add(seaShallow);
+  const seaMid = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, 12),
     new THREE.MeshLambertMaterial({ color: 0x0e3a5c, emissive: 0x0a2c48, emissiveIntensity: .35 }));
-  sea.rotation.x = -Math.PI/2; sea.position.set(0, .05, SEA_Z + 20); scene.add(sea);
-  for (let i = 0; i < 3; i++) {                          // faixas de espuma animadas
+  seaMid.rotation.x = -Math.PI/2; seaMid.position.set(0, .05, SEA_Z + 13); scene.add(seaMid);
+  const seaDeep = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, 24),
+    new THREE.MeshLambertMaterial({ color: 0x082438, emissive: 0x061c2e, emissiveIntensity: .35 }));
+  seaDeep.rotation.x = -Math.PI/2; seaDeep.position.set(0, .05, SEA_Z + 31); scene.add(seaDeep);
+  for (let i = 0; i < 3; i++) {                          // espuma quebrando na beira
     const wv = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, .9),
       new THREE.MeshBasicMaterial({ color: 0xdfeaf2, transparent: true, opacity: .3, depthWrite: false }));
     wv.rotation.x = -Math.PI/2; wv.position.set(0, .07, SEA_Z - .5 + i*2.2);
     scene.add(wv);
     seaWaves.push({ m: wv, base: SEA_Z - .5 + i*2.2, ph: i*2.1 });
   }
+  for (let i = 0; i < 2; i++) {                          // cristas mar adentro
+    const cr = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, .5),
+      new THREE.MeshBasicMaterial({ color: 0x9fc4d8, transparent: true, opacity: .18, depthWrite: false }));
+    cr.rotation.x = -Math.PI/2; cr.position.set(0, .07, SEA_Z + 9 + i*7);
+    scene.add(cr);
+    seaWaves.push({ m: cr, base: SEA_Z + 9 + i*7, ph: 3 + i*1.7 });
+  }
+  // pedras na beira d'água
+  const rockM = new THREE.MeshLambertMaterial({ color: 0x3e4046 });
+  [[-88, 116], [-52, 117.5], [38, 116.5], [92, 117], [120, 115.5]].forEach(rp => {
+    const rk = new THREE.Mesh(new THREE.BoxGeometry(1.4 + Math.random(), .8, 1.1 + Math.random()), rockM);
+    rk.position.set(rp[0], .35, rp[1]);
+    rk.rotation.set(Math.random()*.3, Math.random()*3, Math.random()*.25);
+    rk.castShadow = true; scene.add(rk);
+    colliders.push({ minX: rp[0] - .9, maxX: rp[0] + .9, minZ: rp[1] - .8, maxZ: rp[1] + .8 });
+  });
+  // bola de praia
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(.45, 10, 8),
+    new THREE.MeshLambertMaterial({ color: 0xe8e4dc }));
+  ball.position.set(-30, .45, 104); ball.castShadow = true; scene.add(ball);
+  const stripe = new THREE.Mesh(new THREE.TorusGeometry(.45, .09, 6, 14),
+    new THREE.MeshLambertMaterial({ color: 0xc23a3a }));
+  stripe.rotation.x = Math.PI/2; stripe.position.copy(ball.position); scene.add(stripe);
+  // barquinho ao longe, balançando
+  seaBoat = new THREE.Group();
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(2.6, .5, 1.1),
+    new THREE.MeshLambertMaterial({ color: 0x6a3a2c }));
+  hull.position.y = .3; seaBoat.add(hull);
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.6, 6),
+    new THREE.MeshLambertMaterial({ color: 0x4a3520 }));
+  mast.position.y = 1.6; seaBoat.add(mast);
+  const sail = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.8),
+    new THREE.MeshLambertMaterial({ color: 0xe8e2d2, side: THREE.DoubleSide }));
+  sail.position.set(.75, 1.7, 0); seaBoat.add(sail);
+  seaBoat.position.set(-40, 0, 131);
+  scene.add(seaBoat);
   const umbCols = [0xc23a3a, 0x2e7ac2, 0xc2952e, 0x2ea25a];
   for (let n = 0; n < 5; n++) {                          // guarda-sóis + toalhas
     const ux = -70 + n*32 + (Math.random() - .5)*8, uz = 100 + Math.random()*8;
@@ -973,10 +1032,22 @@ const seaWaves = [];
   }
 }
 
-/* ── MATA (norte): floresta densa com trilhas de terra ── */
+/* ── MATA (norte): floresta densa com trilhas, vagalumes e vida no chão ── */
 {
+  // solo com manchas de vegetação (textura)
+  const fc = document.createElement("canvas"); fc.width = fc.height = 128;
+  const fx2 = fc.getContext("2d");
+  fx2.fillStyle = "#16220f"; fx2.fillRect(0, 0, 128, 128);
+  for (let n = 0; n < 220; n++) {
+    fx2.fillStyle = Math.random() < .5 ? "rgba(30,60,25,.4)" : "rgba(45,35,20,.35)";
+    const r2 = 2 + Math.random()*5;
+    fx2.beginPath(); fx2.arc(Math.random()*128, Math.random()*128, r2, 0, 7); fx2.fill();
+  }
+  const floorTex = new THREE.CanvasTexture(fc);
+  floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+  floorTex.repeat.set(18, 4);
   const floorM = new THREE.Mesh(new THREE.PlaneGeometry(BX*2 + 20, 48),
-    new THREE.MeshLambertMaterial({ color: 0x0f1a0d }));
+    new THREE.MeshLambertMaterial({ color: 0x3a4a2e, map: floorTex }));
   floorM.rotation.x = -Math.PI/2; floorM.position.set(0, .04, -116); floorM.receiveShadow = true; scene.add(floorM);
   // trilhas de terra (sem árvores nelas)
   const trailM2 = new THREE.MeshLambertMaterial({ color: 0x3a2c1a });
@@ -986,34 +1057,88 @@ const seaWaves = [];
   t2b.rotation.x = -Math.PI/2; t2b.position.set(0, .055, -114); scene.add(t2b);
   const inTrail = (x, z) => Math.abs(x) < 4.5 || Math.abs(z + 114) < 3.8;
   const trunkM2 = new THREE.MeshLambertMaterial({ color: 0x3a2a18 });
-  const leafM2  = new THREE.MeshLambertMaterial({ color: 0x143a1c, emissive: 0x0c2a12, emissiveIntensity: .2 });
-  const leafM3  = new THREE.MeshLambertMaterial({ color: 0x1c4a24, emissive: 0x0c2a12, emissiveIntensity: .2 });
-  for (let n = 0; n < 34; n++) {                         // árvores grandes
+  const GREENS = [0x143a1c, 0x1c4a24, 0x25552a, 0x0f3318];
+  for (let n = 0; n < 38; n++) {                         // árvores altas, copa em 3 camadas
     const tx3 = (Math.random()*2 - 1)*(BX - 10), tz3 = -98 - Math.random()*38;
     if (inTrail(tx3, tz3)) continue;
-    const th = 2.6 + Math.random()*1.6;
-    const tk = new THREE.Mesh(new THREE.CylinderGeometry(.16, .24, th, 6), trunkM2);
-    tk.position.set(tx3, th/2, tz3); tk.castShadow = true; scene.add(tk);
-    const l1 = new THREE.Mesh(new THREE.BoxGeometry(2 + Math.random(), 1.6, 2 + Math.random()), Math.random() < .5 ? leafM2 : leafM3);
-    l1.position.set(tx3, th + .7, tz3); l1.rotation.y = Math.random()*3; l1.castShadow = true; scene.add(l1);
-    const l2 = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 1.3), leafM3);
-    l2.position.set(tx3, th + 1.7, tz3); l2.rotation.y = Math.random()*3; scene.add(l2);
+    const th = 3.2 + Math.random()*2;
+    const tk = new THREE.Mesh(new THREE.CylinderGeometry(.15, .26, th, 6), trunkM2);
+    tk.position.set(tx3, th/2, tz3);
+    tk.rotation.z = (Math.random() - .5)*.12;            // leve inclinação natural
+    tk.castShadow = true; scene.add(tk);
+    const lm = new THREE.MeshLambertMaterial({ color: GREENS[(Math.random()*4)|0], emissive: 0x0c2a12, emissiveIntensity: .2 });
+    const lm2 = new THREE.MeshLambertMaterial({ color: GREENS[(Math.random()*4)|0], emissive: 0x0c2a12, emissiveIntensity: .2 });
+    const fadeSet = [lm, lm2];
+    const w1 = 2.4 + Math.random()*1.2;
+    const l1 = new THREE.Mesh(new THREE.BoxGeometry(w1, 1.5, w1), lm);
+    l1.position.set(tx3, th + .5, tz3); l1.rotation.y = Math.random()*3; l1.castShadow = true; scene.add(l1);
+    l1.userData.fadeMats = fadeSet; buildings.push(l1);
+    const l2 = new THREE.Mesh(new THREE.BoxGeometry(w1*.65, 1.2, w1*.65), lm2);
+    l2.position.set(tx3, th + 1.6, tz3); l2.rotation.y = Math.random()*3; scene.add(l2);
+    l2.userData.fadeMats = fadeSet; buildings.push(l2);
+    const l3 = new THREE.Mesh(new THREE.BoxGeometry(w1*.35, .9, w1*.35), lm);
+    l3.position.set(tx3, th + 2.5, tz3); l3.rotation.y = Math.random()*3; scene.add(l3);
+    l3.userData.fadeMats = fadeSet; buildings.push(l3);
     colliders.push({ minX: tx3 - .4, maxX: tx3 + .4, minZ: tz3 - .4, maxZ: tz3 + .4 });
   }
-  for (let n = 0; n < 14; n++) {                         // arbustos
+  const fernM = new THREE.MeshLambertMaterial({ color: 0x1e5228, side: THREE.DoubleSide });
+  for (let n = 0; n < 12; n++) {                         // samambaias (planos cruzados)
     const bx2 = (Math.random()*2 - 1)*(BX - 12), bz2 = -98 - Math.random()*38;
     if (inTrail(bx2, bz2)) continue;
-    const bu = new THREE.Mesh(new THREE.BoxGeometry(.9, .6, .9), leafM2);
+    for (let k = 0; k < 3; k++) {
+      const f2 = new THREE.Mesh(new THREE.PlaneGeometry(1, .8), fernM);
+      f2.position.set(bx2, .4, bz2);
+      f2.rotation.y = k*1.047 + Math.random()*.4;
+      scene.add(f2);
+    }
+  }
+  for (let n = 0; n < 10; n++) {                         // arbustos
+    const bx2 = (Math.random()*2 - 1)*(BX - 12), bz2 = -98 - Math.random()*38;
+    if (inTrail(bx2, bz2)) continue;
+    const bu = new THREE.Mesh(new THREE.BoxGeometry(.9 + Math.random()*.6, .6, .9 + Math.random()*.6),
+      new THREE.MeshLambertMaterial({ color: GREENS[(Math.random()*4)|0] }));
     bu.position.set(bx2, .3, bz2); bu.rotation.y = Math.random()*3; scene.add(bu);
   }
-  for (let n = 0; n < 7; n++) {                          // pedras
+  // troncos caídos atravessados
+  const logM = new THREE.MeshLambertMaterial({ color: 0x4a3520 });
+  [[-56, -104, .6], [44, -128, 2.2]].forEach(lp => {
+    const lg2 = new THREE.Mesh(new THREE.CylinderGeometry(.35, .4, 4.5, 7), logM);
+    lg2.rotation.z = Math.PI/2; lg2.rotation.y = lp[2];
+    lg2.position.set(lp[0], .38, lp[1]); lg2.castShadow = true; scene.add(lg2);
+    colliders.push({ minX: lp[0] - 2, maxX: lp[0] + 2, minZ: lp[1] - .8, maxZ: lp[1] + .8 });
+  });
+  for (let n = 0; n < 7; n++) {                          // pedras com musgo
     const rx = (Math.random()*2 - 1)*(BX - 12), rz = -98 - Math.random()*38;
     if (inTrail(rx, rz)) continue;
     const rk = new THREE.Mesh(new THREE.BoxGeometry(1 + Math.random(), .7 + Math.random()*.5, 1 + Math.random()),
       new THREE.MeshLambertMaterial({ color: 0x4a4c52 }));
     rk.position.set(rx, .3, rz); rk.rotation.set(Math.random()*.3, Math.random()*3, Math.random()*.3);
     rk.castShadow = true; scene.add(rk);
+    const moss = new THREE.Mesh(new THREE.BoxGeometry(.7, .12, .6),
+      new THREE.MeshLambertMaterial({ color: 0x1e4a24 }));
+    moss.position.set(rx, .68, rz); moss.rotation.y = Math.random()*3; scene.add(moss);
     colliders.push({ minX: rx - .7, maxX: rx + .7, minZ: rz - .7, maxZ: rz + .7 });
+  }
+  // cogumelos bioluminescentes (toque Acki Nacki na floresta)
+  for (let n = 0; n < 6; n++) {
+    const mx3 = (Math.random()*2 - 1)*(BX - 14), mz3 = -100 - Math.random()*34;
+    if (inTrail(mx3, mz3)) continue;
+    const st2 = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, .25, 5),
+      new THREE.MeshLambertMaterial({ color: 0xd8d4c8 }));
+    st2.position.set(mx3, .12, mz3); scene.add(st2);
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(.18, .16, 7),
+      new THREE.MeshLambertMaterial({ color: 0x1c4a5c, emissive: 0x2ec5ff, emissiveIntensity: .8 }));
+    cap.position.set(mx3, .3, mz3); scene.add(cap);
+    const mg = glowSprite("rgba(46,197,255,.4)", 1.2);
+    mg.position.set(mx3, .35, mz3); scene.add(mg);
+  }
+  // vagalumes (pontos de luz quente vagando entre as árvores)
+  for (let n = 0; n < 14; n++) {
+    const fy = glowSprite("rgba(255,214,90,.85)", .55);
+    const bx3 = (Math.random()*2 - 1)*(BX - 16), bz3 = -100 - Math.random()*34;
+    fy.position.set(bx3, 1 + Math.random()*1.5, bz3);
+    scene.add(fy);
+    fireflies.push({ s: fy, x: bx3, z: bz3, ph: Math.random()*6, sp: .4 + Math.random()*.5 });
   }
 }
 
@@ -1519,6 +1644,19 @@ function updateAmbience(dt, t) {
   for (const wv of seaWaves) {
     wv.m.position.z = wv.base + Math.sin(t*.8 + wv.ph)*1.6;
     wv.m.material.opacity = .2 + Math.abs(Math.sin(t*.8 + wv.ph))*.18;
+  }
+  // barquinho balançando nas ondas
+  if (seaBoat) {
+    seaBoat.position.y = .05 + Math.sin(t*.9)*.14;
+    seaBoat.rotation.z = Math.sin(t*.7)*.06;
+    seaBoat.rotation.x = Math.sin(t*.55 + 1)*.04;
+  }
+  // vagalumes vagando na mata (piscam e derivam devagar)
+  for (const f of fireflies) {
+    f.s.position.x = f.x + Math.sin(t*f.sp + f.ph)*2.2;
+    f.s.position.z = f.z + Math.cos(t*f.sp*.8 + f.ph)*2.2;
+    f.s.position.y = 1.2 + Math.sin(t*f.sp*1.4 + f.ph)*.5;
+    f.s.material.opacity = .3 + Math.abs(Math.sin(t*1.6 + f.ph))*.6;
   }
   // tempestade: relâmpago + trovão
   if (AMB.storm && G.state === "play") {
