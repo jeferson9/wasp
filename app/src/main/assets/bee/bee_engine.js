@@ -966,7 +966,14 @@
         function doGetReward(attempt) {
           attempt = attempt || 1;
           log((window.bt?bt("log_reward_attempt"):"💰 Calling get_reward()... (attempt ") + attempt + "/3)", "linf");
-          claimMiner.get_reward().then(function() {
+          // Timeout: se a Promise nunca resolver (página oculta/async congelado),
+          // NÃO pode deixar claiming=true para sempre — cai no retry/fail normal.
+          Promise.race([
+            claimMiner.get_reward(),
+            new Promise(function(_ok, rej) {
+              setTimeout(function() { rej(new Error("get_reward timeout (60s)")); }, 60000);
+            })
+          ]).then(function() {
             log("✅ get_reward() OK! Reward enviado para a blockchain.", "lok");
             log("💎 Verifique sua AN Wallet — saldo NACKL atualizado em breve.", "lok");
             try { localStorage.removeItem("wasp_pending_reward"); } catch(_) {}

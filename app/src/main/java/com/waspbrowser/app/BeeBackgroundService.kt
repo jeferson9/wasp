@@ -166,6 +166,11 @@ class BeeBackgroundService : Service() {
             runCatching {
                 wv.resumeTimers()
                 wv.onResume()
+                // Reafirma a visibilidade da página a cada tick: o flag keepVisible
+                // vive só em memória e se perde quando o processo é recriado em
+                // background (reinstalação/kill+sticky-restart) — a página ficava
+                // "hidden", o Chromium congelava o async e o get_reward travava.
+                (wv as? KeepAliveWebView)?.assertVisibleNow()
                 // Conduz as transições do epoch (bgPump) — imune ao throttling do
                 // Chromium porque evaluateJavascript roda na hora — e lê o estado
                 // para atualizar a notificação, tudo numa só passada.

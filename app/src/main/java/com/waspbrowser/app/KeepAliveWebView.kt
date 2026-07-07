@@ -33,4 +33,18 @@ class KeepAliveWebView @JvmOverloads constructor(
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, if (keepVisible) View.VISIBLE else visibility)
     }
+
+    /**
+     * Liga o keepVisible E força a página a voltar a "visible" AGORA.
+     * Os overrides acima só interceptam transições futuras: se a página já
+     * estava oculta quando o flag ligou (ex.: processo recriado com o app em
+     * background — reinstalação, Android matando o app com o service sticky
+     * reiniciando), o Chromium nunca fica sabendo que deve "voltar". Chamado
+     * pelo BeeBackgroundService a cada tick: serviço vivo ⇔ página visível.
+     */
+    fun assertVisibleNow() {
+        keepVisible = true
+        onWindowVisibilityChanged(View.VISIBLE)
+        onVisibilityChanged(this, View.VISIBLE)
+    }
 }
