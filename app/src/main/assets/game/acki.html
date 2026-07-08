@@ -97,6 +97,13 @@
     #failTitle { font-size:24px; font-weight:900; color:#ff5c5c; text-shadow:0 0 20px rgba(255,60,60,.5); }
     .howto { text-align:left; font-size:12.5px; line-height:1.7; color:#aeb9d6; }
     .howto b { color:#e8ecf5; }
+
+    #loadTag { position:fixed; inset:0; z-index:40; background:#05060c; display:flex; flex-direction:column;
+        align-items:center; justify-content:center; gap:14px; }
+    #loadTag .g-logo { font-size:30px; }
+    #loadBarWrap { width:200px; height:6px; border-radius:3px; background:rgba(255,255,255,.1); overflow:hidden; }
+    #loadBarFill { height:100%; width:8%; border-radius:3px; background:linear-gradient(90deg,#37d67a,#a8ff9e); transition:width .25s ease; }
+    #loadTxt { font-size:11px; letter-spacing:1.5px; font-weight:800; color:#8fa2c9; }
 </style>
 </head>
 <body>
@@ -104,6 +111,11 @@
 <div id="vig"></div>
 <div id="flash"></div>
 <div id="bolt"></div>
+<div id="loadTag">
+    <div class="g-logo">ACKI CITY</div>
+    <div id="loadBarWrap"><div id="loadBarFill"></div></div>
+    <div id="loadTxt">CARREGANDO CIDADE…</div>
+</div>
 
 <!-- HUD -->
 <div class="hud" id="hudTop" style="display:none;">
@@ -195,6 +207,7 @@
 </div></div>
 
 <script src="three.min.js"></script>
+<script src="GLTFLoader.js"></script>
 <script>
 "use strict";
 /* ═══════════════════════════════════════════════════════════════
@@ -332,6 +345,49 @@ const SFX = {
   thunder: () => { beep(72, 26, 1.1, "sawtooth", .14); setTimeout(() => beep(52, 22, .9, "sawtooth", .09), 180); }
 };
 
+/* ═══════════════ MODELOS REAIS (Kenney, CC0) — cidade, carros, armas ═══════════════
+   Tudo dentro de um async IIFE: os modelos precisam estar carregados ANTES da
+   cidade ser construída (o loop de lotes já usa MODELS.buildings). O resto do
+   jogo — que antes rodava síncrono no topo do arquivo — passa a rodar depois
+   do await, sem nenhuma outra mudança de ordem. */
+const gltfLoader = new THREE.GLTFLoader();
+function loadGLB(path) {
+  return new Promise(resolve => {
+    gltfLoader.load(path, gltf => resolve(gltf.scene), undefined, () => resolve(null));
+  });
+}
+const MODELS = { buildings: [], cars: {}, weapons: {} };
+async function loadAllModels(onProgress) {
+  const buildingFiles = ["building-a","building-b","building-c","building-d","building-e","building-f","building-g",
+    "building-skyscraper-a","building-skyscraper-b","building-skyscraper-c","building-skyscraper-d","building-skyscraper-e"];
+  const carFiles = { taxi:"taxi", sedan:"sedan", suv:"suv", suvLuxury:"suv-luxury", hatch:"hatchback-sports",
+    ambulance:"ambulance", police:"police", delivery:"delivery" };
+  // sword fica em subpasta própria: seu colormap.png (pacote mini-dungeon)
+  // não pode dividir a mesma pasta do colormap.png do blaster-kit (pistol/rifle)
+  const weaponFiles = { pistol:"models/weapons/pistol.glb", rifle:"models/weapons/rifle.glb",
+    sword:"models/weapons/sword/sword.glb" };
+
+  const bKeys = buildingFiles;
+  const cKeys = Object.keys(carFiles);
+  const wKeys = Object.keys(weaponFiles);
+  const jobs = [
+    ...bKeys.map(f => ({ kind: "b", key: f, path: "models/city/" + f + ".glb" })),
+    ...cKeys.map(k => ({ kind: "c", key: k, path: "models/cars/" + carFiles[k] + ".glb" })),
+    ...wKeys.map(k => ({ kind: "w", key: k, path: weaponFiles[k] }))
+  ];
+  let done = 0;
+  await Promise.all(jobs.map(job => loadGLB(job.path).then(scene => {
+    if (scene) {
+      if (job.kind === "b") MODELS.buildings.push(scene);
+      else if (job.kind === "c") MODELS.cars[job.key] = scene;
+      else MODELS.weapons[job.key] = scene;
+    }
+    done++;
+    if (onProgress) onProgress(done / jobs.length);
+  })));
+}
+
+(async function main() {
 /* ═══════════════ THREE.JS — CENA ═══════════════ */
 const canvas = document.getElementById("gl");
 let renderer;
@@ -380,6 +436,69 @@ const WZ = 140;                                        // mundo total em z: mata
 const SEA_Z = 118;                                     // daqui pra frente é mar
 const colliders = [];                                  // AABBs dos prédios
 const buildings = [];                                  // meshes (fade de oclusão)
+
+// espera os modelos reais (Kenney) antes de construir a cidade — do contrário
+// o loop de lotes rodaria com MODELS.buildings ainda vazio
+await loadAllModels(p => {
+  const fill = document.getElementById("loadBarFill");
+  if (fill) fill.style.width = (10 + p * 90) + "%";
+});
+
+/* prepara um clone de veículo real: escala uniforme p/ o comprimento alvo,
+   recentra a base em y=0 e o centro em x/z=0 (mesma convenção dos veículos
+   procedurais, que são montados centrados na origem) */
+function prepCarClone(src, targetLen) {
+  const clone = src.clone(true);
+  clone.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  const box1 = new THREE.Box3().setFromObject(clone);
+  const size1 = new THREE.Vector3(); box1.getSize(size1);
+  const scale = (targetLen || 2.3) / Math.max(size1.x, size1.z, .001);
+  clone.scale.setScalar(scale);
+  const box2 = new THREE.Box3().setFromObject(clone);
+  clone.position.x -= (box2.min.x + box2.max.x) / 2;
+  clone.position.z -= (box2.min.z + box2.max.z) / 2;
+  clone.position.y -= box2.min.y;
+  return clone;
+}
+/* prepara um clone de arma real: escala p/ o tamanho alvo e centra o bbox
+   num Group wrapper (facilita ajustar a pose na mão sem mexer no modelo) */
+function prepWeaponClone(src, targetLen) {
+  const clone = src.clone(true);
+  clone.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  const box1 = new THREE.Box3().setFromObject(clone);
+  const size1 = new THREE.Vector3(); box1.getSize(size1);
+  const scale = (targetLen || .6) / Math.max(size1.x, size1.y, size1.z, .001);
+  clone.scale.setScalar(scale);
+  const box2 = new THREE.Box3().setFromObject(clone);
+  const center = new THREE.Vector3(); box2.getCenter(center);
+  clone.position.sub(center);
+  const wrap = new THREE.Group();
+  wrap.add(clone);
+  return wrap;
+}
+/* prepara um prédio real p/ ocupar exatamente o volume do lote (w × h × d),
+   igual ao box procedural que substitui — mantém colisão/oclusão idênticas */
+function placeGLBBuilding(cx, cz, w, h, d) {
+  const src = MODELS.buildings[(Math.random() * MODELS.buildings.length) | 0];
+  const clone = src.clone(true);
+  const box1 = new THREE.Box3().setFromObject(clone);
+  const size1 = new THREE.Vector3(); box1.getSize(size1);
+  clone.scale.set(w / Math.max(size1.x, .001), h / Math.max(size1.y, .001), d / Math.max(size1.z, .001));
+  const box2 = new THREE.Box3().setFromObject(clone);
+  clone.position.x = cx - (box2.min.x + box2.max.x) / 2;
+  clone.position.z = cz - (box2.min.z + box2.max.z) / 2;
+  clone.position.y = -box2.min.y;
+  const fadeMats = [];
+  clone.traverse(o => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach(m => { if (m && !fadeMats.includes(m)) fadeMats.push(m); });
+    }
+  });
+  clone.traverse(o => { if (o.isMesh) { o.userData.fadeMats = fadeMats; buildings.push(o); } });
+  scene.add(clone);
+}
 
 /* ── texturas procedurais ── */
 function windowsTexture(hue) {
@@ -558,7 +677,8 @@ function signTexture(txt, color) {
 
     if (roll < .40) {                                    // torre simples
       topH = 10 + Math.random()*20;
-      tier(cx, cz, w, topH, d, 0);
+      if (MODELS.buildings.length && Math.random() < .55) placeGLBBuilding(cx, cz, w, topH, d);
+      else tier(cx, cz, w, topH, d, 0);
     } else if (roll < .72) {                             // torre em camadas (setbacks)
       const h1 = 8 + Math.random()*7;
       tier(cx, cz, w, h1, d, 0);
@@ -1758,7 +1878,23 @@ const WEAPONS = {
 };
 const fieldWeapons = [], projectiles = [];
 
+// ajuste de pose por tipo — cada modelo real vem com sua própria orientação
+// de origem; corrigido a olho no preview para encaixar na mão da Acki
+// eixos nativos conferidos via bounding box: blaster-kit já modela o cano ao
+// longo de Z (nosso "pra frente") — sem correção. mini-dungeon modela a
+// espada de pé (lâmina ao longo de Y) — gira 90° em X pra apontar em Z.
+const WEAPON_POSE = {
+  pistol: { len: .34, rot: { x: 0,    y: 0, z: 0 } },
+  rifle:  { len: .78, rot: { x: 0,    y: 0, z: 0 } },
+  sword:  { len: .62, rot: { x: Math.PI/2, y: 0,    z: 0 } }
+};
 function weaponModel(type) {
+  if (MODELS.weapons[type]) {
+    const pose = WEAPON_POSE[type];
+    const g2 = prepWeaponClone(MODELS.weapons[type], pose.len);
+    g2.rotation.set(pose.rot.x, pose.rot.y, pose.rot.z);
+    return g2;
+  }
   const g = new THREE.Group();
   const B = (w, h, d, color, x, y, z, em, ei) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
@@ -1898,7 +2034,25 @@ shieldMesh.position.y = 1.1;
 shieldMesh.visible = false;
 player.group.add(shieldMesh);
 
+const CARRO_POOL_KEYS = ["sedan", "suv", "suvLuxury", "hatch", "ambulance", "police", "delivery"];
+const CAR_FACING_FIX = Math.PI;   // modelos Kenney: nariz aponta -Z; nosso "frente" é +Z
 function vehicleModel(type) {
+  // táxi/carro usam modelo real (Kenney) quando carregado — o resto (skate,
+  // patins, bike, moto, jet ski) não tem fonte CC0 boa e fica procedural.
+  if (type === "taxi" && MODELS.cars.taxi) {
+    const g2 = prepCarClone(MODELS.cars.taxi, 2.3);
+    g2.rotation.y = CAR_FACING_FIX;
+    return g2;
+  }
+  if (type === "carro") {
+    const pool = CARRO_POOL_KEYS.filter(k => MODELS.cars[k]);
+    if (pool.length) {
+      const key = pool[(Math.random() * pool.length) | 0];
+      const g2 = prepCarClone(MODELS.cars[key], 2.3);
+      g2.rotation.y = CAR_FACING_FIX;
+      return g2;
+    }
+  }
   const g = new THREE.Group();
   const B = (w, h, d, color, x, y, z) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color }));
@@ -2925,9 +3079,20 @@ addEventListener("resize", () => {
 });
 
 /* ── boot ── */
+window._dbg = { G, scene, camera, renderer, hunters, buildings, colliders, fieldBlocks, fieldWeapons, fieldItems, player, MODELS,
+  mountVehicle, unmountVehicle, equipWeapon, vehicleModel, weaponModel, doAttack, spawnHunter };
 applyStaticI18n();
 showTitle();
+const loadTag = document.getElementById("loadTag");
+if (loadTag) loadTag.style.display = "none";
 requestAnimationFrame(t => { lastT = t; tick(t); });
+
+})().catch(e => {
+  // Sem modelos ou sem WebGL: nunca deixa o jogador preso na tela de loading.
+  const t2 = document.getElementById("loadTxt");
+  if (t2) t2.textContent = "ERRO AO CARREGAR — " + (e && e.message ? e.message : e);
+  console.error("Acki City boot error:", e);
+});
 </script>
 </body>
 </html>
