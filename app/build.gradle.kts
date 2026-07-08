@@ -105,7 +105,10 @@ dependencies {
     implementation(libs.androidx.activity)
 
     implementation(libs.geckoview)
-    implementation("com.startapp:inapp-sdk:5.+")
+    // Versão FIXA (não usar "5.+"): a 5.3.2 exige kotlin-stdlib 2.4.0,
+    // incompatível com o compilador Kotlin 2.2.x do projeto — o "+" fazia o
+    // build quebrar sozinho quando a Start.io publicava versão nova.
+    implementation("com.startapp:inapp-sdk:5.3.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
