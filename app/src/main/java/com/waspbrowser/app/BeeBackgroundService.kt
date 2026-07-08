@@ -36,6 +36,7 @@ class BeeBackgroundService : Service() {
     companion object {
         private const val TAG          = "BeeBackgroundService"
         private const val CHANNEL_ID   = "bee_mining_channel"
+        private const val ALERT_CHANNEL_ID = "bee_alert_channel"
         private const val NOTIF_ID     = 42
         private const val TICK_MS      = 4_000L    // keep-alive + bgPump a cada 4s (cadência de tap ~3.75s)
 
@@ -155,16 +156,26 @@ class BeeBackgroundService : Service() {
         }, TICK_MS)
     }
 
+    private var alertedDead = false
+
     private fun keepAliveTick() {
         // Renova o WakeLock se expirou (acquire tem prazo de 6h — minerações
         // longas/noturnas passavam do prazo e a CPU dormia).
         acquireWakeLock()
         val wv = BeeActivity.getPersistentWebView()
         if (wv == null) {
-            // App foi fechado/swiped — a WebView que minera não existe mais.
-            updateNotification("Toque para abrir o Wasp e continuar minerando")
+            // App foi fechado/swiped/morto pelo sistema — a WebView que minera não
+            // existe mais e o serviço sozinho não minera. Alerta o usuário UMA vez
+            // (com som/vibração) para reabrir, em vez de falhar em silêncio.
+            if (!alertedDead) {
+                alertedDead = true
+                notifyMiningDead()
+            } else {
+                updateNotification("⚠ Mineração parada — toque para abrir o Wasp e retomar")
+            }
             return
         }
+        alertedDead = false
         wv.post {
             runCatching {
                 wv.resumeTimers()
@@ -236,8 +247,32 @@ class BeeBackgroundService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val ch = NotificationChannel(CHANNEL_ID, "Bee Participation", NotificationManager.IMPORTANCE_LOW)
             ch.setShowBadge(false)
-            (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            nm.createNotificationChannel(ch)
+            // Canal separado e ALTO para o alerta de "mineração parou" — o canal
+            // normal é silencioso de propósito; este precisa chamar atenção.
+            val alert = NotificationChannel(ALERT_CHANNEL_ID, "Bee Mining Alerts", NotificationManager.IMPORTANCE_HIGH)
+            nm.createNotificationChannel(alert)
         }
+    }
+
+    /** Alerta sonoro único quando a WebView do miner morreu — usuário precisa reabrir. */
+    private fun notifyMiningDead() {
+        val open = PendingIntent.getActivity(this, 1,
+            Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                putExtra("navigate_to", "bee")
+            }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val n = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_bee_tech)
+            .setContentTitle("Mineração parada ⚠")
+            .setContentText("O sistema encerrou o Wasp. Toque para reabrir e retomar a mineração.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(open)
+            .build()
+        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIF_ID + 1, n)
+        updateNotification("⚠ Mineração parada — toque para abrir o Wasp e retomar")
     }
 
     private fun buildNotification(status: String): Notification {

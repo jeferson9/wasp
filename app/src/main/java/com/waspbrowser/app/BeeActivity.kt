@@ -126,6 +126,20 @@ class BeeActivity : AppCompatActivity() {
                             context.startActivity(req)
                         }
                     } catch (e: Exception) { Log.e(TAG, "battery exemption request: ${e.message}") }
+                    // Fabricantes com "matador de apps" próprio ignoram a isenção
+                    // padrão do Android — orienta o usuário a ativar o Autostart
+                    // (o atalho fica em Configurações → Bee Engine).
+                    val oem = (android.os.Build.MANUFACTURER + " " + android.os.Build.BRAND).lowercase()
+                    val aggressive = listOf("xiaomi", "redmi", "poco", "oppo", "vivo", "realme",
+                        "oneplus", "huawei", "honor", "meizu", "letv", "iqoo").any { oem.contains(it) }
+                    if (aggressive) {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            android.widget.Toast.makeText(context,
+                                "Celular ${android.os.Build.MANUFACTURER}: ative também o Autostart do WASP " +
+                                "(Configurações → Bee Engine) para a mineração não ser encerrada.",
+                                android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
 
                 @android.webkit.JavascriptInterface
