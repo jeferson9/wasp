@@ -1813,6 +1813,7 @@ const G = {
   // câmera alta e estável (sem auto-rotação): o joystick fica sempre
   // consistente com a tela e os prédios quase não tampam a Acki
   camYaw: Math.PI, camDist: 8.5, camH: 9,
+  camLowT: 0,   // 0=câmera normal, 1=rasteira (dash/veículo) — suavizado por frame
   shake: 0, hintShown: 0,
   weapon: null, weaponMesh: null, atkAnim: 0, roundId: 0,
   shieldT: 0, vehicle: null, vehicleMesh: null, mission: null,
@@ -2716,12 +2717,19 @@ function tick(now) {
   const shake = G.shake > 0 ? G.shake : 0;
   G.shake = Math.max(0, G.shake - dt*2);
   const sx = (Math.random()-.5)*shake, sy = (Math.random()-.5)*shake;
+  // câmera rasteira automática: dash ou veículo rápido (carro/moto/táxi/jet
+  // ski) dão a sensação de velocidade; a pé ou de skate/bike fica na altura
+  // normal (tática, dá pra ver Nacki e blocos chegando de longe)
+  const lowTarget = (G.dashT > 0 || (G.vehicle && VEHICLES[G.vehicle.type].mult >= 1.8)) ? 1 : 0;
+  G.camLowT += (lowTarget - G.camLowT) * Math.min(1, dt*3.5);
+  const camH2   = G.camH   - G.camLowT * 6.7;   // 9 → 2.3
+  const camDist2 = G.camDist - G.camLowT * 3.3; // 8.5 → 5.2 (mais perto, mais velocidade)
   camera.position.set(
-    px + Math.sin(G.camYaw)*G.camDist + sx,
-    G.camH + sy,
-    pz + Math.cos(G.camYaw)*G.camDist
+    px + Math.sin(G.camYaw)*camDist2 + sx,
+    camH2 + sy,
+    pz + Math.cos(G.camYaw)*camDist2
   );
-  camera.lookAt(px, 1.7, pz);
+  camera.lookAt(px, 1.7 - G.camLowT*.9, pz);
   updateOcclusion();
 
   // auto-degrade de qualidade (2=tudo, 1=sem sombras/chuva leve, 0=mínimo)
