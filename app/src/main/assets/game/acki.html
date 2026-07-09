@@ -412,6 +412,36 @@ scene.fog = new THREE.Fog(0x05060c, 38, 120);
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, .1, 300);
 
+/* ── recuperação de contexto WebGL ──────────────────────────────────────
+   Na WebView do Android, reabrir o jogo rápido (sair → entrar) às vezes
+   entrega um contexto GL já perdido, ou que morre logo após criar: o JS
+   segue rodando (HUD, timers, epoch), mas o 3D fica preto. O three r128
+   se recupera sozinho SE o navegador emitir webglcontextrestored; se não
+   emitir em 3s, recarregamos a página — estava preto de qualquer jeito. */
+function glReload() {
+  const n = +(sessionStorage.getItem("acki_gl_reloads") || 0);
+  if (n >= 2) return;                        // nunca entra em loop de reload
+  sessionStorage.setItem("acki_gl_reloads", n + 1);
+  location.reload();
+}
+canvas.addEventListener("webglcontextlost", e => {
+  e.preventDefault();                        // permite o navegador restaurar
+  const timer = setTimeout(glReload, 3000);
+  canvas.addEventListener("webglcontextrestored", () => clearTimeout(timer), { once: true });
+}, false);
+setTimeout(() => {
+  const gl = renderer.getContext();
+  if (gl.isContextLost && gl.isContextLost()) { glReload(); return; }
+  if (canvas.width === 0 || canvas.height === 0) {
+    // WebView ainda não tinha layout quando o renderer nasceu (ex.: rotação
+    // portrait→landscape em andamento) e nenhum resize disparou depois
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  }
+  sessionStorage.removeItem("acki_gl_reloads");   // contexto saudável: zera o contador
+}, 1500);
+
 const hemiLight = new THREE.HemisphereLight(0x4a5da8, 0x0b0c14, .85);
 scene.add(hemiLight);
 const dirLight = new THREE.DirectionalLight(0xaebfff, .75);
