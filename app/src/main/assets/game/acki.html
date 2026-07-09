@@ -42,6 +42,7 @@
         color:#fff; font-weight:900; font-size:14px; letter-spacing:1px; box-shadow:0 0 22px rgba(255,60,60,.35); }
     #dashBtn:active { transform:scale(.93); }
     #dashBtn.cd { filter:grayscale(.8); opacity:.55; }
+    #dashBtn.held { transform:scale(1.08); box-shadow:0 0 34px rgba(255,80,80,.75); }
     #carryTag { position:fixed; right:30px; bottom:calc(232px + env(safe-area-inset-bottom)); z-index:10; font-size:12px; font-weight:900; color:#7dffab; text-shadow:0 0 10px rgba(55,214,122,.6); pointer-events:none; text-align:center; width:80px; }
     #vehTag { position:fixed; left:34px; bottom:calc(140px + env(safe-area-inset-bottom)); z-index:10; font-size:13px; font-weight:900; color:#8fd8ff; text-shadow:0 0 10px rgba(90,180,255,.6); pointer-events:none; }
     #minimap { position:fixed; left:12px; top:calc(86px + env(safe-area-inset-top)); z-index:9; width:126px; height:126px;
@@ -1807,7 +1808,7 @@ const G = {
   pos: new THREE.Vector3(0, 0, 8),
   vel: new THREE.Vector3(),
   heading: 0, speed: 6.4,
-  dashT: 0, dashCd: 0,
+  dashT: 0, dashCd: 0, dashHeld: false, dashElapsed: 0,
   invuln: 0, runPhase: 0,
   verifyTarget: null, verifyProg: 0,
   // câmera alta e estável (sem auto-rotação): o joystick fica sempre
@@ -2496,7 +2497,7 @@ function startEpoch(n) {
   G.delivered = 0; G.carried = 0; G.combo = 0; G.maxCombo = 0; G.hits = 0;
   G.pos.set(0, 0, 10); G.vel.set(0, 0, 0); G.heading = Math.PI;
   G.camYaw = 0; G.invuln = 2; G.verifyTarget = null; G.verifyProg = 0;   // câmera atrás dela
-  G.dashT = 0; G.dashCd = 0;
+  G.dashT = 0; G.dashCd = 0; G.dashHeld = false; G.dashElapsed = 0;
   G.roundId++;
   applyAmbience(n);          // cada epoch tem um clima: noite/dia/tempestade/entardecer
   const nBlocks = Math.min(G.quota + 3, 10);
@@ -2595,17 +2596,37 @@ addEventListener("touchend", e => {
 });
 /* teclado (teste em desktop) */
 const keys = {};
-addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
-addEventListener("keyup",   e => keys[e.key.toLowerCase()] = false);
+addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if (k === " " && !keys[k]) startDash();   // segurar espaço = segurar o dash
+  keys[k] = true;
+});
+addEventListener("keyup", e => {
+  const k = e.key.toLowerCase();
+  if (k === " ") stopDash();
+  keys[k] = false;
+});
 
-$("dashBtn").addEventListener("touchstart", e => { e.stopPropagation(); doDash(); }, { passive: true });
-$("dashBtn").addEventListener("click", doDash);
+// DASH agora é "segurar": mantém o impulso enquanto o dedo fica no botão,
+// até um teto de 5s — soltar antes corta o impulso na hora e já inicia o
+// cooldown (sem precisar esperar os 5s completos).
+const DASH_MAX = 5;
+$("dashBtn").addEventListener("touchstart", e => { e.stopPropagation(); startDash(); }, { passive: true });
+$("dashBtn").addEventListener("touchend",    e => { e.stopPropagation(); stopDash(); });
+$("dashBtn").addEventListener("touchcancel", () => stopDash());
+$("dashBtn").addEventListener("mousedown",   () => startDash());   // teste em desktop
+addEventListener("mouseup", () => stopDash());
 $("atkBtn").addEventListener("touchstart", e => { e.stopPropagation(); doAttack(); }, { passive: true });
 $("atkBtn").addEventListener("click", doAttack);
-function doDash() {
-  if (G.state !== "play" || G.dashCd > 0) return;
-  G.dashT = .34; G.dashCd = 3.2;
+function startDash() {
+  if (G.state !== "play" || G.dashCd > 0 || G.dashHeld) return;
+  G.dashHeld = true; G.dashElapsed = 0; G.dashT = DASH_MAX;
   SFX.dash(); nVibe(25);
+}
+function stopDash() {
+  if (!G.dashHeld) return;
+  G.dashHeld = false; G.dashT = 0;
+  G.dashCd = 3.2;
 }
 $("pauseBtn").addEventListener("click", () => { if (G.state === "play") { G.state = "pause"; $("ovlPause").classList.add("show"); } });
 $("btnResume").addEventListener("click", () => { $("ovlPause").classList.remove("show"); G.state = "play"; lastT = performance.now(); });
@@ -2743,12 +2764,16 @@ function tick(now) {
 
 function update(dt, t) {
   /* ── movimento: CORRER (sempre pra frente) + virar arrastando ── */
-  if (keys[" "]) { doDash(); keys[" "] = false; }
   if (keys.a || keys.arrowleft)  G.heading += dt*2.8;
   if (keys.d || keys.arrowright) G.heading -= dt*2.8;
-  G.dashT = Math.max(0, G.dashT - dt);
+  // DASH: enquanto segurado, conta até o teto de 5s e para sozinho;
+  // soltar antes (stopDash) já zera dashT e liga o cooldown na hora.
+  if (G.dashHeld) {
+    G.dashElapsed += dt;
+    if (G.dashElapsed >= DASH_MAX) stopDash();
+  }
   G.dashCd = Math.max(0, G.dashCd - dt);
-  $("dashBtn").className = G.dashCd > 0 ? "cd" : "";
+  $("dashBtn").className = G.dashHeld ? "held" : (G.dashCd > 0 ? "cd" : "");
   const running = runHeld || keys.w || keys.arrowup || G.dashT > 0;
   const mag = running ? 1 : 0;
   // água: sem jet ski anda-se devagar (vau); jet ski voa no mar e se arrasta na areia
@@ -3088,7 +3113,7 @@ addEventListener("resize", () => {
 
 /* ── boot ── */
 window._dbg = { G, scene, camera, renderer, hunters, buildings, colliders, fieldBlocks, fieldWeapons, fieldItems, player, MODELS,
-  mountVehicle, unmountVehicle, equipWeapon, vehicleModel, weaponModel, doAttack, spawnHunter };
+  mountVehicle, unmountVehicle, equipWeapon, vehicleModel, weaponModel, doAttack, spawnHunter, startDash, stopDash };
 applyStaticI18n();
 showTitle();
 const loadTag = document.getElementById("loadTag");
