@@ -604,18 +604,79 @@ const ENV = makeEnvMap();
   grid.position.y = .02;
   scene.add(grid);
 }
-/* faixas neon nas ruas */
+/* ── ruas de asfalto real + calçadas com meio-fio (repete por quarteirão) ── */
 {
-  const stripG = new THREE.PlaneGeometry(BOUND*2, .34);
+  const S = 256;                          // textura de 1 quarteirão (CELL×CELL)
+  const c = document.createElement("canvas"); c.width = c.height = S;
+  const x = c.getContext("2d");
+  const px = u => (u / CELL + .5) * S;    // unidades de mundo (-CELL/2..CELL/2) → pixel
+  // base: calçada de concreto claro
+  x.fillStyle = "#8a8d94"; x.fillRect(0, 0, S, S);
+  for (let n = 0; n < 500; n++) {                            // grão do concreto
+    x.fillStyle = Math.random() < .5 ? "rgba(255,255,255,.05)" : "rgba(0,0,0,.06)";
+    x.fillRect(Math.random()*S, Math.random()*S, 2, 2);
+  }
+  x.strokeStyle = "rgba(0,0,0,.14)"; x.lineWidth = 1.5;      // juntas de dilatação (grade 1×1m)
+  for (let g2 = px(-CELL/2); g2 <= px(CELL/2); g2 += S/9) {
+    x.beginPath(); x.moveTo(g2, 0); x.lineTo(g2, S); x.stroke();
+    x.beginPath(); x.moveTo(0, g2); x.lineTo(S, g2); x.stroke();
+  }
+  const ROAD_HALF = 2.4;                                     // meia-largura da rua em cada aresta do quarteirão
+  const CURB_W = .28;                                        // meio-fio
+  // asfalto nas 4 bordas do tile (ruas se encontram com o tile vizinho)
+  x.fillStyle = "#232529";
+  x.fillRect(0, 0, S, px(-CELL/2 + ROAD_HALF));                              // norte
+  x.fillRect(0, px(CELL/2 - ROAD_HALF), S, S - px(CELL/2 - ROAD_HALF));      // sul
+  x.fillRect(0, 0, px(-CELL/2 + ROAD_HALF), S);                              // oeste
+  x.fillRect(px(CELL/2 - ROAD_HALF), 0, S - px(CELL/2 - ROAD_HALF), S);      // leste
+  for (let n = 0; n < 900; n++) {                            // textura granulada do asfalto
+    const px2 = Math.random()*S, py2 = Math.random()*S;
+    const nearRoad = px2 < px(-CELL/2+ROAD_HALF) || px2 > px(CELL/2-ROAD_HALF) ||
+                      py2 < px(-CELL/2+ROAD_HALF) || py2 > px(CELL/2-ROAD_HALF);
+    if (!nearRoad) continue;
+    x.fillStyle = Math.random() < .5 ? "rgba(255,255,255,.04)" : "rgba(0,0,0,.12)";
+    x.fillRect(px2, py2, 1.6, 1.6);
+  }
+  // meio-fio (linha clara entre calçada e asfalto)
+  x.fillStyle = "#c7cad2";
+  const rN = px(-CELL/2 + ROAD_HALF), rS = px(CELL/2 - ROAD_HALF);
+  x.fillRect(0, rN, S, CURB_W*S/CELL); x.fillRect(0, rS - CURB_W*S/CELL, S, CURB_W*S/CELL);
+  x.fillRect(rN, 0, CURB_W*S/CELL, S); x.fillRect(rS - CURB_W*S/CELL, 0, CURB_W*S/CELL, S);
+  // faixa de pedestre nas esquinas (cruzamento)
+  x.fillStyle = "rgba(255,255,255,.65)";
+  for (let k = 0; k < 6; k++) {
+    const off = -CELL/2 + ROAD_HALF*.25 + k*(ROAD_HALF*1.5/6);
+    x.fillRect(px(off) - 2, rN - CURB_W*S/CELL - 16, 4, 14);
+    x.fillRect(rN - CURB_W*S/CELL - 16, px(off), 14, 4);
+  }
+  const roadTex = new THREE.CanvasTexture(c);
+  roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
+  roadTex.repeat.set(GRID*2, GRID*2);
+  const roadPlane = new THREE.Mesh(new THREE.PlaneGeometry(BOUND*2, BOUND*2),
+    new THREE.MeshStandardMaterial({ map: roadTex, roughness: .85, metalness: .05 }));
+  roadPlane.rotation.x = -Math.PI/2;
+  roadPlane.position.y = .025;             // acima do chão-base molhado, abaixo das faixas neon
+  roadPlane.receiveShadow = true;
+  scene.add(roadPlane);
+  // faixas neon nas ruas (ficam por cima, marcando a pista central)
+  const stripG = new THREE.PlaneGeometry(BOUND*2, .28);
   for (let i = -GRID; i <= GRID; i++) {
     const cols = [0xff3b3b, 0x37d67a, 0x9b7cff, 0x2ec5ff];
-    const m = new THREE.MeshBasicMaterial({ color: cols[(Math.abs(i))%4], transparent: true, opacity: .34 });
+    const m = new THREE.MeshBasicMaterial({ color: cols[(Math.abs(i))%4], transparent: true, opacity: .3 });
     const s1 = new THREE.Mesh(stripG, m);
-    s1.rotation.x = -Math.PI/2; s1.position.set(0, .03, i*CELL);
+    s1.rotation.x = -Math.PI/2; s1.position.set(0, .032, i*CELL);
     scene.add(s1);
     const s2 = new THREE.Mesh(stripG, m);
-    s2.rotation.x = -Math.PI/2; s2.rotation.z = Math.PI/2; s2.position.set(i*CELL, .03, 0);
+    s2.rotation.x = -Math.PI/2; s2.rotation.z = Math.PI/2; s2.position.set(i*CELL, .032, 0);
     scene.add(s2);
+  }
+  // bueiros nas ruas
+  const manholeM = new THREE.MeshLambertMaterial({ color: 0x14161a });
+  for (let i = -GRID; i < GRID; i++) for (let j = -GRID; j < GRID; j++) {
+    if (Math.random() < .55) continue;
+    const mh = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .03, 14), manholeM);
+    mh.position.set(i*CELL + (Math.random()-.5)*3, .04, j*CELL + (Math.random()-.5)*3);
+    scene.add(mh);
   }
 }
 
