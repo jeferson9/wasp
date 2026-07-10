@@ -606,52 +606,54 @@ const ENV = makeEnvMap();
 }
 /* ── ruas de asfalto real + calçadas com meio-fio (repete por quarteirão) ── */
 {
-  const S = 256;                          // textura de 1 quarteirão (CELL×CELL)
+  const S = 512;                          // textura de 1 quarteirão (CELL×CELL)
   const c = document.createElement("canvas"); c.width = c.height = S;
   const x = c.getContext("2d");
   const px = u => (u / CELL + .5) * S;    // unidades de mundo (-CELL/2..CELL/2) → pixel
-  // base: calçada de concreto claro
-  x.fillStyle = "#8a8d94"; x.fillRect(0, 0, S, S);
-  for (let n = 0; n < 500; n++) {                            // grão do concreto
-    x.fillStyle = Math.random() < .5 ? "rgba(255,255,255,.05)" : "rgba(0,0,0,.06)";
+  const ROAD_HALF = 2.4;                  // meia-largura da rua em cada aresta do quarteirão
+  const SW = CELL/2 - ROAD_HALF;          // meia-largura da quadra de calçada (6.6)
+
+  // 1) base: asfalto em TUDO (as ruas e cruzamentos ficam por baixo)
+  x.fillStyle = "#232529"; x.fillRect(0, 0, S, S);
+  for (let n = 0; n < 1600; n++) {
+    x.fillStyle = Math.random() < .5 ? "rgba(255,255,255,.04)" : "rgba(0,0,0,.12)";
     x.fillRect(Math.random()*S, Math.random()*S, 2, 2);
   }
-  x.strokeStyle = "rgba(0,0,0,.14)"; x.lineWidth = 1.5;      // juntas de dilatação (grade 1×1m)
-  for (let g2 = px(-CELL/2); g2 <= px(CELL/2); g2 += S/9) {
-    x.beginPath(); x.moveTo(g2, 0); x.lineTo(g2, S); x.stroke();
-    x.beginPath(); x.moveTo(0, g2); x.lineTo(S, g2); x.stroke();
+  // 2) quadra de calçada: só o quadrado central — cruzamentos continuam asfalto
+  const q0 = px(-SW), q1 = px(SW), qs = q1 - q0;
+  x.fillStyle = "#8a8d94"; x.fillRect(q0, q0, qs, qs);
+  for (let n = 0; n < 900; n++) {                            // grão do concreto
+    x.fillStyle = Math.random() < .5 ? "rgba(255,255,255,.05)" : "rgba(0,0,0,.06)";
+    x.fillRect(q0 + Math.random()*qs, q0 + Math.random()*qs, 3, 3);
   }
-  const ROAD_HALF = 2.4;                                     // meia-largura da rua em cada aresta do quarteirão
-  const CURB_W = .28;                                        // meio-fio
-  // asfalto nas 4 bordas do tile (ruas se encontram com o tile vizinho)
-  x.fillStyle = "#232529";
-  x.fillRect(0, 0, S, px(-CELL/2 + ROAD_HALF));                              // norte
-  x.fillRect(0, px(CELL/2 - ROAD_HALF), S, S - px(CELL/2 - ROAD_HALF));      // sul
-  x.fillRect(0, 0, px(-CELL/2 + ROAD_HALF), S);                              // oeste
-  x.fillRect(px(CELL/2 - ROAD_HALF), 0, S - px(CELL/2 - ROAD_HALF), S);      // leste
-  for (let n = 0; n < 900; n++) {                            // textura granulada do asfalto
-    const px2 = Math.random()*S, py2 = Math.random()*S;
-    const nearRoad = px2 < px(-CELL/2+ROAD_HALF) || px2 > px(CELL/2-ROAD_HALF) ||
-                      py2 < px(-CELL/2+ROAD_HALF) || py2 > px(CELL/2-ROAD_HALF);
-    if (!nearRoad) continue;
-    x.fillStyle = Math.random() < .5 ? "rgba(255,255,255,.04)" : "rgba(0,0,0,.12)";
-    x.fillRect(px2, py2, 1.6, 1.6);
+  x.strokeStyle = "rgba(0,0,0,.14)"; x.lineWidth = 2;        // juntas de dilatação
+  for (let k = 1; k < 9; k++) {
+    const g2 = q0 + qs*k/9;
+    x.beginPath(); x.moveTo(g2, q0); x.lineTo(g2, q1); x.stroke();
+    x.beginPath(); x.moveTo(q0, g2); x.lineTo(q1, g2); x.stroke();
   }
-  // meio-fio (linha clara entre calçada e asfalto)
-  x.fillStyle = "#c7cad2";
-  const rN = px(-CELL/2 + ROAD_HALF), rS = px(CELL/2 - ROAD_HALF);
-  x.fillRect(0, rN, S, CURB_W*S/CELL); x.fillRect(0, rS - CURB_W*S/CELL, S, CURB_W*S/CELL);
-  x.fillRect(rN, 0, CURB_W*S/CELL, S); x.fillRect(rS - CURB_W*S/CELL, 0, CURB_W*S/CELL, S);
-  // faixa de pedestre nas esquinas (cruzamento)
-  x.fillStyle = "rgba(255,255,255,.65)";
-  for (let k = 0; k < 6; k++) {
-    const off = -CELL/2 + ROAD_HALF*.25 + k*(ROAD_HALF*1.5/6);
-    x.fillRect(px(off) - 2, rN - CURB_W*S/CELL - 16, 4, 14);
-    x.fillRect(rN - CURB_W*S/CELL - 16, px(off), 14, 4);
-  }
+  // 3) meio-fio: ANEL ao redor da quadra (não atravessa o cruzamento)
+  x.strokeStyle = "#c7cad2"; x.lineWidth = .3 * S/CELL;
+  x.strokeRect(q0, q0, qs, qs);
+  // 4) faixas de pedestre nos 4 cantos: cada canto desenha as 2 aproximações
+  //    "internas" do cruzamento; a outra metade da rua vem do tile vizinho
+  //    (textura repetida), completando a zebra inteira
+  x.fillStyle = "rgba(235,238,245,.85)";
+  const stW = .40, stGap = .38, bandA = 5.0, bandB = 6.35;   // barras ao longo do sentido dos carros
+  [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx2, sz2]) => {
+    for (let u = SW + .15; u < CELL/2; u += stW + stGap) {
+      // sobre a rua vertical (borda x): barras compridas em z, repetindo em x
+      x.fillRect(px(sx2 > 0 ? u : -u - stW), px(sz2 > 0 ? bandA : -bandB),
+                 stW*S/CELL, (bandB - bandA)*S/CELL);
+      // sobre a rua horizontal (borda z): barras compridas em x, repetindo em z
+      x.fillRect(px(sx2 > 0 ? bandA : -bandB), px(sz2 > 0 ? u : -u - stW),
+                 (bandB - bandA)*S/CELL, stW*S/CELL);
+    }
+  });
   const roadTex = new THREE.CanvasTexture(c);
   roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
   roadTex.repeat.set(GRID*2, GRID*2);
+  roadTex.anisotropy = renderer.capabilities.getMaxAnisotropy();  // nítida em ângulo rasante
   const roadPlane = new THREE.Mesh(new THREE.PlaneGeometry(BOUND*2, BOUND*2),
     new THREE.MeshStandardMaterial({ map: roadTex, roughness: .85, metalness: .05 }));
   roadPlane.rotation.x = -Math.PI/2;
@@ -763,7 +765,10 @@ function signTexture(txt, color) {
     if (PARK_LOTS.has(i + "," + j)) continue;            // área de parque
     if (i === 1 && j === 1) continue;                    // lote do M Burger
     if (Math.random() < .16) continue;                   // lotes vazios
-    const w = 9 + Math.random()*3, d = 9 + Math.random()*3;
+    // quadra de calçada tem meia-largura 6.6 (CELL/2 − rua 2.4): prédio de
+    // 8–10 (meia 4–5) deixa 1.6–2.6 de calçada visível em todo lado — antes
+    // (9–12, e comercial +1.5) alguns invadiam a rua e zeravam a calçada
+    const w = 8 + Math.random()*2, d = 8 + Math.random()*2;
     const roll = Math.random();
     let topH = 0, topW = w, topD = d;                    // altura/limite do topo p/ props
 
@@ -797,8 +802,8 @@ function signTexture(txt, color) {
       blinkers.push({ s: tip, ph: Math.random()*6 });
     } else {                                             // comercial baixo e largo
       topH = 5 + Math.random()*3;
-      tier(cx, cz, w + 1.5, topH, d + 1.5, 0);
-      topW = w + 1.5; topD = d + 1.5;
+      tier(cx, cz, w + 1, topH, d + 1, 0);
+      topW = w + 1; topD = d + 1;
     }
 
     // térreo com lojas (vitrines) nas torres + parapeito no topo
@@ -1802,8 +1807,11 @@ function makeFire(x, y, z) {
   const headM = new THREE.MeshLambertMaterial({ color: 0x2a2f3c, emissive: 0xffd9a0, emissiveIntensity: 1.1 });
   const cand = [];
   for (let i = -GRID; i <= GRID; i += 2) for (let j = -GRID; j <= GRID; j += 2) {
-    const x = i*CELL + 1, z = j*CELL + 1;
+    // NA CALÇADA da esquina (rua tem meia-largura 2.4 + meio-fio; 2.95 já é
+    // concreto), nunca no leito da rua — e nunca dentro de um prédio
+    const x = i*CELL + 2.95, z = j*CELL + 2.95;
     if (Math.hypot(x, z) < 10 || Math.abs(x) > BOUND - 3 || Math.abs(z) > BOUND - 3) continue;
+    if (insideBuilding(x, z, .5)) continue;
     cand.push({ x, z });
   }
   cand.sort(() => Math.random() - .5);
@@ -1812,12 +1820,13 @@ function makeFire(x, y, z) {
     pole.position.set(p.x, 1.8, p.z); pole.castShadow = true; scene.add(pole);
     // poste é sólido: a Acki (e os Nacks) precisam desviar dele
     colliders.push({ minX: p.x - .28, maxX: p.x + .28, minZ: p.z - .28, maxZ: p.z + .28 });
+    // braço/lâmpada inclinados para a rua (-x), iluminando o asfalto
     const head = new THREE.Mesh(headG, headM);
-    head.position.set(p.x + .22, 3.62, p.z); scene.add(head);
+    head.position.set(p.x - .35, 3.62, p.z); scene.add(head);
     const gl = glowSprite("rgba(255,214,150,.55)", 2.6);
-    gl.position.set(p.x + .25, 3.6, p.z); scene.add(gl);
+    gl.position.set(p.x - .38, 3.6, p.z); scene.add(gl);
     const pool = flatGlow("rgba(255,205,140,.5)", 5.5, .2);
-    pool.position.set(p.x + .3, .05, p.z); scene.add(pool);
+    pool.position.set(p.x - .9, .05, p.z); scene.add(pool);
   });
 }
 { // ── lixeiras (algumas tombadas) ──
