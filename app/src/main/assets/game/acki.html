@@ -252,7 +252,9 @@ const T = {
     hint1:"Vá até um bloco vermelho 🔴 e fique perto para verificar!",
     hint2:"Bloco verificado! Leve até o Block Keeper (luz verde no centro) 🟢",
     hint3:"Cuidado com os robôs Nacki vermelhos! Use o DASH ⚡",
-    perfect:"PERFEITA! +{n} WP", wpEarn:"+{n} WP", lblEpoch:"Acki City — Epoch {n} finalizada"
+    perfect:"PERFEITA! +{n} WP", wpEarn:"+{n} WP", lblEpoch:"Acki City — Epoch {n} finalizada",
+    regCity:"Acki City", regLitoral:"Litoral Deserto", regCapital:"Capital",
+    regUnlocked:"🌍 NOVA REGIÃO: {name}!", regUnlockedHint:"Volte ao portal para viajar até a nova região."
   },
   en: {
     sub:"CHAIN RUNNER • ACKI NACKI NETWORK",
@@ -284,7 +286,9 @@ const T = {
     hint1:"Go to a red block 🔴 and stand near it to verify!",
     hint2:"Block verified! Take it to the Block Keeper (green light at center) 🟢",
     hint3:"Watch out for the red Nacki robots! Use DASH ⚡",
-    perfect:"PERFECT! +{n} WP", wpEarn:"+{n} WP", lblEpoch:"Acki City — Epoch {n} finalized"
+    perfect:"PERFECT! +{n} WP", wpEarn:"+{n} WP", lblEpoch:"Acki City — Epoch {n} finalized",
+    regCity:"Acki City", regLitoral:"Desert Coast", regCapital:"Capital",
+    regUnlocked:"🌍 NEW REGION: {name}!", regUnlockedHint:"Head back to the portal to travel to the new region."
   }
 }[LANG];
 const tt = (k, v) => { let s = T[k] || k; if (v) Object.keys(v).forEach(x => s = s.replace("{"+x+"}", v[x])); return s; };
@@ -304,6 +308,7 @@ function creditWP(amount, label) {
   const tk = "wasp_wp_today_" + new Date().toDateString();
   localStorage.setItem(tk, String(parseInt(localStorage.getItem(tk) || "0", 10) + amount));
   localStorage.setItem(todayKeyAcki(), String(getAckiToday() + amount));
+  checkRegionUnlocks();
 }
 const epochReward = n => Math.min(40, 8 + n * 2);
 
@@ -1486,11 +1491,17 @@ function makeAcki() {
     const ms = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
     ms.position.set(x, y, z); ms.castShadow = true; parent.add(ms); return ms;
   };
+  const cyl = (parent, rt, rb, h, m, x, y, z) => {
+    const ms = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 10), m);
+    ms.position.set(x, y, z); ms.castShadow = true; parent.add(ms); return ms;
+  };
   // pernas com pivô no quadril (meia preta, liga vermelha, sapato com salto)
   function leg(x) {
     const p = new THREE.Group(); p.position.set(x, .56, 0);
-    box(p, .13, .42, .13, darkM, 0, -.21, 0);
-    if (x > 0) box(p, .145, .045, .145, redM, 0, -.1, 0);   // liga na perna direita
+    cyl(p, .085, .10, .38, darkM, 0, -.20, 0);
+    if (x > 0) cyl(p, .105, .105, .045, redM, 0, -.08, 0);   // liga na perna direita
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(.095, 10, 8), darkM);
+    knee.position.y = -.39; knee.castShadow = true; p.add(knee);
     box(p, .14, .09, .24, shoeM, 0, -.5, .04);
     box(p, .12, .06, .07, shoeM, 0, -.52, -.06);            // salto
     g.add(p); return p;
@@ -1505,7 +1516,7 @@ function makeAcki() {
   const hem2 = new THREE.Mesh(new THREE.CylinderGeometry(.41, .46, .05, 12), redM);
   hem2.position.y = .69; g.add(hem2);
   // torso/espartilho + cadarço cruzado + cinto + laço + gola
-  const torso = box(g, .32, .36, .2, dressM, 0, 1.13, 0);
+  const torso = cyl(g, .21, .17, .39, dressM, 0, 1.13, 0);
   toonOutline(torso, 1.08);
   box(g, .2, .03, .02, redM, 0, 1.06, .11).rotation.z =  .45;   // cadarço X
   box(g, .2, .03, .02, redM, 0, 1.06, .11).rotation.z = -.45;
@@ -1518,18 +1529,19 @@ function makeAcki() {
   // braços: ombro bufante + manga + punho vermelho + mão
   function arm(x) {
     const p = new THREE.Group(); p.position.set(x, 1.27, 0);
-    box(p, .13, .13, .13, dressM, 0, -.03, 0);            // ombro bufante
-    box(p, .09, .3, .09, dressM, 0, -.17, 0);
-    box(p, .1, .05, .1, redM, 0, -.3, 0);
-    box(p, .08, .1, .08, skinM, 0, -.38, 0);
+    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(.115, 10, 8), dressM);
+    shoulder.position.y = -.03; shoulder.castShadow = true; p.add(shoulder);
+    cyl(p, .06, .075, .30, dressM, 0, -.18, 0);
+    cyl(p, .077, .077, .05, redM, 0, -.32, 0);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(.065, 10, 8), skinM);
+    hand.position.y = -.40; hand.castShadow = true; p.add(hand);
     g.add(p); return p;
   }
   const armL = arm(-.22), armR = arm(.22);
   // cabeça: rosto detalhado (256px) + contorno toon
   const faces = ackiFaceTextures();
   const faceM = new THREE.MeshLambertMaterial({ map: faces.open });
-  const head = new THREE.Mesh(new THREE.BoxGeometry(.46, .44, .42),
-    [skinM, skinM, skinM, skinM, faceM, skinM]);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.255, 14, 11), faceM);
   head.position.set(0, 1.6, 0); head.castShadow = true; g.add(head);
   toonOutline(head, 1.05);
   // cabelo: topo, nuca descendo, franja em zigue-zague, mechas laterais longas, ahoge
@@ -2012,6 +2024,7 @@ scene.add(player.group);
 const G = {
   state: "title",            // title | play | pause | win | fail
   epoch: getEpoch(),
+  region: parseInt(localStorage.getItem("wasp_acki_region") || "1", 10),
   quota: 0, delivered: 0, timeLeft: 0, timeTotal: 0,
   carried: 0, carryMax: 3,
   combo: 0, maxCombo: 0, hits: 0,
@@ -2537,6 +2550,36 @@ const AMBIENCES = [
   { id:"sunset", sky:0x321a2c, fogF:110, hS:0xe08a58, hG:0x180e1a, hI:.95,  dC:0xff9a5c, dI:1.05, stars:false, rain:false, rainO:0,   storm:false, winI:.6 }
 ];
 let AMB = AMBIENCES[0], _boltT = 6;
+
+/* ═══════════════ REGIÕES (progressão tipo GTA: cidade → litoral → capital) ═══════════════
+   Fase 1: só o cadastro/estado/salvamento existe. A cidade continua sendo a
+   única região jogável — litoral e capital chegam nas próximas fases, quando
+   a geração de mundo virar uma função reaproveitável (buildWorld). */
+const REGIONS = [
+  { id: 1, key: "city",    nameKey: "regCity",    unlockWP: 0,   unlockEpoch: 0 },
+  { id: 2, key: "litoral", nameKey: "regLitoral", unlockWP: 150, unlockEpoch: 4 },
+  { id: 3, key: "capital", nameKey: "regCapital", unlockWP: 500, unlockEpoch: 9 },
+];
+const getUnlockedRegions = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem("wasp_acki_unlocked_regions") || "[1]");
+    return Array.isArray(raw) && raw.length ? raw : [1];
+  } catch (e) { return [1]; }
+};
+function checkRegionUnlocks() {
+  const totalWP = parseFloat(localStorage.getItem("wasp_wp_total_earned") || "0");
+  const unlocked = getUnlockedRegions();
+  let changed = false;
+  for (const r of REGIONS) {
+    if (unlocked.includes(r.id)) continue;
+    if (totalWP >= r.unlockWP || getEpoch() >= r.unlockEpoch) {
+      unlocked.push(r.id); changed = true;
+      popup(tt("regUnlocked", { name: tt(r.nameKey) }), "#5dff9d");
+      hint(tt("regUnlockedHint"), 4200);
+    }
+  }
+  if (changed) localStorage.setItem("wasp_acki_unlocked_regions", JSON.stringify(unlocked));
+}
 function applyAmbience(n) {
   AMB = AMBIENCES[(n - 1) % AMBIENCES.length];
   scene.background.setHex(AMB.sky);
@@ -2768,6 +2811,7 @@ function winEpoch() {
   const best = Math.max(getBest(), G.epoch);
   localStorage.setItem("wasp_acki_best", String(best));
   localStorage.setItem("wasp_acki_epoch", String(G.epoch + 1));
+  checkRegionUnlocks();
   $("winWp").textContent = "+" + granted + " WP" + (perfect ? " ★" : "");
   $("winBlocks").textContent = G.delivered;
   $("winCombo").textContent = "×" + G.maxCombo;
@@ -3351,7 +3395,7 @@ addEventListener("resize", () => {
 /* ── boot ── */
 window._dbg = { G, scene, camera, renderer, hunters, buildings, colliders, fieldBlocks, fieldWeapons, fieldItems, player, MODELS,
   mountVehicle, unmountVehicle, equipWeapon, vehicleModel, weaponModel, doAttack, spawnHunter, startDash, stopDash,
-  trafficLights, startEpoch };
+  trafficLights, startEpoch, REGIONS, checkRegionUnlocks, getUnlockedRegions };
 applyStaticI18n();
 showTitle();
 const loadTag = document.getElementById("loadTag");
