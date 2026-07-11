@@ -312,7 +312,6 @@ function creditWP(amount, label) {
   const tk = "wasp_wp_today_" + new Date().toDateString();
   localStorage.setItem(tk, String(parseInt(localStorage.getItem(tk) || "0", 10) + amount));
   localStorage.setItem(todayKeyAcki(), String(getAckiToday() + amount));
-  checkRegionUnlocks();
 }
 const epochReward = n => Math.min(40, 8 + n * 2);
 
