@@ -71,6 +71,7 @@
     /* damage flash + vignette + relâmpago */
     #flash { position:fixed; inset:0; z-index:20; background:radial-gradient(circle,transparent 40%,rgba(255,20,30,.55)); opacity:0; pointer-events:none; transition:opacity .5s; }
     #bolt { position:fixed; inset:0; z-index:19; background:rgba(222,232,255,.92); opacity:0; pointer-events:none; }
+    #regionFade { position:fixed; inset:0; z-index:25; background:#05060c; opacity:0; pointer-events:none; transition:opacity .55s; }
     #vig { position:fixed; inset:0; z-index:5; pointer-events:none; background:radial-gradient(circle,transparent 62%,rgba(0,0,5,.55)); }
 
     /* ── overlays (title / win / fail / pause) ── */
@@ -112,6 +113,7 @@
 <div id="vig"></div>
 <div id="flash"></div>
 <div id="bolt"></div>
+<div id="regionFade"></div>
 <div id="loadTag">
     <div class="g-logo">ACKI CITY</div>
     <div id="loadBarWrap"><div id="loadBarFill"></div></div>
@@ -254,7 +256,8 @@ const T = {
     hint3:"Cuidado com os robôs Nacki vermelhos! Use o DASH ⚡",
     perfect:"PERFEITA! +{n} WP", wpEarn:"+{n} WP", lblEpoch:"Acki City — Epoch {n} finalizada",
     regCity:"Acki City", regLitoral:"Litoral Deserto", regCapital:"Capital",
-    regUnlocked:"🌍 NOVA REGIÃO: {name}!", regUnlockedHint:"Volte ao portal para viajar até a nova região."
+    regUnlocked:"🌍 NOVA REGIÃO: {name}!", regUnlockedHint:"Volte ao portal para viajar até a nova região.",
+    regLocked:"🔒 {name} ainda bloqueada"
   },
   en: {
     sub:"CHAIN RUNNER • ACKI NACKI NETWORK",
@@ -288,7 +291,8 @@ const T = {
     hint3:"Watch out for the red Nacki robots! Use DASH ⚡",
     perfect:"PERFECT! +{n} WP", wpEarn:"+{n} WP", lblEpoch:"Acki City — Epoch {n} finalized",
     regCity:"Acki City", regLitoral:"Desert Coast", regCapital:"Capital",
-    regUnlocked:"🌍 NEW REGION: {name}!", regUnlockedHint:"Head back to the portal to travel to the new region."
+    regUnlocked:"🌍 NEW REGION: {name}!", regUnlockedHint:"Head back to the portal to travel to the new region.",
+    regLocked:"🔒 {name} still locked"
   }
 }[LANG];
 const tt = (k, v) => { let s = T[k] || k; if (v) Object.keys(v).forEach(x => s = s.replace("{"+x+"}", v[x])); return s; };
@@ -2407,6 +2411,48 @@ function spawnItem(kind, nearPos) {
   scene.add(g); scene.add(spr);
   fieldItems.push({ g, spr, pos: p, kind });
 }
+
+/* ═══════════════ PORTAL DE VIAGEM (progressão de regiões) ═══════════════
+   Fase 2: só a mecânica de transição — todo portal leva de volta pra
+   Region 1 (a única que existe até a Fase 3 desenhar o litoral). */
+const portals = [];
+function spawnPortal(targetRegion, pos) {
+  const g = new THREE.Group();
+  const ringM = new THREE.MeshLambertMaterial({ color: 0x1c2440, emissive: 0x8a5cff, emissiveIntensity: 1 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6, .16, 10, 24), ringM);
+  ring.position.y = 1.9; g.add(ring);
+  const veil = new THREE.Mesh(new THREE.CircleGeometry(1.5, 20),
+    new THREE.MeshBasicMaterial({ color: 0x8a5cff, transparent: true, opacity: .22, side: THREE.DoubleSide, depthWrite: false }));
+  veil.position.y = 1.9; g.add(veil);
+  const spr = glowSprite("rgba(160,110,255,.7)", 4.2);
+  spr.position.y = 1.9; g.add(spr);
+  g.position.set(pos.x, 0, pos.z);
+  scene.add(g);
+  portals.push({ g, ring, veil, pos: pos.clone(), targetRegion });
+}
+function travelToRegion(targetRegion) {
+  const unlocked = getUnlockedRegions();
+  if (!unlocked.includes(targetRegion)) {
+    const r = REGIONS.find(x => x.id === targetRegion);
+    hint(tt("regLocked", { name: r ? tt(r.nameKey) : "?" }), 2600);
+    return;
+  }
+  const fade = $("regionFade");
+  fade.style.opacity = 1;
+  G.state = "transition";
+  setTimeout(() => {
+    G.region = targetRegion;
+    localStorage.setItem("wasp_acki_region", String(targetRegion));
+    // Fase 2: geografia da região 2/3 ainda não existe — reaproveita a
+    // cidade atual como destino (a troca real de mundo chega na Fase 3).
+    // startEpoch já faz clearRound + reposiciona a Acki + reaplica a ambiência.
+    startEpoch(G.epoch);
+    fade.style.opacity = 0;
+  }, 550);
+}
+// Fase 2: portal aponta pra própria Region 1 (sempre desbloqueada) — só
+// valida fade/reset/transição. Na Fase 3 troca pra targetRegion:2 (litoral).
+spawnPortal(1, new THREE.Vector3(0, 0, 30));
 function mountVehicle(type) {
   if (G.vehicleMesh) player.group.remove(G.vehicleMesh);
   G.vehicle = { type, t: type === "jetski" ? 40 : 30 };
@@ -3175,6 +3221,14 @@ function update(dt, t) {
       } else mountVehicle(it.kind);
     }
   }
+  /* ── portais de viagem entre regiões ── */
+  for (const p of portals) {
+    p.ring.rotation.z += dt*.8;
+    p.veil.rotation.z -= dt*.5;
+    if (G.state === "play" && Math.hypot(p.pos.x - G.pos.x, p.pos.z - G.pos.z) < 1.9) {
+      travelToRegion(p.targetRegion);
+    }
+  }
   /* ── escudo ativo: bolha pulsando (pisca quando está acabando) ── */
   if (G.shieldT > 0) {
     G.shieldT -= dt;
@@ -3395,7 +3449,7 @@ addEventListener("resize", () => {
 /* ── boot ── */
 window._dbg = { G, scene, camera, renderer, hunters, buildings, colliders, fieldBlocks, fieldWeapons, fieldItems, player, MODELS,
   mountVehicle, unmountVehicle, equipWeapon, vehicleModel, weaponModel, doAttack, spawnHunter, startDash, stopDash,
-  trafficLights, startEpoch, REGIONS, checkRegionUnlocks, getUnlockedRegions };
+  trafficLights, startEpoch, REGIONS, checkRegionUnlocks, getUnlockedRegions, portals, spawnPortal, travelToRegion };
 applyStaticI18n();
 showTitle();
 const loadTag = document.getElementById("loadTag");
