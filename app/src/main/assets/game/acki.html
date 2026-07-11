@@ -600,9 +600,9 @@ const ENV = makeEnvMap();
   ground.rotation.x = -Math.PI/2;
   ground.receiveShadow = true;
   scene.add(ground);
-  const grid = new THREE.GridHelper((GRID*2)*CELL, GRID*2, 0x1c2440, 0x141a30);
-  grid.position.y = .02;
-  scene.add(grid);
+  window._envGround = ground;   // referenciado pela fase de neve
+  // (GridHelper removido: ficava a 0.005 do plano das ruas e o z-fighting
+  //  fazia o chão "piscar" em movimento)
 }
 /* ── ruas de asfalto real + calçadas com meio-fio (repete por quarteirão) ── */
 {
@@ -650,6 +650,18 @@ const ENV = makeEnvMap();
                  (bandB - bandA)*S/CELL, stW*S/CELL);
     }
   });
+  // 5) linha central tracejada (tinta amarela) no eixo das ruas — substitui
+  //    as antigas faixas neon em planos separados, que ficavam a 0.007 do
+  //    asfalto e "piscavam" (z-fighting). Pintada NA textura: zero flicker.
+  //    O eixo da rua é a borda do tile: metade da linha em cada lado, e o
+  //    tile vizinho completa. Tracejado para fora dos cruzamentos (|v|<SW).
+  x.fillStyle = "rgba(255,205,80,.75)";
+  const lw = .09 * S/CELL;                 // meia-largura da linha (total .18)
+  for (let v = -SW + .3; v < SW - 1.2; v += 2.4) {
+    const dl = 1.2 * S/CELL;
+    x.fillRect(0, px(v), lw, dl); x.fillRect(S - lw, px(v), lw, dl);   // ruas verticais
+    x.fillRect(px(v), 0, dl, lw); x.fillRect(px(v), S - lw, dl, lw);   // ruas horizontais
+  }
   const roadTex = new THREE.CanvasTexture(c);
   roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
   roadTex.repeat.set(GRID*2, GRID*2);
@@ -657,21 +669,10 @@ const ENV = makeEnvMap();
   const roadPlane = new THREE.Mesh(new THREE.PlaneGeometry(BOUND*2, BOUND*2),
     new THREE.MeshStandardMaterial({ map: roadTex, roughness: .85, metalness: .05 }));
   roadPlane.rotation.x = -Math.PI/2;
-  roadPlane.position.y = .025;             // acima do chão-base molhado, abaixo das faixas neon
+  roadPlane.position.y = .025;             // acima do chão-base molhado
   roadPlane.receiveShadow = true;
   scene.add(roadPlane);
-  // faixas neon nas ruas (ficam por cima, marcando a pista central)
-  const stripG = new THREE.PlaneGeometry(BOUND*2, .28);
-  for (let i = -GRID; i <= GRID; i++) {
-    const cols = [0xff3b3b, 0x37d67a, 0x9b7cff, 0x2ec5ff];
-    const m = new THREE.MeshBasicMaterial({ color: cols[(Math.abs(i))%4], transparent: true, opacity: .3 });
-    const s1 = new THREE.Mesh(stripG, m);
-    s1.rotation.x = -Math.PI/2; s1.position.set(0, .032, i*CELL);
-    scene.add(s1);
-    const s2 = new THREE.Mesh(stripG, m);
-    s2.rotation.x = -Math.PI/2; s2.rotation.z = Math.PI/2; s2.position.set(i*CELL, .032, 0);
-    scene.add(s2);
-  }
+  window._envRoad = roadPlane;             // referenciado pela fase de neve
   // bueiros nas ruas
   const manholeM = new THREE.MeshLambertMaterial({ color: 0x14161a });
   for (let i = -GRID; i < GRID; i++) for (let j = -GRID; j < GRID; j++) {
@@ -989,9 +990,9 @@ function signTexture(txt, color) {
       cloth.position.set(vx + .7 + k*.85, 1.33, vz); scene.add(cloth);
     }
   }
-  // postes de madeira com fios
+  // postes de madeira com fios (fora da rua de entrada em z≈0!)
   const poleTops = [];
-  [[-126, -50], [-118, 0], [-126, 50]].forEach(p4 => {
+  [[-126, -50], [-118, 10], [-126, 50]].forEach(p4 => {
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, 5, 6), poleP);
     pole.position.set(p4[0], 2.5, p4[1]); pole.castShadow = true; scene.add(pole);
     const cross = new THREE.Mesh(new THREE.BoxGeometry(1.1, .08, .08), poleP);
@@ -1829,6 +1830,44 @@ function makeFire(x, y, z) {
     pool.position.set(p.x - .9, .05, p.z); scene.add(pool);
   });
 }
+const trafficLights = [];
+{ // ── semáforos: poste na calçada da esquina, braço sobre a rua, 3 luzes ──
+  // cruzamentos "pares" (postes de luz usam os ímpares — nunca dividem esquina)
+  const tPoleG = new THREE.CylinderGeometry(.08, .1, 4, 6);
+  const tDarkM = new THREE.MeshLambertMaterial({ color: 0x22262e });
+  const cand2 = [];
+  for (let i = -4; i <= 4; i += 2) for (let j = -4; j <= 4; j += 2) {
+    const x = i*CELL + 3.05, z = j*CELL + 3.05;
+    if (Math.hypot(i*CELL, j*CELL) < 12) continue;           // praça
+    if (insideBuilding(x, z, .5)) continue;
+    cand2.push({ x, z, roadX: i*CELL });
+  }
+  cand2.sort(() => Math.random() - .5);
+  cand2.slice(0, 8).forEach(p => {
+    const pole = new THREE.Mesh(tPoleG, tDarkM);
+    pole.position.set(p.x, 2, p.z); pole.castShadow = true; scene.add(pole);
+    colliders.push({ minX: p.x - .28, maxX: p.x + .28, minZ: p.z - .28, maxZ: p.z + .28 });
+    // braço se estende da calçada até sobre a rua vertical
+    const armLen = p.x - p.roadX + .35;
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(armLen, .09, .09), tDarkM);
+    arm.position.set(p.x - armLen/2, 3.95, p.z); scene.add(arm);
+    // cabeça com 3 luzes (vazam nas duas faces — visível dos dois sentidos)
+    const head = new THREE.Mesh(new THREE.BoxGeometry(.3, .82, .24), tDarkM);
+    head.position.set(p.roadX - .2, 3.55, p.z); scene.add(head);
+    const mk = (base, em, dy) => {
+      const lm = new THREE.MeshLambertMaterial({ color: base, emissive: em, emissiveIntensity: .05 });
+      const l = new THREE.Mesh(new THREE.BoxGeometry(.16, .16, .3), lm);
+      l.position.set(p.roadX - .2, 3.55 + dy, p.z); scene.add(l);
+      return lm;
+    };
+    trafficLights.push({
+      r: mk(0x330b0b, 0xff2a2a,  .26),
+      y: mk(0x332a0b, 0xffc107,  0),
+      g: mk(0x0b331a, 0x2ecc55, -.26),
+      ph: Math.random()*10, x: p.roadX, z: p.z
+    });
+  });
+}
 { // ── lixeiras (algumas tombadas) ──
   const binG = new THREE.BoxGeometry(.55, .75, .5);
   const binCols = [0x1e3325, 0x1e2a3a, 0x33241e];
@@ -1872,18 +1911,27 @@ for (let i = 0; i < 14 && i < wallSpots.length; i++) {
 /* ── animação do ambiente (chamada todo frame) ── */
 let _flickT = 0;
 function updateAmbience(dt, t) {
-  // chuva
+  // chuva / neve (neve cai devagar e deriva com o "vento")
   if (rain.p.visible) {
     rain.p.position.set(G.pos.x, 0, G.pos.z);
     const a = rain.pos;
+    const fall = AMB.snow ? .13 : 1;
     for (let i = 0; i < rain.N; i++) {
-      a[i*3+1] -= rain.vel[i]*dt;
+      a[i*3+1] -= rain.vel[i]*dt*fall;
+      if (AMB.snow) a[i*3] += Math.sin(t*.7 + i)*dt*.6;
       if (a[i*3+1] < 0) {
         a[i*3+1] = 24 + Math.random()*3;
         a[i*3] = (Math.random()*2 - 1)*30; a[i*3+2] = (Math.random()*2 - 1)*30;
       }
     }
     rain.geo.attributes.position.needsUpdate = true;
+  }
+  // semáforos: ciclo verde (4.5s) → amarelo (1.2s) → vermelho (4.3s)
+  for (const tl of trafficLights) {
+    const ph2 = (t*.6 + tl.ph) % 10;
+    tl.g.emissiveIntensity = ph2 < 4.5 ? 1 : .04;
+    tl.y.emissiveIntensity = (ph2 >= 4.5 && ph2 < 5.7) ? 1 : .04;
+    tl.r.emissiveIntensity = ph2 >= 5.7 ? 1 : .04;
   }
   // fogo dos carros
   for (const f of fires) {
@@ -2482,7 +2530,9 @@ let _mmT = 0;
 /* ═══════════════ AMBIENTES POR EPOCH (noite → dia → tempestade → entardecer) ═══════════════ */
 const AMBIENCES = [
   { id:"night",  sky:0x05060c, fogF:120, hS:0x4a5da8, hG:0x0b0c14, hI:.85,  dC:0xaebfff, dI:.75,  stars:true,  rain:true,  rainO:.45, storm:false, winI:.85 },
-  { id:"day",    sky:0x9dbde0, fogF:150, hS:0xe8f1ff, hG:0x6a7a92, hI:1.65, dC:0xfff0d0, dI:1.75, stars:false, rain:false, rainO:0,   storm:false, winI:.22 },
+  // a antiga fase "dia" ficava clara demais sem contexto — virou DIA DE NEVE:
+  // a claridade agora é neve (chão branco, flocos lentos, céu frio)
+  { id:"snow",   sky:0xaebcd0, fogF:110, hS:0xe8f1ff, hG:0x8a93a5, hI:1.45, dC:0xffffff, dI:1.15, stars:false, rain:true,  rainO:.9,  storm:false, winI:.4, snow:true },
   { id:"storm",  sky:0x080a12, fogF:88,  hS:0x39496e, hG:0x090a10, hI:.72,  dC:0x8fa5d8, dI:.55,  stars:false, rain:true,  rainO:.75, storm:true,  winI:.9 },
   { id:"sunset", sky:0x321a2c, fogF:110, hS:0xe08a58, hG:0x180e1a, hI:.95,  dC:0xff9a5c, dI:1.05, stars:false, rain:false, rainO:0,   storm:false, winI:.6 }
 ];
@@ -2498,6 +2548,17 @@ function applyAmbience(n) {
   dirLight.intensity = AMB.dI;
   starsMesh.visible = AMB.stars;
   rain.p.material.opacity = AMB.rainO;
+  // neve: flocos brancos grandes; chuva: gotas finas azuladas
+  rain.p.material.color.setHex(AMB.snow ? 0xffffff : 0x9db4d8);
+  rain.p.material.size = AMB.snow ? .32 : .09;
+  // chão nevado: emissive clareia asfalto/calçada; base molhada vira gelo
+  if (window._envRoad) {
+    window._envRoad.material.emissive.setHex(AMB.snow ? 0xaeb6c2 : 0x000000);
+    window._envRoad.material.emissiveIntensity = AMB.snow ? .55 : 0;
+  }
+  if (window._envGround) {
+    window._envGround.material.color.setHex(AMB.snow ? 0x9aa4b2 : 0x0b0d14);
+  }
   // janelas dos prédios: acesas à noite, quase apagadas de dia
   for (const b of buildings) {
     const mats = b.userData.fadeMats || [];
@@ -3289,7 +3350,8 @@ addEventListener("resize", () => {
 
 /* ── boot ── */
 window._dbg = { G, scene, camera, renderer, hunters, buildings, colliders, fieldBlocks, fieldWeapons, fieldItems, player, MODELS,
-  mountVehicle, unmountVehicle, equipWeapon, vehicleModel, weaponModel, doAttack, spawnHunter, startDash, stopDash };
+  mountVehicle, unmountVehicle, equipWeapon, vehicleModel, weaponModel, doAttack, spawnHunter, startDash, stopDash,
+  trafficLights, startEpoch };
 applyStaticI18n();
 showTitle();
 const loadTag = document.getElementById("loadTag");
