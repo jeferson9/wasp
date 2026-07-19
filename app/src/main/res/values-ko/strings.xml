@@ -151,4 +151,12 @@
     <string name="toast_translate_error">번역을 시작할 수 없습니다</string>
     <string name="toast_no_page_translate">번역할 페이지가 없습니다</string>
     <string name="link_cant_open">이 링크를 열 수 없습니다</string>
+    <string name="about_title">Wasp 정보</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">패키지</string>
+    <string name="about_label_platform">플랫폼</string>
+    <string name="about_label_browser_engine">브라우저 엔진</string>
+    <string name="about_label_mining_engine">채굴 엔진</string>
+    <string name="about_section_engines">엔진</string>
+    <string name="about_footer">모든 권리 보유</string>
 </resources>

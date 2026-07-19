@@ -130,7 +130,13 @@
     <string name="notif_mining_title">Майнінг NACKL</string>
     <string name="notif_mining_active">Майнінг активний</string>
     <string name="about_title">Про Wasp</string>
-    <string name="about_subtitle">Wasp Browser початкова версія</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">Пакет</string>
+    <string name="about_label_platform">Платформа</string>
+    <string name="about_label_browser_engine">Рушій браузера</string>
+    <string name="about_label_mining_engine">Рушій майнінгу</string>
+    <string name="about_section_engines">Рушії</string>
+    <string name="about_footer">Усі права захищено</string>
     <string name="nav_back">Назад</string>
     <string name="nav_home">Головна</string>
     <string name="nav_menu">Меню</string>

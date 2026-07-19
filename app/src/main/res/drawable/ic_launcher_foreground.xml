@@ -7,14 +7,21 @@
 
     <!-- Fundo transparente — o background já é preto -->
 
-    <!-- Círculo amarelo com padding seguro (safe zone: 12dp cada lado) -->
+    <!-- Círculo amarelo DENTRO da safe zone real do adaptive icon: só o
+         círculo central de 66dp (de 108) é garantido — qualquer coisa maior
+         é cortada pela máscara do launcher (círculo/squircle), o que deixava
+         o ícone "quebrado". Diâmetro 62 < 66. -->
     <path
         android:fillColor="#FFC107"
-        android:pathData="M54,14a40,40 0 1,0 0.001,0Z"/>
+        android:pathData="M54,23a31,31 0 1,0 0.001,0Z"/>
 
-    <!-- W branco centralizado dentro do círculo -->
+    <!-- W branco em traço único (stroke): nunca se distorce -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M31,40 L41,72 L54,51 L67,72 L77,40 L69,40 L62,62 L54,46 L46,62 L39,40 Z"/>
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M35,42 L44.5,70 L54,51.5 L63.5,70 L73,42"/>
 
 </vector>

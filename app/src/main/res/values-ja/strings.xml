@@ -151,4 +151,12 @@
     <string name="toast_translate_error">翻訳を開始できませんでした</string>
     <string name="toast_no_page_translate">翻訳するページがありません</string>
     <string name="link_cant_open">このリンクを開けませんでした</string>
+    <string name="about_title">Wasp について</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">パッケージ</string>
+    <string name="about_label_platform">プラットフォーム</string>
+    <string name="about_label_browser_engine">ブラウザエンジン</string>
+    <string name="about_label_mining_engine">マイニングエンジン</string>
+    <string name="about_section_engines">エンジン</string>
+    <string name="about_footer">全著作権所有</string>
 </resources>

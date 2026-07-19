@@ -41,6 +41,13 @@ class BeeBridge(
     }
 
     @JavascriptInterface
+    fun openAbout() {
+        (context as? MainActivity)?.runOnUiThread {
+            context.startActivity(android.content.Intent(context, AboutActivity::class.java))
+        }
+    }
+
+    @JavascriptInterface
     fun getMiningStatus(): String {
         val bgActive = BeeBackgroundService.isActive(context)
         val beeActive = context

@@ -33,6 +33,23 @@
     } catch(e) { return false; }
   }
 
+  // Bônus de boas-vindas: 30 WP uma única vez, na 1ª conexão da carteira,
+  // para o usuário já poder iniciar a mineração (custa 5 WP/sessão → 6 sessões).
+  function grantWelcomeBonus() {
+    try {
+      if (localStorage.getItem("wasp_welcome_bonus") === "1") return false;
+      var cur = getWP();
+      localStorage.setItem(KEY_WP, String(cur + 30));
+      localStorage.setItem("wasp_welcome_bonus", "1");
+      var hist = [];
+      try { hist = JSON.parse(localStorage.getItem(KEY_WP_HISTORY) || "[]"); } catch(_) {}
+      hist.unshift("[" + new Date().toLocaleString("en-US") + "] +30 WP • Welcome bonus");
+      localStorage.setItem(KEY_WP_HISTORY, JSON.stringify(hist.slice(0, 100)));
+      updateWpDisplay();
+      return true;
+    } catch(e) { return false; }
+  }
+
   function updateWpDisplay() {
     var el = document.getElementById("wpBalanceBee");
     if (el) el.textContent = getWP() + " WP";
@@ -72,7 +89,7 @@
   var dotStatus, txtTitle, txtDesc;
   var switchSub, miningSwitch;
   var mEngine, mCycles, mUptime, mWallet;
-  var setupCard, walletInput, btnSetup, btnOpenAgain, btnReset;
+  var setupCard, walletInput, btnSetup, btnOpenAgain, btnReset, hdrLogout;
   var tapSection, btnTap;
   var logBox;
   var n1, n2, n3, n4;
@@ -94,6 +111,7 @@
     btnSetup     = byId("btnSetup");
     btnOpenAgain = byId("btnOpenWalletAgain");
     btnReset     = byId("btnReset");
+    hdrLogout    = byId("hdrLogout");
     tapSection   = byId("tapSection");
     btnTap       = byId("btnTap");
     logBox       = byId("logBox");
@@ -185,6 +203,23 @@
     try {
       if (window.AndroidBee && window.AndroidBee.toast) window.AndroidBee.toast(msg);
     } catch (_) {}
+  }
+  // Toast traduzido pelo dicionário do assistente (window.asstText). Usa a chave
+  // como fallback se o i18n não estiver disponível.
+  function ttoast(key) { toast((window.asstText && window.asstText(key)) || key); }
+
+  // Wasp Assistente — mensagem amigável do andamento da participação (efeito
+  // de digitação, definido no index.html). Não substitui o log() técnico, que
+  // continua indo para o console para depuração.
+  function assistant(key, vars) {
+    try { if (window.waspAssistant) window.waspAssistant.say(key, vars); } catch (_) {}
+  }
+  // Linha "pensando" viva (contador de taps em tempo real) e seu encerramento.
+  function assistantThink(key, vars) {
+    try { if (window.waspAssistant) window.waspAssistant.think(key, vars); } catch (_) {}
+  }
+  function assistantDone() {
+    try { if (window.waspAssistant) window.waspAssistant.doneThinking(); } catch (_) {}
   }
 
   function openDeepLink(url) {
@@ -464,6 +499,7 @@
       setStatus("on", (window.bt?bt("bee_ready"):"Bee ready ✅"), (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
       if (btnReset)     btnReset.classList.remove("hidden");
+      if (hdrLogout)    hdrLogout.classList.remove("hidden");
       if (miningSwitch) miningSwitch.disabled = false;
       var _wpNow = getWP();
       if (switchSub) switchSub.textContent = _wpNow >= WP_MINING_COST
@@ -471,6 +507,7 @@
         : (window.bt?bt("sw_need_wp"):"Need {n} WP to start").replace("{n}", WP_MINING_COST) + " (" + _wpNow + " WP)";
       updateWpDisplay();
       setStep(5);
+      assistant("ready");
       log("Session restored: " + saved.walletName, "lok");
       // Mostra botão de mineração em segundo plano nativo
       try { if (window._updateBgMiningCard) window._updateBgMiningCard(); } catch(_) {}
@@ -493,6 +530,7 @@
       if (walletInput && saved.walletName) walletInput.value = saved.walletName;
       if (miningSwitch) { miningSwitch.checked = false; miningSwitch.disabled = true; }
       setStep(1);
+      assistant("setup_needed");
       // Mostra aviso Mambaboard na primeira vez (antes de configurar wallet)
       try {
         var mambaDismissed = localStorage.getItem("wasp_mamba_dismissed");
@@ -544,7 +582,7 @@
     if (setupRunning) return;
     if (!wasmReady) {
       log("SDK not yet loaded — please wait", "lwrn");
-      toast("Aguarde o SDK carregar...");
+      ttoast("toast_wait_sdk");
       return;
     }
     var walletName = walletInput ? walletInput.value.trim() : "";
@@ -562,6 +600,7 @@
 
     try {
       setStep(2);
+      assistant("wallet_setup");
       setStatus("warn", window.bt?bt("log_gen_keys"):"Generating keys...", window.bt?bt("step_gen_keys_desc"):"Creating mining identity");
       log(window.bt?bt("log_gen_keys"):"Generating mining keys...", "linf");
 
@@ -598,6 +637,11 @@
       setStatus("warn", window.bt?bt("log_opening_wallet"):"Opening AN Wallet...", window.bt?bt("step_authorize_desc"):"Confirm key registration");
       openDeepLink(rawDeepLink);
 
+      // CRÍTICO: transforma o botão em "Já autorizei — continuar" ligado ao
+      // confirmAuthorization. Sem este bloco (foi removido por engano), o
+      // usuário novo volta da AN Wallet e NÃO tem como completar a autorização
+      // → minerAddress nunca é buscado, as chaves nunca propagam e o reward
+      // nunca cai (rewards pagos = 0). É o coração do setup.
       if (btnSetup) {
         btnSetup.disabled = false;
         btnSetup.textContent = window.bt?bt("sw_authorized"):"✅ Already authorized — continue";
@@ -605,6 +649,7 @@
       }
       if (btnOpenAgain) btnOpenAgain.classList.remove("hidden");
       if (btnReset)     btnReset.classList.remove("hidden");
+      if (hdrLogout)    hdrLogout.classList.remove("hidden");
       setStatus("warn", window.bt?bt("step_wait_blockchain"):"Waiting for confirmation", window.bt?bt("log_confirm_wallet"):"Authorize on AN Wallet and tap continue");
       log(window.bt?bt("log_confirm_wallet"):"Confirm on AN Wallet and return here", "lwrn");
 
@@ -657,6 +702,11 @@
 
       // Libera o usuário imediatamente — propagação roda em background
       saved.authorized = true; saveSaved();
+      assistant("authorized");
+      // Bônus de boas-vindas (30 WP, 1×) — já dá pra iniciar a mineração.
+      // Sem toast aqui (evita empilhar com o "Bee Engine authorized"); o aviso
+      // fica só no Wasp Assistente.
+      if (grantWelcomeBonus()) { assistant("welcome_bonus"); }
       try { if (window._updateBgMiningCard) window._updateBgMiningCard(); } catch(_) {}
       setStatus("on", (window.bt?bt("bee_authorized"):"Bee authorized ✅"), (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
       if (setupCard)    setupCard.classList.add("hidden");
@@ -670,7 +720,7 @@
       log(window.bt?bt("log_bee_authorized"):"Bee authorized! Turn on mining.", "lok");
       // TEMP: aviso de Mambaboard desativado a pedido do usuário
       // log(window.bt?bt("log_mambaboard_warning"):"⚠️ Activate Mambaboard to receive rewards.", "lwrn");
-      toast("Bee Engine authorized! ✅");
+      // (toast removido — o Wasp Assistente já avisa "Carteira conectada" traduzido)
 
       // Propagação em background — não bloqueia o usuário
       // O SDK faz o poll internamente com max_attempts=60 e interval_ms=3000 (~3 min total)
@@ -692,12 +742,14 @@
           log("Mining works anyway — propagation confirms automatically.", "linf");
         });
       }
-      // TEMP: aviso Mambaboard desativado temporariamente
-      // try {
-      //   var dismissed = localStorage.getItem("wasp_mamba_dismissed");
-      //   var mambaCard = document.getElementById("mambaCard");
-      //   if (mambaCard && !dismissed) mambaCard.classList.remove("hidden");
-      // } catch(_) {}
+      // Aviso Mambaboard: obrigatório só para quem é NOVO na rede Acki Nacki
+      // (quem já ativou antes não precisa repetir — por isso some ao clicar
+      // "Já ativei" e fica marcado em wasp_mamba_dismissed).
+      try {
+        var dismissed = localStorage.getItem("wasp_mamba_dismissed");
+        var mambaCard = document.getElementById("mambaCard");
+        if (mambaCard && !dismissed) mambaCard.classList.remove("hidden");
+      } catch(_) {}
 
     } catch (e) {
       var em2 = e && e.message ? e.message : String(e);
@@ -765,6 +817,7 @@
       log(window.bt?bt("log_first_mining"):"🔑 First mining: confirming key registration...", "lwrn");
       setStatus("warn", window.bt?bt("sw_registering"):"Registering keys...", window.bt?bt("step_wait_blockchain_desc"):"Waiting for network confirmation (may take ~1 min)");
       if (switchSub) switchSub.textContent = window.bt?bt("sw_registering"):"Registering keys on network...";
+      assistant("registering_keys");
       if (miningSwitch) miningSwitch.checked = true; // mantém intenção do usuário
       try {
         await window.BeeSDK.ensure_mining_keys_propagated({
@@ -777,6 +830,7 @@
         });
         saved.propagated = true; saveSaved();
         log(window.bt?bt("log_keys_confirmed"):"✅ Keys confirmed! Reward will arrive.", "lok");
+        assistant("keys_confirmed");
         var dp = byId("dPropagated"); if (dp) dp.textContent = window.bt?bt("sw_confirmed"):"✅ Confirmed";
       } catch (e) {
         log(window.bt?bt("log_prop_not_confirmed_start"):"⚠️ Propagation not confirmed after ~2 min. Starting anyway.", "lwrn");
@@ -800,6 +854,28 @@
       if (switchSub) switchSub.textContent = (window.bt?bt("sw_need_wp"):"Need {n} WP").replace("{n}",WP_MINING_COST);
       setStatus("err", window.bt?bt("log_insufficient_wp"):"Insufficient WP", (window.bt?bt("btn_earn_wp"):"Earn WP") + " · WP Central");
       log((window.bt?bt("log_insufficient_wp"):"❌ Insufficient WP.") + " Balance: " + wp + " / Required: " + WP_MINING_COST, "lerr");
+      assistant("low_wp");
+      // ── Coleta as recompensas "em trânsito" mesmo SEM WP ──────────────────
+      // Resgatar (get_reward) NÃO custa WP — só iniciar época custa. Como não
+      // haverá nova época para disparar o claim das últimas recompensas que
+      // ainda estão finalizando, marcamos pendente (resgate ao voltar ao app)
+      // e agendamos tentativas de claim-only enquanto o painel estiver aberto.
+      if (saved.minerAddress && saved.publicKey && saved.secretKey) {
+        try { localStorage.setItem("wasp_pending_reward", "1"); } catch(_) {}
+        if (!window._tailClaimScheduled) {
+          window._tailClaimScheduled = true;
+          assistant("tail_claim");
+          [90000, 300000].forEach(function(delay) {
+            setTimeout(function() {
+              if (!mining && !claiming && localStorage.getItem("wasp_pending_reward") === "1") {
+                tryClaimPendingReward(function() { window._tailClaimScheduled = false; });
+              } else {
+                window._tailClaimScheduled = false;
+              }
+            }, delay);
+          });
+        }
+      }
       updateWpDisplay();
       return;
     }
@@ -818,6 +894,7 @@
     // Reseta taps e incrementa epoch a cada novo inicio
     window._tapCount = 0;
     window._epochCount = (window._epochCount || 0) + 1;
+    assistant("starting");
     try {
       setStatus("warn", window.bt?bt("sw_mining"):"Mining NACKL ⚡", window.bt?bt("please_wait"):"Initializing session");
 
@@ -903,6 +980,7 @@
         // Nó instável — reembolsa WP e tenta novamente em 60s sem desistir
         log(window.bt?bt("log_unstable_node"):"⚠️ Unstable node — retrying in 60s...", "lwrn");
         setStatus("warn", "Unstable node — reconnecting...", "Next attempt in 60s");
+        assistant("error");
         miner = null;
         refundSessionWP("unstable node");
         setTimeout(function() {
@@ -922,6 +1000,7 @@
   function doStartMiner() {
     var lastEventTime = Date.now();
     var epochDone = false; // flag para evitar duplo handleEpochEnd
+    window._tailClaimScheduled = false; // nova época rodando: libera novo agendamento de tail-claim
 
     // Watchdog: reinicia se ficar 90s sem eventos (aumentado — rede pode ser lenta)
     if (window._watchdogTimer) clearInterval(window._watchdogTimer);
@@ -985,7 +1064,8 @@
             } catch(_) {}
             var el = byId("mReward"); if (el) el.textContent = window.bt?bt("sw_sent"):"Sent ✅";
             updateMetrics();
-            toast("Reward NACKL enviado! ✅");
+            assistant("reward_sent");
+            ttoast("toast_reward_sent");
             try { claimMiner.stop(); } catch(_) {}
             claiming = false;
             resolve();
@@ -1002,7 +1082,7 @@
                 log(window.bt?bt("log_reauth_needed"):"⚠️ Keys not registered — tap Reauthorize.", "lerr");
                 setStatus("err", "Reauthorize on AN Wallet", "Mining keys not propagated — tap Reauthorize");
                 showReauthPrompt();
-                toast("Reauthorize mining keys on AN Wallet");
+                ttoast("toast_reauth");
               }
               try { claimMiner.stop(); } catch(_) {}
               claiming = false;
@@ -1057,6 +1137,8 @@
       setStatus("warn", "Coletando reward...", "Aguardando slashing period (~16s)");
       if (switchSub) switchSub.textContent = window.bt?bt("sw_collecting"):"Collecting reward...";
       if (tapSection) tapSection.classList.add("hidden");
+      assistantDone();
+      assistant("epoch_end");
       notifyMiningStatus();
 
       // Slashing period: aguardar ~16s antes do claim.
@@ -1091,6 +1173,7 @@
       function scheduleRestart() {
         setStatus("warn", "Waiting for next epoch...", "Reiniciando em ~30s");
         if (switchSub) switchSub.textContent = window.bt?bt("sw_next_epoch"):"Waiting for next epoch...";
+        assistant("waiting");
         setTimeout(function() {
           if (miningSwitch && miningSwitch.checked) startMining();
         }, 30000);
@@ -1104,6 +1187,11 @@
       epochDone = true;
       handleEpochEnd(reason || "bgpump");
     };
+    // Cancela o epoch sem tratá-lo como concluído. Usado no stop manual: o
+    // miner.stop() emite um evento final (session_end/done) que, sem isto,
+    // dispararia handleEpochEnd → "ciclo concluído/preparando recompensa"
+    // mesmo o usuário tendo desligado no meio (e com poucos taps não cai nada).
+    window._cancelEpoch = function() { epochDone = true; };
     window._pendingClaim = null; // limpa claim pendente de epoch anterior
 
     miner.start(MINING_DURATION_MS, function(event) {
@@ -1144,7 +1232,12 @@
     setStatus("on", "Mining NACKL ⚡", (window.bt?bt("status_wallet"):"Wallet: ") + saved.walletName);
     updateMetrics();
     log(window.bt?bt("log_mining_started"):"✅ Mining started — epoch active", "lok");
-    toast("NACKL Mining started! ⚡");
+    assistant("participating");
+    // Aviso do warm-up: só no início de uma sessão nova (usuário ligou / autostart /
+    // segundo plano), não nas continuações entre épocas. Explica que a 1ª recompensa
+    // leva ~2 ciclos e que em regime é 1:1 — evita a sensação de "minerei 3 pra cair 1".
+    if (window._newSession) { window._newSession = false; assistant("warmup"); }
+    ttoast("toast_mining_started");
 
     // ─── AUTO-TAP ────────────────────────────────────────────────────────
     // 80 taps por epoch de 5 min = 1 tap a cada ~3.75s
@@ -1153,15 +1246,21 @@
     var autoTapCount = 0;
     var AUTO_TAP_TOTAL = 80;
     var AUTO_TAP_INTERVAL = Math.floor(MINING_DURATION_MS / AUTO_TAP_TOTAL); // ~3750ms
+    // Wasp Assistente: anuncia a conversão e já liga o contador vivo (linha
+    // "pensando"), pra não parecer parado entre os marcos de 10 taps.
+    assistant("converting");
+    assistantThink("counting", { n: 0, total: AUTO_TAP_TOTAL });
     window._autoTapTimer = setInterval(async function() {
       if (!mining || !miner) {
         clearInterval(window._autoTapTimer);
         window._autoTapTimer = null;
+        assistantDone();
         return;
       }
       if (autoTapCount >= AUTO_TAP_TOTAL) {
         clearInterval(window._autoTapTimer);
         window._autoTapTimer = null;
+        assistantDone();
         return;
       }
       try {
@@ -1171,8 +1270,11 @@
         );
         autoTapCount++;
         window._tapCount = (window._tapCount || 0) + 1;
+        // Contador vivo a cada tap — mantém o assistente "pensando".
+        assistantThink("counting", { n: autoTapCount, total: AUTO_TAP_TOTAL });
         if (autoTapCount % 10 === 0) {
           log("◈ Syncing with network... " + autoTapCount + "/" + AUTO_TAP_TOTAL, "linf");
+          assistant("taps_done", { n: autoTapCount });
         }
         // Animar botão TAP visualmente
         if (window._tapBtnAnim) window._tapBtnAnim();
@@ -1205,6 +1307,9 @@
     // mineração (debitando WP) mesmo com o usuário tendo desligado.
     if (window._epochTimer)    { clearTimeout(window._epochTimer);     window._epochTimer    = null; }
     window._pendingClaim = null;
+    // Marca o epoch como cancelado ANTES do stop — assim o evento final do
+    // miner.stop() não é interpretado como "ciclo concluído".
+    if (window._cancelEpoch) window._cancelEpoch();
     try { if (miner) miner.stop(); } catch(_) {}
     miner = null; mining = false; sessionStart = null; stopUptimeTimer();
     if (tapSection) tapSection.classList.add("hidden");
@@ -1212,6 +1317,8 @@
     setStatus("on", (window.bt?bt("bee_ready"):"Bee ready"), (window.bt?bt("mining_paused"):"Mining paused"));
     notifyMiningStatus();
     updateMetrics();
+    assistantDone();
+    assistant("paused");
     log(window.bt?bt("log_mining_paused"):"Mining paused.", "lwrn");
   }
 
@@ -1239,6 +1346,7 @@
       saved.firstTapDone = true; saveSaved();
       var ftc = byId("firstTapCard"); if (ftc) ftc.classList.add("hidden");
       log("✅ Protocol started!", "lok");
+      window._newSession = true;
       await startMining();
     } catch(e) { log("Erro no primeiro tap: " + e.message, "lerr"); }
   }
@@ -1248,7 +1356,7 @@
   // sem apagar a sessão. Resolve o caso "rewards não caem após reconectar":
   // as chaves locais existem mas não estão propagadas na blockchain/wallet.
   async function reauthorizeKeys() {
-    if (!wasmReady) { toast("Aguarde o SDK carregar..."); return; }
+    if (!wasmReady) { ttoast("toast_wait_sdk"); return; }
     if (!saved.walletName || !saved.publicKey || !saved.secretKey) {
       log("No local keys to reauthorize — complete the full setup.", "lerr");
       doReset();
@@ -1263,7 +1371,7 @@
         walletName: saved.walletName
       });
       openDeepLink(link);
-      toast("Confirm your mining keys on AN Wallet");
+      ttoast("toast_confirm_keys");
       // Após reautorizar, tenta reconfirmar a propagação em background.
       saved.propagated = false; saveSaved();
       _propagateAttempts = 0;
@@ -1291,21 +1399,55 @@
     } catch(_) {}
   }
 
-  // ─── RESET ───────────────────────────────────────────────────────────────
+  // ─── RESET / LOGOUT ────────────────────────────────────────────────────────
+  // window.confirm() NÃO funciona na WebView do painel (sem WebChromeClient),
+  // por isso usamos um diálogo próprio (beeConfirm). doReset apenas pergunta;
+  // doResetNow executa de fato.
   function doReset() {
-    if (!window.confirm("Reset Bee Engine? Keys will be deleted.")) return;
+    beeConfirm(
+      window.asstText ? window.asstText("logout_confirm") : "Disconnect this wallet? Your mining keys will be removed from this device.",
+      doResetNow
+    );
+  }
+  function doResetNow() {
     stopMining(); clearSaved(); rawDeepLink = null; cycles = 0;
     if (walletInput)   walletInput.value = "";
     if (setupCard)     setupCard.classList.remove("hidden");
     if (btnOpenAgain)  btnOpenAgain.classList.add("hidden");
     if (btnReset)      btnReset.classList.add("hidden");
-    if (btnSetup)      { btnSetup.disabled = false; btnSetup.textContent = "Start setup"; btnSetup.onclick = runSetup; }
+    if (hdrLogout)     hdrLogout.classList.add("hidden");
+    if (btnSetup)      { btnSetup.disabled = false; btnSetup.textContent = window.bt?bt("btn_start_setup"):"Start setup"; btnSetup.onclick = runSetup; }
     if (miningSwitch)  { miningSwitch.checked = false; miningSwitch.disabled = true; }
     if (tapSection)    tapSection.classList.add("hidden");
     var ftc = byId("firstTapCard"); if (ftc) ftc.classList.add("hidden");
-    if (switchSub) switchSub.textContent = "Setup required";
-    setStep(1); setStatus("warn", "Reset done", "Configure again");
-    updateMetrics(); log("Setup reset.", "lwrn");
+    if (switchSub) switchSub.textContent = window.bt?bt("setup_required"):"Setup required";
+    setStep(1); setStatus("warn", window.bt?bt("configure_bee"):"Configure Bee Engine", window.bt?bt("wallet_name_desc"):"Configure again");
+    updateMetrics(); log("Wallet disconnected / setup reset.", "lwrn");
+  }
+
+  // Diálogo de confirmação próprio (não depende de window.confirm/WebChromeClient).
+  function beeConfirm(message, onYes) {
+    var ov = byId("beeConfirmOverlay");
+    if (!ov) {
+      ov = document.createElement("div");
+      ov.id = "beeConfirmOverlay";
+      ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:rgba(3,4,9,.72);display:flex;align-items:center;justify-content:center;padding:24px;";
+      ov.innerHTML =
+        '<div style="width:100%;max-width:360px;background:#12141f;border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);">' +
+          '<div id="beeConfirmMsg" style="font-size:14px;line-height:1.5;color:#e8ecf5;margin-bottom:18px;"></div>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button id="beeConfirmNo" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#c8d0e0;font-size:13px;font-weight:700;cursor:pointer;"></button>' +
+            '<button id="beeConfirmYes" style="flex:1;padding:11px;border-radius:10px;border:none;background:#ff5f57;color:#fff;font-size:13px;font-weight:800;cursor:pointer;"></button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(ov);
+    }
+    byId("beeConfirmMsg").textContent = message;
+    byId("beeConfirmNo").textContent  = window.asstText ? window.asstText("btn_cancel")  : "Cancel";
+    byId("beeConfirmYes").textContent = window.asstText ? window.asstText("btn_confirm") : "Disconnect";
+    ov.style.display = "flex";
+    byId("beeConfirmNo").onclick  = function(){ ov.style.display = "none"; };
+    byId("beeConfirmYes").onclick = function(){ ov.style.display = "none"; try { onYes && onYes(); } catch(_){} };
   }
 
   // ─── DIAGNÓSTICO ─────────────────────────────────────────────────────────
@@ -1413,6 +1555,7 @@
         ENDPOINTS, APP_ID, saved.minerAddress, saved.publicKey, saved.secretKey
       );
       log("Verificando reward pendente...", "linf");
+      assistant("pending_check");
       // Timeout: se o get_reward() do tmpMiner nunca resolver (sessão
       // conflitada/rede), NÃO pode segurar claiming=true eternamente.
       await Promise.race([
@@ -1422,7 +1565,8 @@
         })
       ]);
       log("get_reward (resume): executed ✅ -- check your AN Wallet", "lok");
-      toast("Pending reward sent to wallet ✅");
+      assistant("pending_sent");
+      // (toast removido — o assistente já mostra "Recompensa pendente enviada" traduzido)
       try { localStorage.removeItem("wasp_pending_reward"); } catch(_) {}
       var el = byId("mReward"); if (el) el.textContent = "Sent ✅";
     } catch(e) {
@@ -1460,6 +1604,7 @@
             return;
           }
           // autoMine removido
+          window._newSession = true; // início de sessão (usuário ligou) → aviso do warm-up
           startMining();
         } else {
           // Desligar a participação também desliga o segundo plano — a mineração
@@ -1471,6 +1616,7 @@
     }
     if (btnSetup)     btnSetup.onclick = runSetup;
     if (btnReset)     btnReset.addEventListener("click", doReset);
+    if (hdrLogout)    hdrLogout.addEventListener("click", doReset);
     if (btnTap)       btnTap.addEventListener("click", sendTap);
     var ftb = byId("btnFirstTap");
     if (ftb) ftb.addEventListener("click", doFirstTap);
@@ -1504,6 +1650,7 @@
     updateWpDisplay(); // Mostra saldo WP ao abrir o painel
     bindEvents();
     setStep(1);
+    assistant("greeting");
     // Pequeno delay para garantir que o DOM e a bridge estão prontos
     setTimeout(loadSdk, 400);
   }
@@ -1535,7 +1682,7 @@
   window.enableBackgroundParticipation = function() {
     try {
       if (!saved.authorized || !saved.minerAddress) {
-        toast("Configure e autorize o Bee Engine primeiro.");
+        ttoast("toast_setup_first");
         return false;
       }
       // Garante que a participação (foreground) está ligada — é ela que minera.
@@ -1545,12 +1692,14 @@
           return false;
         }
         if (miningSwitch) miningSwitch.checked = true;
+        window._newSession = true;
         startMining();
       }
       window._bgParticipation = true;
       if (window.AndroidBee && window.AndroidBee.enableBackgroundMining) {
         window.AndroidBee.enableBackgroundMining(saved.walletName || "");
       }
+      assistant("bg_on");
       log("⚡ Participação em segundo plano ligada — pode minimizar/apagar a tela.", "lok");
       return true;
     } catch (e) {
@@ -1639,6 +1788,7 @@
         window.enableBackgroundParticipation();
       } else {
         if (miningSwitch) miningSwitch.checked = true;
+        window._newSession = true;
         startMining();
       }
     } catch (e) { log("Autostart erro: " + (e.message || String(e)), "lwrn"); }

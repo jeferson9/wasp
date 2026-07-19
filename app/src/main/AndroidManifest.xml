@@ -108,7 +108,6 @@
         <activity android:name=".Web3Activity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
         <activity android:name=".AboutActivity" android:exported="false" />
-        <activity android:name=".WaspSecureMode" android:exported="false" />
 
         <service
             android:name=".BeeBackgroundService"

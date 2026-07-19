@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+/src
+app/src.zip
+.claude/

@@ -124,6 +124,15 @@ class SettingsActivity : AppCompatActivity() {
             clickable = false
         ) {})
 
+        content.addView(settingsRow(
+            title = getString(R.string.settings_about),
+            emoji = "🐝"
+        ) {
+            startActivity(android.content.Intent(this, AboutActivity::class.java))
+            @Suppress("DEPRECATION")
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+        })
+
         root.addView(content)
         setContentView(root)
 

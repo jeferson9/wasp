@@ -151,4 +151,12 @@
     <string name="toast_translate_error">अनुवाद शुरू नहीं हो सका</string>
     <string name="toast_no_page_translate">अनुवाद के लिए कोई पृष्ठ नहीं</string>
     <string name="link_cant_open">यह लिंक नहीं खुल सका</string>
+    <string name="about_title">Wasp के बारे में</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">पैकेज</string>
+    <string name="about_label_platform">प्लेटफ़ॉर्म</string>
+    <string name="about_label_browser_engine">ब्राउज़र इंजन</string>
+    <string name="about_label_mining_engine">माइनिंग इंजन</string>
+    <string name="about_section_engines">इंजन</string>
+    <string name="about_footer">सर्वाधिकार सुरक्षित</string>
 </resources>

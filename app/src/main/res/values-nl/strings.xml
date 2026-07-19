@@ -151,4 +151,12 @@
     <string name="toast_translate_error">Vertaling kon niet worden gestart</string>
     <string name="toast_no_page_translate">Geen pagina om te vertalen</string>
     <string name="link_cant_open">Kon deze link niet openen</string>
+    <string name="about_title">Over Wasp</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">Pakket</string>
+    <string name="about_label_platform">Platform</string>
+    <string name="about_label_browser_engine">Browserengine</string>
+    <string name="about_label_mining_engine">Mining-engine</string>
+    <string name="about_section_engines">Engines</string>
+    <string name="about_footer">Alle rechten voorbehouden</string>
 </resources>

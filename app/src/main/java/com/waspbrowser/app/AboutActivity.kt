@@ -30,6 +30,9 @@ class AboutActivity : AppCompatActivity() {
         wv.loadDataWithBaseURL(null, buildHtml(version), "text/html", "UTF-8", null)
     }
 
+    // getString() aqui já reflete o idioma escolhido pelo usuário — o mesmo
+    // locale aplicado via AppCompatDelegate.setApplicationLocales() no
+    // SettingsActivity recria o Context desta Activity com os recursos certos.
     private fun buildHtml(version: String) = """
 <!DOCTYPE html>
 <html>
@@ -111,48 +114,52 @@ class AboutActivity : AppCompatActivity() {
   <div class="logo">🐝</div>
   <div class="app-name">WASP Browser</div>
 </div>
-<div class="app-sub">Web3 · Mining · Privacy</div>
+<div class="app-sub">${getString(R.string.about_subtitle)}</div>
 
 <p class="desc">
-  Browser Web3 com mineração NACKL integrada. 
+  Browser Web3 com mineração NACKL integrada.
   Navegue, mine e acumule Wasp Points enquanto usa a internet.
 </p>
 
-<div class="section-title">Informações</div>
+<div class="section-title">${getString(R.string.settings_section_about)}</div>
 <div class="card">
   <div class="info-row">
-    <span class="info-label">Versão</span>
+    <span class="info-label">${getString(R.string.settings_version)}</span>
     <span class="info-value amber">$version</span>
   </div>
   <div class="info-row">
-    <span class="info-label">Package</span>
+    <span class="info-label">${getString(R.string.about_label_package)}</span>
     <span class="info-value">com.waspbrowser.app</span>
   </div>
   <div class="info-row">
-    <span class="info-label">Plataforma</span>
+    <span class="info-label">${getString(R.string.about_label_platform)}</span>
     <span class="info-value">Android</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">${getString(R.string.settings_search_engine)}</span>
+    <span class="info-value">Google · Bing · DuckDuckGo</span>
   </div>
 </div>
 
-<div class="section-title">Motores</div>
+<div class="section-title">${getString(R.string.about_section_engines)}</div>
 <div class="card">
   <div class="engine-row">
     <div class="engine-icon">🦊</div>
     <div class="engine-info">
-      <div class="engine-name">Motor de Navegação</div>
-      <div class="engine-desc">GeckoView — Firefox</div>
+      <div class="engine-name">${getString(R.string.about_label_browser_engine)}</div>
+      <div class="engine-desc">GeckoView (Firefox)</div>
     </div>
   </div>
   <div class="engine-row">
     <div class="engine-icon">⛏️</div>
     <div class="engine-info">
-      <div class="engine-name">Motor de Mineração</div>
-      <div class="engine-desc">Bee Engine — Acki Nacki</div>
+      <div class="engine-name">${getString(R.string.about_label_mining_engine)}</div>
+      <div class="engine-desc">Bee Engine · SDK 3.0 (Acki Nacki)</div>
     </div>
   </div>
 </div>
 
-<div class="footer">© 2025 Wasp Browser · Todos os direitos reservados</div>
+<div class="footer">© 2026 Wasp Browser · ${getString(R.string.about_footer)}</div>
 
 </body>
 </html>

@@ -151,4 +151,12 @@
     <string name="toast_translate_error">Çeviri başlatılamadı</string>
     <string name="toast_no_page_translate">Çevrilecek sayfa yok</string>
     <string name="link_cant_open">Bu bağlantı açılamadı</string>
+    <string name="about_title">Wasp Hakkında</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">Paket</string>
+    <string name="about_label_platform">Platform</string>
+    <string name="about_label_browser_engine">Tarayıcı motoru</string>
+    <string name="about_label_mining_engine">Madencilik motoru</string>
+    <string name="about_section_engines">Motorlar</string>
+    <string name="about_footer">Tüm hakları saklıdır</string>
 </resources>

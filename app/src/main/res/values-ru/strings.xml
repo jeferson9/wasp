@@ -151,4 +151,12 @@
     <string name="toast_translate_error">Не удалось начать перевод</string>
     <string name="toast_no_page_translate">Нет страницы для перевода</string>
     <string name="link_cant_open">Не удалось открыть ссылку</string>
+    <string name="about_title">О Wasp</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">Пакет</string>
+    <string name="about_label_platform">Платформа</string>
+    <string name="about_label_browser_engine">Браузерный движок</string>
+    <string name="about_label_mining_engine">Движок майнинга</string>
+    <string name="about_section_engines">Движки</string>
+    <string name="about_footer">Все права защищены</string>
 </resources>

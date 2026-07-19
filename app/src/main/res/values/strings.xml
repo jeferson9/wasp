@@ -139,7 +139,13 @@
     <string name="notif_mining_active">Participation active in background</string>
     <string name="notif_stop">Stop</string>
     <string name="about_title">About Wasp</string>
-    <string name="about_subtitle">Wasp Browser initial version</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">Package</string>
+    <string name="about_label_platform">Platform</string>
+    <string name="about_label_browser_engine">Browser engine</string>
+    <string name="about_label_mining_engine">Mining engine</string>
+    <string name="about_section_engines">Engines</string>
+    <string name="about_footer">All rights reserved</string>
     <string name="nav_back">Back</string>
     <string name="nav_home">Home</string>
     <string name="nav_menu">Menu</string>

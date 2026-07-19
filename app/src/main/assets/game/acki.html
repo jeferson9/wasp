@@ -78,6 +78,8 @@
     .ovl.show { display:flex; }
     .ovl-card { width:min(480px,92%); max-height:92%; overflow-y:auto; text-align:center; padding:22px 26px; border-radius:22px;
         background:linear-gradient(160deg,rgba(16,20,36,.95),rgba(8,10,18,.95)); border:1px solid rgba(130,150,220,.22); box-shadow:0 20px 60px rgba(0,0,0,.6); }
+    /* Libera scroll vertical por toque dentro dos overlays (o global *{touch-action:none} bloqueava) */
+    .ovl-card, .ovl-card * { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
     .g-logo { font-size:34px; font-weight:900; font-style:italic; letter-spacing:1px; line-height:1.05;
         background:linear-gradient(90deg,#ff4b4b,#ffb35c 45%,#37d67a); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 0 18px rgba(255,80,80,.35)); }
     .g-sub { font-size:11px; letter-spacing:3px; font-weight:800; color:#8fa2c9; margin-top:4px; }
@@ -390,6 +392,11 @@ async function loadAllModels(onProgress) {
 
 (async function main() {
 /* ═══════════════ THREE.JS — CENA ═══════════════ */
+// Tempo mínimo de tela de loading: com os modelos em cache, o Promise.all de
+// loadAllModels() resolve quase tudo junto e a barra pulava de 10% pra 100%
+// quase instantâneo — parecia que "carregava só um pouco" antes do jogo abrir.
+const loadStart = performance.now();
+const MIN_LOAD_MS = 1200;
 const canvas = document.getElementById("gl");
 let renderer;
 try {
@@ -2813,6 +2820,9 @@ addEventListener("touchstart", e => {
   }
 }, { passive: false });
 addEventListener("touchmove", e => {
+  // Deixa o scroll nativo funcionar dentro de um overlay aberto (ex.: "Como jogar")
+  // — sem isto o preventDefault abaixo travava a rolagem do texto.
+  if (e.target && e.target.closest && e.target.closest(".ovl.show")) return;
   for (const t of e.changedTouches) {
     if (t.identifier === steer.id) {
       // arrastar para a direita = virar para a direita (câmera segue atrás)
@@ -3361,6 +3371,10 @@ window._dbg = { G, scene, camera, renderer, hunters, buildings, colliders, field
   trafficLights, startEpoch };
 applyStaticI18n();
 showTitle();
+// Garante que a barra visivelmente chegue a 100% antes de sumir, mesmo
+// quando o carregamento real (cache) é quase instantâneo.
+const loadElapsed = performance.now() - loadStart;
+if (loadElapsed < MIN_LOAD_MS) await new Promise(r => setTimeout(r, MIN_LOAD_MS - loadElapsed));
 const loadTag = document.getElementById("loadTag");
 if (loadTag) loadTag.style.display = "none";
 requestAnimationFrame(t => { lastT = t; tick(t); });

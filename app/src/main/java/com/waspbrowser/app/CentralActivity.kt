@@ -18,7 +18,7 @@ class CentralActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CentralActivity"
-        const val AD_COOLDOWN_MS = 5 * 60 * 1000L  // 5 min entre anúncios
+        const val AD_COOLDOWN_MS = 0L  // TESTE: sem cooldown (voltar p/ 60 * 60 * 1000L = 1h antes de publicar)
         const val AD_REWARD_WP   = 30              // WP por vídeo assistido
         // Referência à WebView ativa da Central, para callbacks de anúncio
         // (a StartioAdActivity precisa devolver o reward para o central.html,

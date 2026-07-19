@@ -142,4 +142,12 @@
     <string name="toast_translate_error">Không thể bắt đầu dịch</string>
     <string name="toast_no_page_translate">Không có trang để dịch</string>
     <string name="link_cant_open">Không thể mở liên kết này</string>
+    <string name="about_title">Giới thiệu Wasp</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">Gói ứng dụng</string>
+    <string name="about_label_platform">Nền tảng</string>
+    <string name="about_label_browser_engine">Công cụ trình duyệt</string>
+    <string name="about_label_mining_engine">Công cụ đào coin</string>
+    <string name="about_section_engines">Công cụ</string>
+    <string name="about_footer">Đã đăng ký bản quyền</string>
 </resources>

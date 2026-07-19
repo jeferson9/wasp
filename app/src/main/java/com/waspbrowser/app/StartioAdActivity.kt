@@ -2,28 +2,31 @@ package com.waspbrowser.app
 
 /*
  * ============================================================================
- *  WASP - VIDEO RECOMPENSADO (Start.io)  -  ESTADO E HISTORICO
+ *  WASP - ANUNCIOS (Start.io)  -  ESTADO E HISTORICO
  * ============================================================================
  *
- *  O QUE ESTA TELA FAZ:
- *   - Aberta pela Central WP quando o usuario toca "Assistir anuncio".
- *   - Carrega e exibe um video recompensado do Start.io (App ID 204731691).
- *   - Ao COMPLETAR o video (VideoListener -> rewarded=true), credita 30 WP
- *     via CentralActivity.grantAdReward().
+ *  TRES MODOS, DUAS REGRAS DE NEGOCIO:
+ *   - REWARDED (EXTRA_MODE == "wp"): aberta quando o usuario toca "Assistir
+ *     anuncio". O WP (30) SO e creditado se o VideoListener marcar
+ *     rewarded=true, ou seja, o video precisa ser assistido ate o fim.
+ *     O anuncio E' condicao pra ganhar aqui, de proposito.
+ *   - MODE_INTERSTITIAL_BONUS / MODE_TAP_INTERSTITIAL: o WP (quando existe,
+ *     como no bonus de 15 WP) e' creditado ANTES de abrir esta tela — o
+ *     interstitial e' so um extra exibido depois, nunca condicao pra ganhar.
+ *     Se o anuncio falhar ao carregar, a tela fecha sozinha sem afetar nada.
  *
  *  SITUACAO ATUAL:
  *   - MODO DE TESTE habilitado para garantir que o video apareca durante o
- *     desenvolvimento (setTestAdsEnabled(true)).
+ *     desenvolvimento (setTestAdsEnabled(true)). Nesse modo o Start.io serve
+ *     sempre o mesmo criativo de teste, entao rewarded e interstitial parecem
+ *     visualmente iguais em dev — em producao cada um mostra o formato real.
  *   - Overlay "Carregando video..." enquanto o SDK busca/bufferiza o criativo,
  *     para a espera nao parecer travamento (a latencia de rede do Start.io
  *     nao da para eliminar por codigo; da para deixar tolerante).
  *
- *  >>> ATENCAO ANTES DE PUBLICAR (BRECHA DE WP GRATIS) <<<
- *   O fallback AUTOMATIC abaixo credita 30 WP ao FECHAR o anuncio, SEM exigir
- *   que um video tenha sido assistido. Isso existe so para validar o fluxo em
- *   teste. EM PRODUCAO isso deixa o usuario farmar WP sem assistir nada.
- *   Antes de publicar: remover o fallback AUTOMATIC (ou so creditar quando
- *   rewarded==true) e voltar setTestAdsEnabled(false).
+ *  >>> ATENCAO ANTES DE PUBLICAR <<<
+ *   Desligar setTestAdsEnabled(true) -> false. Sem isso o app so mostra o
+ *   criativo de teste do Start.io, nunca anuncios reais.
  * ============================================================================
  */
 
@@ -56,6 +59,10 @@ class StartioAdActivity : AppCompatActivity() {
         const val APP_ID                  = "204731691"
         const val MODE_INTERSTITIAL_BONUS = "interstitial_bonus"
         const val INTERSTITIAL_BONUS_WP   = 15
+        // Interstitial "seco": sem bônus de WP, sem tela de confirmação —
+        // usado ao fechar o Tap Game após completar (a recompensa do tap já
+        // foi creditada pelo próprio jogo, este anúncio não credita nada).
+        const val MODE_TAP_INTERSTITIAL   = "tap_interstitial"
     }
 
     private val handler  = Handler(Looper.getMainLooper())
@@ -71,9 +78,29 @@ class StartioAdActivity : AppCompatActivity() {
             if (::statusText.isInitialized) statusText.text = m
         }
 
-        StartAppSDK.setTestAdsEnabled(true) // REMOVER ANTES DE PUBLICAR
+        StartAppSDK.setTestAdsEnabled(true) // MODO TESTE (voltar p/ false antes de publicar)
 
         val mode = intent.getStringExtra(EXTRA_MODE) ?: ""
+
+        if (mode == MODE_TAP_INTERSTITIAL) {
+            // ── MODO INTERSTITIAL DO TAP GAME (sem recompensa) ────────────
+            // Dispara direto, sem overlay de "assista e ganhe" e sem tela de
+            // confirmação — a recompensa dos 100 taps já caiu antes de abrir.
+            setContentView(buildLoadingOverlay(showRewardHint = false))
+            val adTap = StartAppAd(this)
+            adTap.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
+                override fun onReceiveAd(p: Ad) {
+                    adTap.showAd(object : AdDisplayListener {
+                        override fun adHidden(p0: Ad)        { safeFinish() }
+                        override fun adDisplayed(p0: Ad)     {}
+                        override fun adClicked(p0: Ad)       {}
+                        override fun adNotDisplayed(p0: Ad)  { safeFinish() }
+                    })
+                }
+                override fun onFailedToReceiveAd(p: Ad?) { safeFinish() }
+            })
+            return
+        }
 
         if (mode == MODE_INTERSTITIAL_BONUS) {
             // ── MODO INTERSTITIAL BÔNUS ───────────────────────────────────
@@ -134,8 +161,32 @@ class StartioAdActivity : AppCompatActivity() {
             }
 
             override fun onFailedToReceiveAd(p: Ad?) {
-                diag(getString(R.string.ad_none_available))
-                handler.postDelayed({ safeFinish() }, 900)
+                // Vídeo recompensado costuma ter fill baixo (app novo / região).
+                // Fallback: mostra um intersticial (que enche fácil) e credita o WP
+                // do mesmo jeito — o cooldown de 60 min já limita qualquer abuso.
+                // Sem isto, o usuário fica sem como ganhar WP e não consegue minerar.
+                diag(getString(R.string.ad_loading_video))
+                val fallback = StartAppAd(this@StartioAdActivity)
+                fallback.loadAd(StartAppAd.AdMode.AUTOMATIC, object : AdEventListener {
+                    override fun onReceiveAd(p2: Ad) {
+                        fallback.showAd(object : AdDisplayListener {
+                            override fun adHidden(p0: Ad) {
+                                CentralActivity.grantAdReward(applicationContext)
+                                safeFinish()
+                            }
+                            override fun adDisplayed(p0: Ad) {}
+                            override fun adClicked(p0: Ad) {}
+                            override fun adNotDisplayed(p0: Ad) {
+                                diag(getString(R.string.ad_none_available))
+                                handler.postDelayed({ safeFinish() }, 900)
+                            }
+                        })
+                    }
+                    override fun onFailedToReceiveAd(p2: Ad?) {
+                        diag(getString(R.string.ad_none_available))
+                        handler.postDelayed({ safeFinish() }, 900)
+                    }
+                })
             }
         })
     }

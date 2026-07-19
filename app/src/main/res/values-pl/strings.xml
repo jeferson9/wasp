@@ -151,4 +151,12 @@
     <string name="toast_translate_error">Nie można uruchomić tłumaczenia</string>
     <string name="toast_no_page_translate">Brak strony do przetłumaczenia</string>
     <string name="link_cant_open">Nie można otworzyć tego linku</string>
+    <string name="about_title">O Wasp</string>
+    <string name="about_subtitle">Web3 · Mining · Privacy</string>
+    <string name="about_label_package">Pakiet</string>
+    <string name="about_label_platform">Platforma</string>
+    <string name="about_label_browser_engine">Silnik przeglądarki</string>
+    <string name="about_label_mining_engine">Silnik kopania</string>
+    <string name="about_section_engines">Silniki</string>
+    <string name="about_footer">Wszelkie prawa zastrzeżone</string>
 </resources>

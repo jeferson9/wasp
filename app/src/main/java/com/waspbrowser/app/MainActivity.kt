@@ -77,6 +77,14 @@ class MainActivity : AppCompatActivity() {
     private fun getCurrentTab(): WaspTab? = tabs.getOrNull(activeTabIndex)
 
     private fun newTab(url: String = "") {
+        // Propositalmente NÃO desativa a aba anterior (session.setActive(false)):
+        // isso sinaliza a página como "em segundo plano" pra engine e pode
+        // congelar fluxos de login que dependem de polling em background
+        // (ex.: "aguardando confirmação no celular", QR code, magic link) —
+        // o mesmo problema de throttling que já vimos na WebView de mineração.
+        // A correção do bug de estado cruzado entre abas é feita só pelos
+        // guards `session == getActiveSession()` nos callbacks do Gecko, que
+        // não afetam a execução de nenhuma aba.
         val session = GeckoSession()
         attachGeckoDelegates(session)
         session.open(geckoRuntime!!)
@@ -88,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         sslErrorActive = false
         runOnUiThread {
             geckoView.setSession(session)
+            try { session.setActive(true) } catch (_: Exception) {}
             urlInput.visibility = View.GONE
             urlDisplay.visibility = View.VISIBLE
             urlTitle.text = ""
@@ -269,6 +278,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var geckoView: GeckoView
     private var persistentBeeView: android.webkit.WebView? = null
     private var beePanelExpanded = false
+    // true depois que o usuário colapsa o painel pelo menos uma vez — a partir
+    // daí o rodapé (com a barra de progresso do epoch) deve reaparecer sempre
+    // que voltar pro navegador, mas ficar escondido na home.
+    private var beeFooterActive = false
     private lateinit var btnBack: ImageButton
     private lateinit var btnHome: ImageButton
     private lateinit var btnMenu: ImageButton
@@ -634,7 +647,11 @@ class MainActivity : AppCompatActivity() {
             isLongClickable = true
             requestFocus(View.FOCUS_DOWN)
             setOnTouchListener { v, _ -> if (!v.hasFocus()) v.requestFocus(View.FOCUS_DOWN); false }
-            setOnLongClickListener { true } // consome long-press: impede menu de contexto nativo
+            // Sem bloqueio de long-click aqui: consumia o long-press em QUALQUER
+            // ponto da tela, impedindo Colar/Selecionar na barra de busca e em
+            // outros inputs. A proteção contra o menu nativo de "salvar imagem"
+            // nos ícones do Hive já é feita via CSS (-webkit-touch-callout:none
+            // em .hive-item), então não precisa de bloqueio no lado Android.
         }
         webAppView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: android.webkit.WebView?, url: String?, favicon: android.graphics.Bitmap?) {
@@ -807,13 +824,16 @@ class MainActivity : AppCompatActivity() {
         session.contentDelegate = object : GeckoSession.ContentDelegate {
 
             override fun onTitleChange(session: GeckoSession, title: String?) {
+                if (title.isNullOrBlank()) return
+                // Guarda o título na aba que realmente disparou o evento —
+                // não necessariamente a aba visível (ex.: uma aba em segundo
+                // plano terminando de carregar).
+                tabs.find { it.session == session }?.title = title
+                if (session != getActiveSession()) return
                 runOnUiThread {
-                    if (!title.isNullOrBlank()) {
-                        currentTitle = title
-                        tabs.getOrNull(activeTabIndex)?.title = title
-                        urlTitle.text = title
-                        if (currentUrl.isNotBlank()) urlDomain.text = getCleanDomain(currentUrl)
-                    }
+                    currentTitle = title
+                    urlTitle.text = title
+                    if (currentUrl.isNotBlank()) urlDomain.text = getCleanDomain(currentUrl)
                 }
             }
 
@@ -844,8 +864,12 @@ class MainActivity : AppCompatActivity() {
         session.progressDelegate = object : GeckoSession.ProgressDelegate {
 
             override fun onPageStart(session: GeckoSession, url: String) {
+                // Guarda a URL na aba que disparou o evento, mesmo se ela não
+                // for a aba visível — mas só mexe na UI (barra de endereço,
+                // progresso) quando é a sessão realmente ativa.
+                tabs.find { it.session == session }?.url = url
+                if (session != getActiveSession()) return
                 currentUrl = url
-                tabs.getOrNull(activeTabIndex)?.url = url
                 sslErrorActive = false
                 currentTitle = ""
                 runOnUiThread {
@@ -861,6 +885,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onProgressChange(session: GeckoSession, progress: Int) {
+                if (session != getActiveSession()) return
                 runOnUiThread {
                     if (geckoView.visibility != View.VISIBLE) return@runOnUiThread
                     pageProgress.progress = progress
@@ -869,6 +894,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onPageStop(session: GeckoSession, success: Boolean) {
+                if (session != getActiveSession()) return
                 runOnUiThread { pageProgress.visibility = View.GONE }
                 if (success && currentUrl.isNotBlank()) {
                     try {
@@ -922,11 +948,16 @@ class MainActivity : AppCompatActivity() {
                 hasUserGesture: Boolean
             ) {
                 val safeUrl = url ?: return
-                currentUrl = safeUrl
-                runOnUiThread {
-                    urlDomain.text = getCleanDomain(safeUrl)
-                    updateSecurityIcon(safeUrl)
-                    WaspTranslator.onNavigate(safeUrl) { badgeView -> updateTranslateBadge(badgeView) }
+                // Mesma lógica: a aba que navegou guarda sua própria URL;
+                // a barra de endereço só reflete a sessão ativa.
+                tabs.find { it.session == session }?.url = safeUrl
+                if (session == getActiveSession()) {
+                    currentUrl = safeUrl
+                    runOnUiThread {
+                        urlDomain.text = getCleanDomain(safeUrl)
+                        updateSecurityIcon(safeUrl)
+                        WaspTranslator.onNavigate(safeUrl) { badgeView -> updateTranslateBadge(badgeView) }
+                    }
                 }
                 finishPopupLoginIfNeeded(session, safeUrl)
             }
@@ -948,6 +979,11 @@ class MainActivity : AppCompatActivity() {
                     try {
                         try { popupSession?.close() } catch (_: Exception) {}
                         val newSession = GeckoSession()
+                        // Sem isto, a sessão nunca é anexada ao runtime: a popup troca
+                        // de tela mas fica "morta" por dentro — não carrega, não roda JS
+                        // e não consegue avisar a aba original via window.opener/postMessage.
+                        // Era exatamente isto que quebrava o connect de wallet (ex.: dex.do).
+                        newSession.open(geckoRuntime!!)
 
                         // Fecha popup quando JS chama window.close()
                         newSession.contentDelegate = object : GeckoSession.ContentDelegate {
@@ -1145,6 +1181,7 @@ class MainActivity : AppCompatActivity() {
         geckoView.visibility = View.VISIBLE
         topBar.alpha = 0f
         topBar.visibility = View.VISIBLE
+        updateBeeFooterVisibility()
         geckoView.animate().alpha(1f).setDuration(180).withEndAction {
             webAppView.visibility = View.GONE
         }.start()
@@ -1153,13 +1190,14 @@ class MainActivity : AppCompatActivity() {
 
     /** Troca suave: GeckoView (browser) → WebView (home) */
     private fun crossfadeToHome(onEnd: () -> Unit = {}) {
-        if (webAppView.visibility == View.VISIBLE) { onEnd(); return }
+        if (webAppView.visibility == View.VISIBLE) { updateBeeFooterVisibility(); onEnd(); return }
         webAppView.alpha = 0f
         webAppView.visibility = View.VISIBLE
         webAppView.animate().alpha(1f).setDuration(180).withEndAction {
             geckoView.visibility = View.GONE
             topBar.visibility = View.GONE
             pageProgress.visibility = View.GONE
+            updateBeeFooterVisibility()
             onEnd()
         }.start()
     }
@@ -1244,6 +1282,26 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent, opts.toBundle())
     }
 
+    /**
+     * Rodapé colapsado do painel Bee (com a barra de progresso do epoch)
+     * só faz sentido no navegador — é o lembrete de que sair dele pode parar
+     * a mineração se o segundo plano não estiver ativado. Na home a mineração
+     * continua normal, então o rodapé só polui a tela ali.
+     */
+    private fun updateBeeFooterVisibility() {
+        if (beePanelExpanded || !beeFooterActive) return
+        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
+        if (::geckoView.isInitialized && geckoView.visibility == android.view.View.VISIBLE) {
+            val dp56 = (56 * resources.displayMetrics.density).toInt()
+            val params = container.layoutParams
+            params.height = dp56
+            container.layoutParams = params
+            container.visibility = android.view.View.VISIBLE
+        } else {
+            container.visibility = android.view.View.GONE
+        }
+    }
+
     fun openBeePanel() {
         val theme = getSharedPreferences("wasp_settings", android.content.Context.MODE_PRIVATE)
             .getString("theme", "dark") ?: "dark"
@@ -1273,13 +1331,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun collapseBeePanel() {
-        val container = findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
-        val dp56 = (56 * resources.displayMetrics.density).toInt()
-        val params = container.layoutParams
-        params.height = dp56
-        container.layoutParams = params
-        container.visibility = android.view.View.VISIBLE
+        findViewById<android.widget.FrameLayout>(R.id.bee_panel_container) ?: return
         beePanelExpanded = false
+        beeFooterActive = true
+        updateBeeFooterVisibility()
         findViewById<android.widget.FrameLayout>(R.id.main_content_frame)?.visibility = android.view.View.VISIBLE
         topBar.visibility = if (geckoView.visibility == android.view.View.VISIBLE) android.view.View.VISIBLE else android.view.View.GONE
         persistentBeeView?.evaluateJavascript("""
